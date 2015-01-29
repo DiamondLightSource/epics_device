@@ -140,8 +140,9 @@ void _panic_error(char *extra, const char *filename, int line)
     fflush(stdout);
 
 #ifdef VX_WORKS
-    exit(255);
-    for (;;) ;
+    /* On vxWorks all we can really do is hang. */
+    while (true)
+        taskSuspend(taskIdSelf());
 
 #else
     /* Now try and create useable backtrace. */

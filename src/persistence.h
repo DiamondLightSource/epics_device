@@ -21,6 +21,8 @@ bool initialise_persistent_state(const char *FileName, int save_interval);
 bool load_persistent_state(void);
 
 /* Writes out persistent state file if necessary. */
+bool update_persistent_state(void);
+
 void terminate_persistent_state(void);
 
 

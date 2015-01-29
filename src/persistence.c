@@ -9,6 +9,10 @@
 #include <time.h>
 #include <pthread.h>
 
+#ifdef VX_WORKS
+#include <taskLib.h>
+#endif
+
 #include "error.h"
 #include "hashtable.h"
 
@@ -208,7 +212,6 @@ static pthread_t persistence_thread_id;
 
 #define LOCK()      pthread_mutex_lock(&mutex);
 #define UNLOCK()    pthread_mutex_unlock(&mutex);
-#define SIGNAL()    pthread_cond_broadcast(&psignal);
 
 
 
@@ -517,6 +520,7 @@ static bool write_persistent_state(const char *filename)
     char out_buffer[40];
     time_t now = time(NULL);
 #ifdef VX_WORKS
+    /* The vxWorks declaration of ctime_r is mysteriously different! */
     size_t buf_size = sizeof(out_buffer);
     const char *timestamp = ctime_r(&now, out_buffer, &buf_size);
 #else
@@ -540,14 +544,28 @@ static bool write_persistent_state(const char *filename)
 
 /* Updates persistent state via a backup file to avoid data loss (assuming
  * rename is implemented as an OS atomic action). */
-static bool update_persistent_state(void)
+bool update_persistent_state(void)
 {
-    size_t name_len = strlen(state_filename);
-    char backup_file[name_len + strlen(".backup") + 1];
-    sprintf(backup_file, "%s.backup", state_filename);
-    return
-        write_persistent_state(backup_file)  &&
-        TEST_IO(rename(backup_file, state_filename));
+    if (persistence_dirty  &&  state_filename != NULL)
+    {
+#ifdef VX_WORKS
+        /* On vxWorks it would seem that rename (at least over NFS) just doesn't
+         * work, so the best we can do is write the file. */
+        return write_persistent_state(state_filename);
+#else
+        /* By writing to a backup file first we can then rely on the OS
+         * implementing rename as an atomic operation to achieve a safe atomic
+         * update of the stored state. */
+        size_t name_len = strlen(state_filename);
+        char backup_file[name_len + strlen(".backup") + 1];
+        sprintf(backup_file, "%s.backup", state_filename);
+        return
+            write_persistent_state(backup_file)  &&
+            TEST_IO(rename(backup_file, state_filename));
+#endif
+    }
+    else
+        return true;
 }
 
 
@@ -585,8 +603,7 @@ static void *persistence_thread(void *context)
     while (thread_running)
     {
         pwait_timeout(persistence_interval, 0);
-        if (persistence_dirty  &&  state_filename != NULL)
-            update_persistent_state();
+        update_persistent_state();
         persistence_dirty = false;
     }
     UNLOCK();
