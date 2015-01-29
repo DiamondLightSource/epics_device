@@ -270,7 +270,8 @@ struct epics_record *lookup_epics_record(
 {
     BUILD_KEY(key, name, record_type);
     struct epics_record *result = hash_table_lookup(hash_table, key);
-    ASSERT_OK(TEST_NULL_(result, "Lookup %s failed", key));
+    bool ok = TEST_NULL_(result, "Lookup %s failed", key);
+    ASSERT_OK(ok);
     return result;
 }
 

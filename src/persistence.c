@@ -438,7 +438,7 @@ static bool parse_persistence_file(const char *filename)
     struct line_buffer line = {
         .file = fopen(filename, "r"),
         .line_number = 0 };
-    if (!TEST_NULL_(line.file, "Unable to open state file %s", filename))
+    if (!TEST_NULL_IO_(line.file, "Unable to open state file %s", filename))
         /* If persistence file isn't found we report open failure but don't
          * fail -- this isn't really an error. */
         return true;
@@ -504,7 +504,7 @@ static void write_lines(
 static bool write_persistent_state(const char *filename)
 {
     FILE *out;
-    bool ok = TEST_NULL_(out = fopen(filename, "w"),
+    bool ok = TEST_NULL_IO_(out = fopen(filename, "w"),
         "Unable to write persistent state: cannot open \"%s\"", filename);
     if (!ok)
         return false;

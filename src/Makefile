@@ -53,6 +53,7 @@ INC += epics_device.h
 DBD += epics_device.dbd
 
 
+epics_device_SRCS += error.c            # General error handling support
 epics_device_SRCS += epics_device.c     # EPICS device support framework
 epics_device_SRCS += epics_extra.c      # Miscellanous extra EPICS support
 epics_device_SRCS += hashtable.c        # Simple generic hash table
