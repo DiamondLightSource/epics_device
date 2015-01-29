@@ -39,25 +39,26 @@ static bool epics_ready = false;
 static pthread_mutex_t epics_ready_mutex = PTHREAD_MUTEX_INITIALIZER;
 static struct epics_interlock *notify_list = NULL;
 
-#define LOCK_READY()    ASSERT_0(pthread_mutex_lock(&epics_ready_mutex))
-#define UNLOCK_READY()  ASSERT_0(pthread_mutex_unlock(&epics_ready_mutex))
+#define LOCK_READY()    ASSERT_PTHREAD(pthread_mutex_lock(&epics_ready_mutex))
+#define UNLOCK_READY()  ASSERT_PTHREAD(pthread_mutex_unlock(&epics_ready_mutex))
 
 
 static void take_interlock(struct epics_interlock *interlock)
 {
-    ASSERT_0(pthread_mutex_lock(&interlock->mutex));
+    ASSERT_PTHREAD(pthread_mutex_lock(&interlock->mutex));
     while (interlock->busy)
-        ASSERT_0(pthread_cond_wait(&interlock->signal, &interlock->mutex));
+        ASSERT_PTHREAD(
+            pthread_cond_wait(&interlock->signal, &interlock->mutex));
     interlock->busy = true;
-    ASSERT_0(pthread_mutex_unlock(&interlock->mutex));
+    ASSERT_PTHREAD(pthread_mutex_unlock(&interlock->mutex));
 }
 
 static void release_interlock(struct epics_interlock *interlock)
 {
-    ASSERT_0(pthread_mutex_lock(&interlock->mutex));
+    ASSERT_PTHREAD(pthread_mutex_lock(&interlock->mutex));
     interlock->busy = false;
-    ASSERT_0(pthread_cond_signal(&interlock->signal));
-    ASSERT_0(pthread_mutex_unlock(&interlock->mutex));
+    ASSERT_PTHREAD(pthread_cond_signal(&interlock->signal));
+    ASSERT_PTHREAD(pthread_mutex_unlock(&interlock->mutex));
 }
 
 
@@ -96,8 +97,8 @@ static void init_interlock(struct epics_interlock *interlock)
 {
     interlock->next = NULL;
     interlock->busy = false;
-    ASSERT_0(pthread_mutex_init(&interlock->mutex, NULL));
-    ASSERT_0(pthread_cond_init(&interlock->signal, NULL));
+    ASSERT_PTHREAD(pthread_mutex_init(&interlock->mutex, NULL));
+    ASSERT_PTHREAD(pthread_cond_init(&interlock->signal, NULL));
 }
 
 struct epics_interlock *create_interlock(const char *base_name, bool set_time)
@@ -268,7 +269,7 @@ static void *ca_repeater(void *context)
 bool start_caRepeater(void)
 {
     pthread_t thread_id;
-    return TEST_0(pthread_create(&thread_id, NULL, ca_repeater, NULL));
+    return TEST_PTHREAD(pthread_create(&thread_id, NULL, ca_repeater, NULL));
 }
 
 

@@ -29,10 +29,10 @@
 
 /* The following error handling macros are defined here:
  *
- *  TEST_OK     TEST_OK_    ASSERT_OK       Fail if expression is false
- *  TEST_IO     TEST_IO_    ASSERT_IO       Fail if expression is -1
- *  TEST_NULL   TEST_NULL_  ASSERT_NULL     Fail if expression equals NULL
- *  TEST_0      TEST_0_     ASSERT_0        Fail if expression is not 0
+ *  TEST_OK      TEST_OK_      ASSERT_OK       Fail if expression is false
+ *  TEST_IO      TEST_IO_      ASSERT_IO       Fail if expression is -1
+ *  TEST_NULL    TEST_NULL_    ASSERT_NULL     Fail if expression equals NULL
+ *  TEST_PTHREAD TEST_PTHREAD_ ASSERT_PTHREAD  Fail if expression is not 0
  *
  * There are also macros for handling file I/O in a similar form (but with
  * slightly different argument lists):
@@ -55,9 +55,9 @@
  *      If the test fails then _panic_error() is called and execution does not
  *      continue from this point.
  *
- * Note that the _0 macros have the extra side effect of assigning any non-zero
- * expression to errno: these are designed to be used with the pthread functions
- * where this behaviour is appropriate.
+ * Note that the _PTHREAD macros have the extra side effect of assigning any
+ * non-zero expression to errno: these are designed to be used with the pthread
+ * functions where this behaviour is appropriate.
  *
  * These macros are designed to be used as chained conjunctions of the form
  *
@@ -65,9 +65,9 @@
  *
  * To facilitate this three further macros are provided:
  *
- *  DO_(statements)             Performs statements and evaluates to True
- *  IF_(test, iftrue)                   Only checks iftrue if test succeeds
- *  IF_ELSE(test, iftrue, iffalse)      Alternative spelling of (?:)
+ *  DO(statements)                  Performs statements and evaluates to True
+ *  IF(test, iftrue)                Only checks iftrue if test succeeds
+ *  IF_ELSE(test, iftrue, iffalse)  Alternative spelling of (?:)
  */
 
 #ifdef VX_WORKS
@@ -102,7 +102,7 @@ char *_extra_io(void);
 /* Generic TEST macro: computes a boolean from expr using COND (should be a
  * macro), and prints the given error message if the boolean is false.  The
  * boolean result is the value of the entire expression. */
-#define TEST_(COND, EXTRA, expr, message...) \
+#define _TEST(COND, EXTRA, expr, message...) \
     ( { \
         typeof(expr) __result__ = (expr); \
         bool __ok__ = COND(__result__); \
@@ -113,7 +113,7 @@ char *_extra_io(void);
 
 /* An assert for tests that really really should not fail!  This exits
  * immediately. */
-#define ASSERT_(COND, EXTRA, expr)  \
+#define _ASSERT(COND, EXTRA, expr)  \
     do { \
         typeof(expr) __result__ = (expr); \
         if (unlikely(!COND(__result__))) \
@@ -127,37 +127,38 @@ char *_extra_io(void);
 /* Tests system calls: -1 => error, pick up error data from errno. */
 #define _COND_IO(expr)              ((intptr_t) (expr) != -1)
 #define _MSG_IO(expr)               _extra_io()
-#define TEST_IO_(expr, message...)  TEST_(_COND_IO, _MSG_IO, expr, message)
+#define TEST_IO_(expr, message...)  _TEST(_COND_IO, _MSG_IO, expr, message)
 #define TEST_IO(expr)               TEST_IO_(expr, ERROR_MESSAGE)
-#define ASSERT_IO(expr)             ASSERT_(_COND_IO, _MSG_IO, expr)
+#define ASSERT_IO(expr)             _ASSERT(_COND_IO, _MSG_IO, expr)
 
 /* Tests an ordinary boolean: false => error. */
 #define _COND_OK(expr)              ((bool) (expr))
 #define _MSG_OK(expr)               NULL
-#define TEST_OK_(expr, message...)  TEST_(_COND_OK, _MSG_OK, expr, message)
+#define TEST_OK_(expr, message...)  _TEST(_COND_OK, _MSG_OK, expr, message)
 #define TEST_OK(expr)               TEST_OK_(expr, ERROR_MESSAGE)
-#define ASSERT_OK(expr)             ASSERT_(_COND_OK, _MSG_OK, expr)
+#define ASSERT_OK(expr)             _ASSERT(_COND_OK, _MSG_OK, expr)
 
 /* Tests pointers: NULL => error.  If there is extra information in errno then
  * use the NULL_IO test, otherwise just NULL. */
 #define _COND_NULL(expr)            ((expr) != NULL)
 #define TEST_NULL_(expr, message...) \
-    TEST_(_COND_NULL, _MSG_OK, expr, message)
+    _TEST(_COND_NULL, _MSG_OK, expr, message)
 #define TEST_NULL(expr)             TEST_NULL_(expr, ERROR_MESSAGE)
-#define ASSERT_NULL(expr)           ASSERT_(_COND_NULL, _MSG_OK, expr)
+#define ASSERT_NULL(expr)           _ASSERT(_COND_NULL, _MSG_OK, expr)
 
 #define TEST_NULL_IO_(expr, message...) \
-    TEST_(_COND_NULL, _MSG_IO, expr, message)
-#define TEST_NULL_IO(expr)             TEST_NULL_IO_(expr, ERROR_MESSAGE)
-#define ASSERT_NULL_IO(expr)           ASSERT_(_COND_NULL, _MSG_IO, expr)
+    _TEST(_COND_NULL, _MSG_IO, expr, message)
+#define TEST_NULL_IO(expr)          TEST_NULL_IO_(expr, ERROR_MESSAGE)
+#define ASSERT_NULL_IO(expr)        _ASSERT(_COND_NULL, _MSG_IO, expr)
 
 /* Tests the return from a pthread_ call: a non zero return is the error
  * code!  We just assign this to errno. */
-#define _COND_0(expr)               ((expr) == 0)
-#define _MSG_0(expr)                ({ errno = (expr); _extra_io(); })
-#define TEST_0_(expr, message...)   TEST_(_COND_0, _MSG_0, expr, message)
-#define TEST_0(expr)                TEST_0_(expr, ERROR_MESSAGE)
-#define ASSERT_0(expr)              ASSERT_(_COND_0, _MSG_0, expr)
+#define _COND_PTHREAD(expr)         ((expr) == 0)
+#define _MSG_PTHREAD(expr)          ({ errno = (expr); _extra_io(); })
+#define TEST_PTHREAD_(expr, message...) \
+    _TEST(_COND_PTHREAD, _MSG_PTHREAD, expr, message)
+#define TEST_PTHREAD(expr)          TEST_PTHREAD_(expr, ERROR_MESSAGE)
+#define ASSERT_PTHREAD(expr)        _ASSERT(_COND_PTHREAD, _MSG_PTHREAD, expr)
 
 
 /* For marking unreachable code.  Same as ASSERT_OK(false). */
@@ -169,26 +170,9 @@ char *_extra_io(void);
 
 /* These two macros facilitate using the macros above by creating if
  * expressions that are slightly more sensible looking than ?: in context. */
-#define DO_(action)                     ({action; true;})
-#define IF_(test, iftrue)               ((test) ? (iftrue) : true)
+#define DO(action)                      ({action; true;})
+#define IF(test, iftrue)                ((test) ? (iftrue) : true)
 #define IF_ELSE(test, iftrue, iffalse)  ((test) ? (iftrue) : (iffalse))
-
-/* Used to ensure that the finally action always occurs, even if action fails.
- * Returns combined success of both actions. */
-#define FINALLY(action, finally) \
-    ( { \
-        bool __oK__ = (action); \
-        (finally)  &&  __oK__; \
-    } )
-
-/* If action fails perform on_fail as a cleanup action.  Returns status of
- * action. */
-#define UNLESS(action, on_fail) \
-    ( { \
-        bool __oK__ = (action); \
-        if (!__oK__) { on_fail; } \
-        __oK__; \
-    } )
 
 
 /* Testing read and write happens often enough to be annoying, so some
@@ -223,11 +207,6 @@ char *_extra_io(void);
         } __union = { .__value = (value) }; \
         __union.__cast; \
     } )
-
-/* Companion to the offsetof macro for returning a value at the given offset
- * into a structure.  Returns correctly typed pointer. */
-#define USE_OFFSET(type, structure, offset) \
-    ((type *) ((void *) (structure) + (offset)))
 
 /* For ignoring return values even when warn_unused_result is in force. */
 #define IGNORE(e)       do if(e) {} while (0)

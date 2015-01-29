@@ -331,7 +331,7 @@ static bool read_line(struct line_buffer *line, bool *eof)
         return
             TEST_OK_(len > 0  &&  line->line[len - 1] == '\n',
                 "Line %d truncated?", line->line_number)  &&
-            DO_(line->line[len - 1] = '\0');
+            DO(line->line[len - 1] = '\0');
     }
 }
 
@@ -424,7 +424,7 @@ static bool parse_assignment(struct line_buffer *line)
     struct persistent_variable *persistence = NULL;
     bool ok =
         TEST_NULL_(equal = strchr(line->line, '='), "Missing =")  &&
-        DO_(*equal++ = '\0')  &&
+        DO(*equal++ = '\0')  &&
         TEST_NULL_(persistence = hash_table_lookup(variable_table, line->line),
             "Persistence key \"%s\" not found", line->line)  &&
         parse_value(line, equal, persistence);
@@ -617,13 +617,13 @@ bool initialise_persistent_state(const char *file_name, int save_interval)
 {
     /* Due to a bug in the vxWorks compiler's pthread.h we have can't use the
      * static initialiser for pthread_cond_t, so we initialise here. */
-    ASSERT_0(pthread_mutex_init(&mutex, NULL));
-    ASSERT_0(pthread_cond_init(&psignal, NULL));
+    ASSERT_PTHREAD(pthread_mutex_init(&mutex, NULL));
+    ASSERT_PTHREAD(pthread_cond_init(&psignal, NULL));
 
     state_filename = file_name;
     persistence_interval = save_interval;
     variable_table = hash_table_create(false);  // We look after name lifetime
-    return TEST_0(pthread_create(
+    return TEST_PTHREAD(pthread_create(
         &persistence_thread_id, NULL, persistence_thread, NULL));
 }
 

@@ -35,7 +35,7 @@ static bool skip_whitespace(const char **string)
 
 static bool read_char(const char **string, char ch)
 {
-    return **string == ch  &&  DO_(*string += 1);
+    return **string == ch  &&  DO(*string += 1);
 }
 
 static bool parse_char(const char **string, char ch)
@@ -103,12 +103,12 @@ static bool do_parse_line(
     size_t ix = 0;
     bool ok =
         parse_name(&string, name, NAME_LENGTH)  &&
-        DO_(skip_whitespace(&string))  &&
+        DO(skip_whitespace(&string))  &&
         parse_char(&string, '=')  &&
-        DO_(skip_whitespace(&string))  &&
+        DO(skip_whitespace(&string))  &&
         lookup_name(name, config_table, config_size, &ix)  &&
         parse_int(&string, config_table[ix].result)  &&
-        DO_(skip_whitespace(&string))  &&
+        DO(skip_whitespace(&string))  &&
         parse_eos(&string);
 
     /* Report parse error. */
@@ -120,7 +120,7 @@ static bool do_parse_line(
         /* Perform post parse validation. */
         TEST_OK_(!seen[ix],
             "Parameter %s repeated on line %d", name, line_number)  &&
-        DO_(seen[ix] = true);
+        DO(seen[ix] = true);
 }
 
 

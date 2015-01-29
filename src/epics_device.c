@@ -635,7 +635,7 @@ static bool init_record_common(
         TEST_NULL_(base, "No record found for %s", key)  &&
         TEST_OK_(base->record_name == NULL,
             "%s already bound to %s", key, base->record_name)  &&
-        DO_(base->record_name = pr->name; pr->dpvt = base)  &&
+        DO(base->record_name = pr->name; pr->dpvt = base)  &&
         TEST_OK_(
             (pr->scan == menuScanI_O_Intr) == (base->ioscanpvt != NULL),
             "%s has inconsistent scan menu (%d) and ioscanpvt (%p)",
