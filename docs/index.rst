@@ -1,7 +1,5 @@
 .. _index:
 
-.. EPICS device documentation file
-
 Documentation for EPICS Device Support Module
 =============================================
 
@@ -11,13 +9,19 @@ Contents:
     :numbered:
     :maxdepth: 2
 
+    overview
     epics_device
+    epics_extra
+    builder
+    persistence
+    pvlogging
+    error
+    hashtable
+    example
+    ideas
 
-
-Indices and tables
-==================
+Index and Search
+================
 
 * :ref:`genindex`
-* :ref:`modindex`
 * :ref:`search`
-* `Selected source code <_modules/index.html>`_

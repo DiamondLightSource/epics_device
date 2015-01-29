@@ -20,6 +20,15 @@ import sys, os
 
 from pkg_resources import require
 
+# So that viewcode can create links to the builder files we need to configure
+# the iocbuilder.
+require('iocbuilder==3.41')
+from iocbuilder import ConfigureTemplate, ModuleVersion
+ConfigureTemplate()
+ModuleVersion('epics_device', home = '..', use_name = False)
+
+
+
 # -- General configuration -----------------------------------------------------
 
 # Add any Sphinx extension module names here, as strings. They can be extensions
@@ -46,6 +55,9 @@ master_doc = 'index'
 # General information about the project.
 project = u'EPICS Device'
 copyright = u'2015, Michael Abbott'
+
+# Use the Sphinx C domain for code documentation.
+primary_domain = 'c'
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
