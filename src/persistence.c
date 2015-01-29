@@ -16,6 +16,7 @@
 #include "error.h"
 #include "hashtable.h"
 
+#include "persistence_internal.h"
 #include "persistence.h"
 
 

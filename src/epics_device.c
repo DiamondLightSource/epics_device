@@ -41,7 +41,7 @@
 
 #include "error.h"
 #include "hashtable.h"
-#include "persistence.h"
+#include "persistence_internal.h"
 
 #include "epics_device.h"
 

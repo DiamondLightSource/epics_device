@@ -26,7 +26,7 @@ static int max_array_length;
 
 /* Alas dbGetField is rather rubbish at formatting floating point numbers, so we
  * do that ourselves, but the rest formats ok. */
-static void FormatField(dbAddr *dbaddr, dbr_string_t *value)
+static void format_field(dbAddr *dbaddr, dbr_string_t *value)
 {
 #define FORMAT(type, format) \
     do { \
@@ -72,12 +72,12 @@ static void print_value(dbr_string_t *value, int length)
     }
 }
 
-static void EpicsPvPutHook(asTrapWriteMessage *pmessage, int after)
+static void epics_pv_put_hook(asTrapWriteMessage *pmessage, int after)
 {
     dbAddr *dbaddr = (dbAddr *) pmessage->serverSpecific;
     int length = (int) dbaddr->no_elements;
     dbr_string_t *value = calloc((size_t) length, sizeof(dbr_string_t));
-    FormatField(dbaddr, value);
+    format_field(dbaddr, value);
 
     if (after)
     {
@@ -100,10 +100,10 @@ static void EpicsPvPutHook(asTrapWriteMessage *pmessage, int after)
 }
 
 
-bool HookLogging(int max_length)
+bool hook_pv_logging(const char *access_file, int max_length)
 {
     max_array_length = max_length;
     asSetFilename("db/access.acf");
-    asTrapWriteRegisterListener(EpicsPvPutHook);
+    asTrapWriteRegisterListener(epics_pv_put_hook);
     return true;
 }

@@ -1,2 +1,2 @@
-import support
-import common
+from support import *
+from common import *
