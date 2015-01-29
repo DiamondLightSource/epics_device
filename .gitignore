@@ -3,6 +3,7 @@ db/
 dbd/
 include/
 lib/
+/docs/html/
 
 O.*
 *.pyc
