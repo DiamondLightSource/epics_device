@@ -89,7 +89,6 @@ void _report_error(char *extra, const char *message, ...)
 
 /* Two mechanisms for reporting extra error information. */
 char *_extra_io(void);
-char *_extra_epics(int error);
 
 
 /* This function performs a simple error report through the error report
@@ -156,12 +155,6 @@ char *_extra_epics(int error);
 #define TEST_0_(expr, message...)   TEST_(_COND_0, _MSG_0, expr, message)
 #define TEST_0(expr)                TEST_0_(expr, ERROR_MESSAGE)
 #define ASSERT_0(expr)              ASSERT_(_COND_0, _MSG_0, expr)
-
-/* Tests return from a EPICS calls which return an appropriate error code. */
-#define _MSG_EPICS(expr)            _extra_epics(expr)
-#define TEST_EPICS_(expr, message...) TEST_(_COND_0, _MSG_EPICS, expr, message)
-#define TEST_EPICS(expr)            TEST_EPICS_(expr, ERROR_MESSAGE)
-#define ASSERT_EPICS(expr)          ASSERT_(_COND_0, _MSG_EPICS, expr)
 
 
 /* For marking unreachable code.  Same as ASSERT_OK(false). */

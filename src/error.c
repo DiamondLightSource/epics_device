@@ -60,14 +60,6 @@ char *_extra_io(void)
 }
 
 
-char *_extra_epics(int error)
-{
-    char *result;
-    asprintf(&result, "(%d) %s", error, ca_message(error));
-    return result;
-}
-
-
 void _report_error(char *extra, const char *format, ...)
 {
     /* Large enough not to really worry about overflow.  If we do generate a
