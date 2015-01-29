@@ -71,7 +71,6 @@ bool check_epics_ready(void);
 /* Helpful for embedded systems where we don't want to start a separate
  * caRepeater application. */
 bool start_caRepeater(void);
-
 /* To load an EPICS database first call database_add_macro() as many times as
  * necessary to define macros and then call database_load_file().  A successful
  * call to database_load_file() will reset the macro set so that further macros
@@ -96,7 +95,9 @@ bool database_load_file(const char *filename);
  *
  *  value = READ_IN_RECORD(type, record)
  *      Returns value written to record.
- */
+ *
+ * This API is very experimental and is not currently documented in the external
+ * documentation for this module. */
 
 struct in_epics_record_longin;
 struct in_epics_record_ulongin;

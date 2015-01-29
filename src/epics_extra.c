@@ -69,7 +69,9 @@ void interlock_wait(struct epics_interlock *interlock)
 
 void interlock_signal(struct epics_interlock *interlock, struct timespec *ts)
 {
-    trigger_record(interlock->trigger, 0, ts);
+    if (ts)
+        set_record_timestamp(interlock->trigger, ts);
+    trigger_record(interlock->trigger);
 }
 
 /* Completion of EPICS processing chain, allow waiting thread to proceed.
@@ -237,7 +239,12 @@ void _write_in_record(
         memcpy(record->value, value, record->field_size);
     }
     if (do_update)
-        trigger_record(record->record, args->severity, args->timestamp);
+    {
+        set_record_severity(record->record, args->severity);
+        if (args->timestamp)
+            set_record_timestamp(record->record, args->timestamp);
+        trigger_record(record->record);
+    }
 }
 
 

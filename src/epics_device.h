@@ -305,15 +305,19 @@ struct epics_record;
 struct epics_record *publish_epics_record(
     enum record_type record_type, const char *name, const void *args);
 
-/* This updates the recorded record severity and optionally, if .set_time was
- * specified, the record timestamp.  If .io_intr was set then record processing
- * will be triggered.  This can only be called for IN and WAVEFORM records. */
-void trigger_record(
-    struct epics_record *record, epicsAlarmSeverity severity,
-    const struct timespec *timestamp);
+/* Updates the record severity for IN and WAVEFORM records.  Cannot be called
+ * for OUT records. */
+void set_record_severity(
+    struct epics_record *base, epicsAlarmSeverity severity);
 
-/* Simple helper for EPICS_STRING type. */
-void copy_epics_string(EPICS_STRING *out, const char *in);
+/* Sets the timestamp for records with .set_time set.  Must be called with a
+ * valid timestamp, only valid for IN and WAVEFORM records. */
+void set_record_timestamp(
+    struct epics_record *base, const struct timespec *timestamp);
+
+/* Triggers a record with .io_intr set, can only be called for IN and WAVEFORM
+ * records. */
+void trigger_record(struct epics_record *record);
 
 /* Returns published epics_record structure with the given type and name.
  * Generates ASSERT fail if record not present. */

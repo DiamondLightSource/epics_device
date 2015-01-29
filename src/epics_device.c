@@ -277,14 +277,15 @@ struct epics_record *lookup_epics_record(
 
 
 /* Checks whether the given record is an IN record for validating the trigger
- * method. */
-static bool is_in_record(enum record_type record_type)
+ * and other update methods. */
+static bool is_in_or_waveform(struct epics_record *base)
 {
-    switch (record_type)
+    switch (base->record_type)
     {
         case RECORD_TYPE_longin:    case RECORD_TYPE_ulongin:
         case RECORD_TYPE_ai:        case RECORD_TYPE_bi:
         case RECORD_TYPE_stringin:  case RECORD_TYPE_mbbi:
+        case RECORD_TYPE_waveform:
             return true;
         default:
             return false;
@@ -292,32 +293,32 @@ static bool is_in_record(enum record_type record_type)
 }
 
 
-void trigger_record(
-    struct epics_record *base, epicsAlarmSeverity severity,
-    const struct timespec *timestamp)
+void set_record_severity(
+    struct epics_record *base, epicsAlarmSeverity severity)
 {
-    bool in_record = is_in_record(base->record_type);
-    bool wf_record = base->record_type == RECORD_TYPE_waveform;
-    ASSERT_OK(in_record  ||  wf_record);
+    ASSERT_OK(is_in_or_waveform(base));
 
     base->severity = severity;
-    if (timestamp)
-    {
-        ASSERT_OK(in_record  &&  base->in.set_time);
-        base->in.timestamp = *timestamp;
-    }
-
-    if (base->ioscanpvt)
-    {
-        base->ioscan_pending = true;
-        scanIoRequest(base->ioscanpvt);
-    }
 }
 
 
-void copy_epics_string(EPICS_STRING *out, const char *in)
+void set_record_timestamp(
+    struct epics_record *base, const struct timespec *timestamp)
 {
-    strncpy(out->s, in, sizeof(EPICS_STRING));
+    ASSERT_OK(is_in_or_waveform(base));
+    ASSERT_OK(base->in.set_time);
+
+    base->in.timestamp = *timestamp;
+}
+
+
+void trigger_record(struct epics_record *base)
+{
+    ASSERT_OK(is_in_or_waveform(base));
+    ASSERT_OK(base->ioscanpvt);
+
+    base->ioscan_pending = true;
+    scanIoRequest(base->ioscanpvt);
 }
 
 
