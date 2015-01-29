@@ -14,6 +14,7 @@ INC += hashtable.h
 INC += persistence.h
 INC += pvlogging.h
 INC += config_file.h
+INC += vxdefs.h
 
 DBD += epics_device.dbd
 

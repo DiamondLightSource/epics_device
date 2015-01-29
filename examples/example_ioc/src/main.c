@@ -11,7 +11,7 @@
 #include "example_pvs.h"
 
 
-extern int example_ioc_registerRecordDeviceDriver(struct dbBase *pdbbase);
+extern int example_ioc_registerRecordDeviceDriver(struct dbBase *pdb);
 
 
 static bool load_database(const char *db)

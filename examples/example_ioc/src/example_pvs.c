@@ -1,5 +1,6 @@
 #include <stdbool.h>
 #include <stddef.h>
+#include <stdarg.h>
 #include <math.h>
 
 #include "error.h"
@@ -27,7 +28,7 @@ static void set_frequency(double frequency)
 
 bool initialise_example_pvs(void)
 {
-    PUBLISH_WRITER_P(ao, "FREQ", set_frequency);
+    PUBLISH_WRITER(ao, "FREQ", set_frequency);
     PUBLISH_WF_READ_VAR(double, "WF", WF_LENGTH, waveform);
     PUBLISH_READ_VAR(ai, "SUM", sum);
 

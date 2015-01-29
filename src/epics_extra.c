@@ -92,13 +92,18 @@ static void receive_epics_ready(struct epics_interlock *interlock)
 }
 
 
+static void init_interlock(struct epics_interlock *interlock)
+{
+    interlock->next = NULL;
+    interlock->busy = false;
+    ASSERT_0(pthread_mutex_init(&interlock->mutex, NULL));
+    ASSERT_0(pthread_cond_init(&interlock->signal, NULL));
+}
+
 struct epics_interlock *create_interlock(const char *base_name, bool set_time)
 {
     struct epics_interlock *interlock = malloc(sizeof(struct epics_interlock));
-    interlock->next = NULL;
-    interlock->busy = false;
-    interlock->mutex = (pthread_mutex_t) PTHREAD_MUTEX_INITIALIZER;
-    interlock->signal = (pthread_cond_t) PTHREAD_COND_INITIALIZER;
+    init_interlock(interlock);
 
     char buffer[strlen(base_name) + strlen(":TRIG") + 1];
     sprintf(buffer, "%s:TRIG", base_name);
@@ -119,9 +124,8 @@ void wait_for_epics_start(void)
 {
     /* This is very naughty code.  We fake up a temporary interlock object just
      * so we can go onto the initialisation list.  Still, it will serve... */
-    struct epics_interlock interlock = {
-        .mutex = PTHREAD_MUTEX_INITIALIZER,
-        .signal = PTHREAD_COND_INITIALIZER };
+    struct epics_interlock interlock;
+    init_interlock(&interlock);
 
     LOCK_READY();
     bool lock_needed = !epics_ready;

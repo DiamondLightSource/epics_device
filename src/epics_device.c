@@ -841,7 +841,7 @@ DEFINE_IN_OUT(longin,   longout,   val,  EPICS_OK,   SIMPLE_ADAPTER, do_MLST)
 DEFINE_IN_OUT(ai,       ao,        val,  NO_CONVERT, SIMPLE_ADAPTER, do_MLST)
 DEFINE_IN_OUT(bi,       bo,        rval, EPICS_OK,   COPY_ADAPTER,   do_MLST)
 DEFINE_IN_OUT(stringin, stringout, val,  EPICS_OK,   STRING_ADAPTER, no_MLST)
-DEFINE_IN_OUT(mbbi,     mbbo,      rval, EPICS_OK,   SIMPLE_ADAPTER, do_MLST)
+DEFINE_IN_OUT(mbbi,     mbbo,      rval, EPICS_OK,   COPY_ADAPTER,   do_MLST)
 
 /* Also need dummy special_linconv routines for ai and ao. */
 static long linconv_ai(aiRecord *pr, int cmd) { return EPICS_OK; }
@@ -877,7 +877,7 @@ static bool check_waveform_type(waveformRecord *pr, struct epics_record *base)
             base->key, pr->ftvl, expected, base->waveform.field_type)  &&
         TEST_OK_(pr->nelm == base->max_length,
             "Array %s wrong length, %d != %zd",
-            base->key, pr->nelm, base->max_length);
+            base->key, (int) pr->nelm, base->max_length);
 }
 
 
@@ -950,10 +950,12 @@ static long process_waveform(waveformRecord *pr)
 
 #include "recordDevice.h"
 
+#ifndef VX_WORKS
 /* The epicsExportAddress macro used in the definitions below casts a structure
  * pointer via (char*) and thus generates a cast alignment error.  We want to
  * just ignore this here. */
 #pragma GCC diagnostic ignored "-Wcast-align"
+#endif
 DEFINE_DEVICE(longin,    5, read_longin);
 DEFINE_DEVICE(longout,   5, write_longout);
 DEFINE_DEVICE(ai,        6, read_ai,  linconv_ai);

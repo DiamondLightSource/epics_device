@@ -11,6 +11,8 @@
 #include <asTrapWrite.h>
 #include <asDbLib.h>
 
+#include "error.h"
+
 #include "pvlogging.h"
 
 

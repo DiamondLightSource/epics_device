@@ -56,8 +56,8 @@ static bool parse_int(const char **string, int *variable)
 
 static bool parse_name(const char **string, char *name, size_t length)
 {
-    bool ok = TEST_OK_(isalpha(**string), "Not a valid name");
-    while (ok  &&  (isalnum(**string)  ||  **string == '_'))
+    bool ok = TEST_OK_(isalpha((unsigned int) **string), "Not a valid name");
+    while (ok  &&  (isalnum((unsigned int) **string)  ||  **string == '_'))
     {
         *name++ = *(*string)++;
         length -= 1;

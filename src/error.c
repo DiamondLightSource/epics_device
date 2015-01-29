@@ -9,11 +9,56 @@
 #include <stdarg.h>
 #include <errno.h>
 #include <string.h>
+#ifdef VX_WORKS
+#include <taskLib.h>
+#else
 #include <execinfo.h>
+#endif
 
 #include <caerr.h>
 
 #include "error.h"
+
+
+#ifdef VX_WORKS
+/* On vxWorks we are missing a lot of useful functions. */
+
+int vsnprintf(char *str, size_t size, const char *format, va_list args)
+{
+    return vsprintf(str, format, args);
+}
+
+int snprintf(char *str, size_t size, const char *format, ...)
+{
+    va_list args;
+    va_start(args, format);
+    int count = vsnprintf(str, size, format, args);
+    va_end(args);
+    return count;
+}
+
+char *strdup(const char *str)
+{
+    size_t len = strlen(str) + 1;
+    char *result = malloc(len);
+    memcpy(result, str, len);
+    return result;
+}
+
+int asprintf(char **result, const char *format, ...)
+{
+    char result_buffer[1024];   // Lazy ... hope it's long enough!
+
+    va_list args;
+    va_start(args, format);
+    int count = vsnprintf(result_buffer, sizeof(result_buffer), format, args);
+    va_end(args);
+
+    *result = strdup(result_buffer);
+    return count;
+}
+
+#endif
 
 
 static void default_error_hook(const char *message)
@@ -52,8 +97,13 @@ char *_extra_io(void)
     int error = errno;
     if (error != 0)
     {
+#ifdef VX_WORKS
+        const char *error_string = str_error;
+        strerror_r(error, str_error);
+#else
         const char *error_string =
             strerror_r(error, str_error, sizeof(str_error));
+#endif
         asprintf(&result, "(%d) %s", error, error_string);
     }
     return result;
@@ -89,6 +139,11 @@ void _panic_error(char *extra, const char *filename, int line)
     fflush(stderr);
     fflush(stdout);
 
+#ifdef VX_WORKS
+    exit(255);
+    for (;;) ;
+
+#else
     /* Now try and create useable backtrace. */
     void *backtrace_buffer[128];
     int count = backtrace(backtrace_buffer, ARRAY_SIZE(backtrace_buffer));
@@ -99,5 +154,5 @@ void _panic_error(char *extra, const char *filename, int line)
     write(STDERR_FILENO, last_line, (size_t) char_count);
 
     _exit(255);
+#endif
 }
-

@@ -83,7 +83,11 @@ static bool check_number(const char *start, const char *end)
 DEFINE_READ_NUM(int8_t, strtol, 10)
 DEFINE_READ_NUM(int16_t, strtol, 10)
 DEFINE_READ_NUM(int32_t, strtol, 10)
+#ifdef VX_WORKS
+DEFINE_READ_NUM(float, strtod)
+#else
 DEFINE_READ_NUM(float, strtof)
+#endif
 DEFINE_READ_NUM(double, strtod)
 
 
@@ -195,8 +199,8 @@ static int persistence_interval;
 
 /* To ensure state is updated in a timely way we have a background thread
  * responsible for this. */
-static pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
-static pthread_cond_t psignal = PTHREAD_COND_INITIALIZER;
+static pthread_mutex_t mutex;
+static pthread_cond_t psignal;
 /* Used to signal thread termination. */
 static bool thread_running = true;
 /* Thread handle used for shutdown. */
@@ -413,7 +417,7 @@ static bool parse_value(
 static bool parse_assignment(struct line_buffer *line)
 {
     char *equal;
-    struct persistent_variable *persistence;
+    struct persistent_variable *persistence = NULL;
     bool ok =
         TEST_NULL_(equal = strchr(line->line, '='), "Missing =")  &&
         DO_(*equal++ = '\0')  &&
@@ -512,7 +516,13 @@ static bool write_persistent_state(const char *filename)
     /* Start with a timestamp log. */
     char out_buffer[40];
     time_t now = time(NULL);
-    ok = TEST_OK(fprintf(out, "# Written: %s", ctime_r(&now, out_buffer)) > 0);
+#ifdef VX_WORKS
+    size_t buf_size = sizeof(out_buffer);
+    const char *timestamp = ctime_r(&now, out_buffer, &buf_size);
+#else
+    const char *timestamp = ctime_r(&now, out_buffer);
+#endif
+    ok = TEST_OK(fprintf(out, "# Written: %s", timestamp) > 0);
 
     int ix = 0;
     const void *key;
@@ -587,6 +597,11 @@ static void *persistence_thread(void *context)
 /* Must be called before marking any variables as persistent. */
 bool initialise_persistent_state(const char *file_name, int save_interval)
 {
+    /* Due to a bug in the vxWorks compiler's pthread.h we have can't use the
+     * static initialiser for pthread_cond_t, so we initialise here. */
+    ASSERT_0(pthread_mutex_init(&mutex, NULL));
+    ASSERT_0(pthread_cond_init(&psignal, NULL));
+
     state_filename = file_name;
     persistence_interval = save_interval;
     variable_table = hash_table_create(false);  // We look after name lifetime
