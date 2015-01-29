@@ -49,7 +49,7 @@ void interlock_wait(struct epics_interlock *interlock);
 
 /* Signals the interlock.  If set_time was specified then a timestamp should be
  * passed through, otherwise NULL will serve. */
-void interlock_signal(struct epics_interlock *interlock, struct timespec *time);
+void interlock_signal(struct epics_interlock *interlock, struct timespec *ts);
 
 
 /* Needs to be called early, before EPICS initialisation completes. */
@@ -63,6 +63,22 @@ void wait_for_epics_start(void);
 /* Returns true if EPICS initialisation has finished, false if
  * wait_for_epics_start() will block. */
 bool check_epics_ready(void);
+
+
+/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
+/* IOC startup support. */
+
+/* Helpful for embedded systems where we don't want to start a separate
+ * caRepeater application. */
+bool start_caRepeater(void);
+
+/* To load an EPICS database first call database_add_macro() as many times as
+ * necessary to define macros and then call database_load_file().  A successful
+ * call to database_load_file() will reset the macro set so that further macros
+ * can be defined and another database loaded. */
+void database_add_macro(const char *macro, const char *format, ...)
+    __attribute__((format(printf, 2, 3)));
+bool database_load_file(const char *filename);
 
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */

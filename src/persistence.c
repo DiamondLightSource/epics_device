@@ -214,6 +214,10 @@ static pthread_t persistence_thread_id;
 void create_persistent_waveform(
     const char *name, enum PERSISTENCE_TYPES type, size_t max_length)
 {
+    /* If you try to create a persistent PV without having first initialised the
+     * persistence layer then you'll get this error. */
+    ASSERT_NULL(variable_table);
+
     const struct persistent_action *action = &persistent_actions[type];
     struct persistent_variable *persistence =
         malloc(sizeof(struct persistent_variable) + max_length * action->size);
@@ -225,12 +229,6 @@ void create_persistent_waveform(
     LOCK();
     hash_table_insert(variable_table, persistence->name, persistence);
     UNLOCK();
-}
-
-
-void create_persistent_variable(const char *name, enum PERSISTENCE_TYPES type)
-{
-    create_persistent_waveform(name, type, 1);
 }
 
 
@@ -262,7 +260,11 @@ bool read_persistent_waveform(const char *name, void *variable, size_t *length)
 bool read_persistent_variable(const char *name, void *variable)
 {
     size_t length;
-    return read_persistent_waveform(name, variable, &length);
+    return
+        read_persistent_waveform(name, variable, &length)  &&
+        TEST_OK_(length == 1,
+            "Persistent variable %s length mismatch: %zd != 1",
+            name, length);
 }
 
 

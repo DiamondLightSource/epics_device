@@ -3,6 +3,8 @@
 import sys
 import os
 
+from iocbuilder import *
+
 
 # This class wraps the creation of records which talk directly to the
 # Libera device driver.

@@ -1,5 +1,6 @@
 /* Extra support built on top of epics_device. */
 
+#define _GNU_SOURCE
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -9,6 +10,7 @@
 #include <string.h>
 
 #include <initHooks.h>
+#include <dbAccess.h>
 
 #include "error.h"
 #include "epics_device.h"
@@ -239,6 +241,60 @@ void *_read_in_record(
 {
     ASSERT_OK(record->record_type == record_type);
     return record->value;
+}
+
+
+/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
+/* IOC startup support. */
+
+/* External declaration of caRepeater thread.  This should really be published
+ * by a standard EPICS header file. */
+extern void caRepeaterThread(void *context);
+
+static void *ca_repeater(void *context)
+{
+    caRepeaterThread(context);
+    return NULL;
+}
+
+/* This routine spawns a caRepeater thread, as recommended by Andrew Johnson
+ * (private communication, 2006/12/04).  This means that this IOC has no
+ * external EPICS dependencies (otherwise the caRepeater application needs to be
+ * run). */
+bool start_caRepeater(void)
+{
+    pthread_t thread_id;
+    return TEST_0(pthread_create(&thread_id, NULL, ca_repeater, NULL));
+}
+
+
+/* Current database macro string. */
+static char *database_macros = NULL;
+
+void database_add_macro(const char *macro_name, const char *format, ...)
+{
+    va_list args;
+    va_start(args, format);
+
+    /* Arbitrary limit for the length of a single macro definition. */
+    char macro_string[512];
+    vsnprintf(macro_string, sizeof(macro_string), format, args);
+    va_end(args);
+
+    if (database_macros)
+        asprintf(&database_macros, "%s,%s=%s",
+            database_macros, macro_name, macro_string);
+    else
+        asprintf(&database_macros, "%s=%s", macro_name, macro_string);
+}
+
+
+bool database_load_file(const char *filename)
+{
+    bool ok = TEST_IO(dbLoadRecords(filename, database_macros));
+    free(database_macros);
+    database_macros = NULL;
+    return ok;
 }
 
 

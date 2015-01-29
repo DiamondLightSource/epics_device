@@ -228,6 +228,7 @@
  */
 
 #include <alarm.h>
+struct timespec;
 
 
 /* This must be called once before publishing any PVs. */

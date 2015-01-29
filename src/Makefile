@@ -7,7 +7,8 @@ include $(TOP)/configure/CONFIG
 
 #USR_CFLAGS += -S
 #USR_CFLAGS += -E
-#USR_CFLAGS += -g
+USR_CFLAGS += -g
+USR_LDFLAGS += -g
 
 USR_CFLAGS += -std=gnu99
 USR_CFLAGS += -Werror -Wall -Wextra -Wno-unused-parameter
@@ -32,15 +33,8 @@ USR_CPPFLAGS += -isystem $(EPICS_BASE)/include
 
 
 
-ifdef DEBUG_TRACEBACK
-# Allow panic_error() backtrace to show a backtrace with useful information.
-USR_CFLAGS += -O0
-USR_CFLAGS += -g
-USR_CFLAGS += -mapcs-frame
-USR_LDFLAGS += -rdynamic
 endif
 
-STATIC_BUILD = YES
 
 
 #=============================
@@ -49,6 +43,11 @@ LIBRARY_IOC += epics_device
 
 INC += error.h
 INC += epics_device.h
+INC += epics_extra.h
+INC += hashtable.h
+INC += persistence.h
+INC += pvlogging.h
+INC += config_file.h
 
 DBD += epics_device.dbd
 
@@ -60,8 +59,6 @@ epics_device_SRCS += hashtable.c        # Simple generic hash table
 epics_device_SRCS += persistence.c      # Persistent value support for EPICS
 epics_device_SRCS += pvlogging.c        # Logging for all caputs
 epics_device_SRCS += config_file.c      # Read configuration
-
-
 
 
 include $(TOP)/configure/RULES

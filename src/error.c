@@ -68,12 +68,13 @@ void _report_error(char *extra, const char *format, ...)
 {
     /* Large enough not to really worry about overflow.  If we do generate a
      * silly message that's too big, then that's just too bad. */
-    const int MESSAGE_LENGTH = 512;
+    const size_t MESSAGE_LENGTH = 512;
     char error_message[MESSAGE_LENGTH];
 
     va_list args;
     va_start(args, format);
     int count = vsnprintf(error_message, MESSAGE_LENGTH, format, args);
+    va_end(args);
 
     if (extra)
         snprintf(error_message + count, MESSAGE_LENGTH - (size_t) count,
