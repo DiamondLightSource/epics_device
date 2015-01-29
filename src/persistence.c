@@ -5,10 +5,8 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <string.h>
-#include <stdint.h>
 #include <errno.h>
 #include <time.h>
-#include <sys/time.h>
 #include <pthread.h>
 
 #include "error.h"
@@ -552,12 +550,11 @@ static bool update_persistent_state(void)
 #define NSECS   1000000000
 static bool pwait_timeout(int secs, long nsecs)
 {
-    struct timeval now;
-    gettimeofday(&now, NULL);
-    struct timespec timeout = {
-        .tv_sec = now.tv_sec + secs,
-        .tv_nsec = 1000 * now.tv_usec + nsecs
-    };
+    struct timespec timeout;
+    ASSERT_IO(clock_gettime(CLOCK_REALTIME, &timeout));
+    timeout.tv_sec += secs;
+    timeout.tv_nsec += nsecs;
+
     if (timeout.tv_nsec >= NSECS)
     {
         timeout.tv_nsec -= NSECS;

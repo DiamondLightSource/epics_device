@@ -48,10 +48,14 @@ char *_extra_io(void)
      * Ah well.  We go with the GNU definition, so here is a buffer to maybe use
      * for the message. */
     char str_error[256];
-    char *result;
+    char *result = NULL;
     int error = errno;
-    asprintf(&result, "(%d) %s",
-        error, strerror_r(error, str_error, sizeof(str_error)));
+    if (error != 0)
+    {
+        const char *error_string =
+            strerror_r(error, str_error, sizeof(str_error));
+        asprintf(&result, "(%d) %s", error, error_string);
+    }
     return result;
 }
 
