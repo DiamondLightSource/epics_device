@@ -25,7 +25,9 @@
 
 int vsnprintf(char *str, size_t size, const char *format, va_list args)
 {
-    return vsprintf(str, format, args);
+    int count = vsprintf(str, format, args);
+    ASSERT_OK(count < (int) size);
+    return count;
 }
 
 int snprintf(char *str, size_t size, const char *format, ...)
@@ -93,19 +95,18 @@ char *_extra_io(void)
      * Ah well.  We go with the GNU definition, so here is a buffer to maybe use
      * for the message. */
     char str_error[256];
-    char *result = NULL;
     int error = errno;
-    if (error != 0)
-    {
 #ifdef VX_WORKS
-        const char *error_string = str_error;
-        strerror_r(error, str_error);
+    /* Of course, vxWorks has yet another and incompatible declaration of
+     * strerror_r for us.  Ho hum. */
+    const char *error_string = str_error;
+    strerror_r(error, str_error);
 #else
-        const char *error_string =
-            strerror_r(error, str_error, sizeof(str_error));
+    const char *error_string =
+        strerror_r(error, str_error, sizeof(str_error));
 #endif
-        asprintf(&result, "(%d) %s", error, error_string);
-    }
+    char *result;
+    asprintf(&result, "(%d) %s", error, error_string);
     return result;
 }
 
