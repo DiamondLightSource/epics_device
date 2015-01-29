@@ -10,6 +10,7 @@
 #include "epics_device.h"
 #include "epics_extra.h"
 #include "persistence.h"
+#include "pvlogging.h"
 
 #include "example_pvs.h"
 
@@ -37,6 +38,7 @@ static bool ioc_main(void)
 
         initialise_example_pvs()  &&
         start_caRepeater()  &&
+        hook_pv_logging("db/access.acf", 10)  &&
 
         /* The following block of code could equivalently be implemented by
          * writing a startup script with the following content with a call to
@@ -47,7 +49,7 @@ static bool ioc_main(void)
          *  dbLoadRecords("db/example_ioc.db", "DEVICE=TS-TS-TEST-99")
          *  iocInit()
          */
-        DO_(load_persistent_state())  &&
+        DO(load_persistent_state())  &&
         TEST_IO(dbLoadDatabase("dbd/example_ioc.dbd", NULL, NULL))  &&
         TEST_IO(example_ioc_registerRecordDeviceDriver(pdbbase))  &&
         load_database("db/example_ioc.db")  &&
@@ -88,7 +90,7 @@ int main(int argc, const char *argv[])
         parse_args(argc, argv)  &&
         ioc_main()  &&
         TEST_IO(iocsh(NULL))  &&
-        DO_(terminate_persistent_state());
+        DO(terminate_persistent_state());
     return ok ? 0 : 1;
 }
 #endif
