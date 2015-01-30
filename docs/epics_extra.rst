@@ -1,4 +1,4 @@
-..  py:module:: iocbuilder.modules.epics_device
+..  py:currentmodule:: iocbuilder.modules.epics_device
 
 Extra EPICS Device Support
 ==========================
@@ -72,7 +72,7 @@ function, see that link for an example.
 
     This is an opaque type representing an interlock consisting of the two EPICS
     records created by :py:func:`Trigger` and supporting the methods listed
-    below.
+    below.  Values are created by :func:`create_interlock`.
 
 ..  function:: struct epics_interlock *create_interlock( \
         const char *base_name, bool set_time)

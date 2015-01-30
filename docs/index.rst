@@ -1,9 +1,5 @@
-.. _index:
-
 Documentation for EPICS Device Support Module
 =============================================
-
-Contents:
 
 ..  toctree::
     :numbered:
