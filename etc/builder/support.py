@@ -154,4 +154,5 @@ def WaveformOut(address, *args, **fields):
 __all__ = [
     'aIn',      'aOut',     'boolIn',   'boolOut',  'longIn',   'longOut',
     'mbbIn',    'mbbOut',   'stringIn', 'stringOut',
-    'Waveform', 'WaveformOut']
+    'Waveform', 'WaveformOut',
+    'EpicsDevice']

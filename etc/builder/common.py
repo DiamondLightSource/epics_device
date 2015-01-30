@@ -14,11 +14,25 @@ __all__ = [
 def Action(name, **kargs):
     return boolOut(name, PINI = 'NO', **kargs)
 
-def Trigger(prefix, *pvs):
+def Trigger(prefix, *pvs, **kargs):
     done = Action('%s:DONE' % prefix, DESC = '%s processing done' % prefix)
-    return boolIn('%s:TRIG' % prefix,
+    trigger = boolIn('%s:TRIG' % prefix,
         SCAN = 'I/O Intr', DESC = '%s processing trigger' % prefix,
         FLNK = create_fanout('%s:TRIG:FAN' % prefix, *pvs + (done,)))
+
+    # Configure all PVs to pick up their timestamp from trigger so that at least
+    # they all show a consistent timestamp.  We leave :DONE because the
+    # difference it shows may be instructive.
+    for pv in pvs:
+        pv.TSEL = trigger.TIME
+
+    # If set_time is set the IOC driver will be computing the trigger timestamp
+    if kargs.pop('set_time', False):
+        trigger.TSE = -2
+
+    assert kargs == {}, 'Unexpected keyword args: %s' % kargs.keys()
+    return trigger
+
 
 # Creates an Action with the given name which is triggered every time any of the
 # listed PVs is processed.
