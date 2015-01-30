@@ -67,6 +67,3 @@ functionality documented here.
     EPICS Device records and the corresponding records in the database.  To help
     with this style of writing this Python module uses IOC builder support to
     make writing databases simple.
-
-
-A working IOC is described in some detail in :doc:`example`.

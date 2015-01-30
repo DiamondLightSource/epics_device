@@ -24,7 +24,6 @@ static int persistence_interval;
 static bool load_database(const char *db)
 {
     database_add_macro("DEVICE", "TS-TS-TEST-99");
-    database_add_macro("BLAH", "%d", 33);
     return database_load_file(db);
 }
 

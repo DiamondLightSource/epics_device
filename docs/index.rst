@@ -13,8 +13,10 @@ Documentation for EPICS Device Support Module
     pvlogging
     error
     hashtable
-    example
     ideas
+
+..  Currently omitted from documentation
+    example
 
 Index and Search
 ================

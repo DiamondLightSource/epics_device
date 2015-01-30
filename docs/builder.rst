@@ -217,7 +217,7 @@ update on driver internal events.
 
     For example, the database definition::
 
-        Trigger('UPDATE', aIn('V1'), aIn('V2'), aIn('V3'))
+        Trigger('UPDATE', aIn('V1'), aIn('V2'), aIn('V3'), Waveform('WF', 1000))
 
     ..  highlight:: c
 
@@ -226,13 +226,15 @@ update on driver internal events.
 
         static struct epics_interlock *update;
         static double v1, v2, v3;
-        static void compute_update(double *v1, double *v2, double *v3) { ... }
+        static int wf[1000];
+        static void compute_update(
+            double *v1, double *v2, double *v3, int wf[]) { ... }
 
         // Called in response to some internal or external action
-        void trigger_update_v(void)
+        void trigger_update(void)
         {
             interlock_wait(update);
-            compute_update(&v1, &v2, &v3);
+            compute_update(&v1, &v2, &v3, wf);
             interlock_trigger(update, NULL);
         }
 
@@ -243,6 +245,7 @@ update on driver internal events.
             PUBLISH_READ_VAR(ai, "V1", v1);
             PUBLISH_READ_VAR(ai, "V2", v2);
             PUBLISH_READ_VAR(ai, "V3", v3);
+            PUBLISH_WF_READ_VAR(int, "WF", 1000, wf);
         }
 
     ..  highlight:: py
