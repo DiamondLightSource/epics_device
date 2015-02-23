@@ -664,7 +664,10 @@ static long get_ioint_common(int cmd, dbCommon *pr, IOSCANPVT *ioscanpvt)
  * (for instance, call is forced to return a bool), and in fact the only record
  * type we need to adapt is bi/bo to bool. */
 #define SIMPLE_ADAPTER(call, type, value, args...) \
-    call(args, *(type*[]) { &value })
+    ( { \
+        COMPILE_ASSERT(sizeof(value) == sizeof(type)); \
+        call(args, &value); \
+    } )
 
 #define COPY_ADAPTER(call, type, value, args...) \
     ( { \
@@ -862,6 +865,11 @@ static long linconv_ao(aoRecord *pr, int cmd) { return EPICS_OK; }
  * declarations in the code and in the database. */
 static bool check_waveform_type(waveformRecord *pr, struct epics_record *base)
 {
+    /* Validate that the names we're using for the int types match what EPICS
+     * expects.  These correspond to the names used in enum waveform_type. */
+    COMPILE_ASSERT(sizeof(short) == sizeof(epicsInt16));
+    COMPILE_ASSERT(sizeof(int) == sizeof(epicsInt32));
+
     epicsEnum16 expected = DBF_NOACCESS;
     switch (base->waveform.field_type)
     {
