@@ -10,7 +10,7 @@
 
 STATIC_BUILD = YES
 
-CROSS_COMPILER_TARGET_ARCHS = 
+CROSS_COMPILER_TARGET_ARCHS =
 
 # Identify which python interpreter to use.  Must be at least version 2.4.
 PYTHON = dls-python
