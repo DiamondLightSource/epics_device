@@ -139,7 +139,7 @@ struct in_epics_record_ *_publish_write_epics_record(
 
 
 struct write_in_epics_record_args {
-    epicsAlarmSeverity severity;
+    enum epics_alarm_severity severity;
     const struct timespec *timestamp;
     bool force_update;
 };

@@ -227,7 +227,6 @@
  *          database when binding the record.
  */
 
-#include <alarm.h>
 struct timespec;
 
 
@@ -290,12 +289,20 @@ enum waveform_type {
 /* Epics strings are rather limited: a massive 39 characters are available! */
 typedef struct epics_string { char s[40]; } EPICS_STRING;
 
+/* We declare our own copy of the EPICS alarm severities to eliminate any
+ * dependencies on EPICS headers. */
+enum epics_alarm_severity {
+    epics_sev_none,         // No alarm
+    epics_sev_minor,        // Minor alarm
+    epics_sev_major,        // Major alarm
+    epics_sev_invalid       // PV is invalid
+};
+
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 /* Core record publishing interface. */
 
-/* This is the abstract interface returned by all core publish methods.  At
- * present only trigger_record() is supported. */
+/* This is the abstract interface returned by all core publish methods. */
 struct epics_record;
 
 /* Makes the named record of the given type available for binding.  The
@@ -308,7 +315,7 @@ struct epics_record *publish_epics_record(
 /* Updates the record severity for IN and WAVEFORM records.  Cannot be called
  * for OUT records. */
 void set_record_severity(
-    struct epics_record *base, epicsAlarmSeverity severity);
+    struct epics_record *base, enum epics_alarm_severity severity);
 
 /* Sets the timestamp for records with .set_time set.  Must be called with a
  * valid timestamp, only valid for IN and WAVEFORM records. */

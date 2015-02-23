@@ -73,7 +73,7 @@ struct epics_record {
     IOSCANPVT ioscanpvt;            // Used for I/O intr enabled records
     bool ioscan_pending;            // Set for early record triggering
     bool persist;                   // Set for persistently written data
-    epicsAlarmSeverity severity;    // Reported record status
+    enum epics_alarm_severity severity;    // Reported record status
     void *context;                  // Context for all user callbacks
 
     /* The following fields are record class specific. */
@@ -294,7 +294,7 @@ static bool is_in_or_waveform(struct epics_record *base)
 
 
 void set_record_severity(
-    struct epics_record *base, epicsAlarmSeverity severity)
+    struct epics_record *base, enum epics_alarm_severity severity)
 {
     ASSERT_OK(is_in_or_waveform(base));
 

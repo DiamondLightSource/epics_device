@@ -517,6 +517,19 @@ Auxiliary API
 A handful of auxiliary functions and macros allow some further processing of
 records.
 
+..  type:: enum epics_alarm_severity
+
+    This is a copy of the base EPICS severity type with the following possible
+    values:
+
+    =================== ======= ================================================
+    enum name           Value   Meaning
+    =================== ======= ================================================
+    epics_sev_none      0       Normal status, no alarm
+    epics_sev_minor     1       Minor alarm status
+    epics_sev_major     2       Major alarm status
+    epics_sev_invalid   3       PV value is invalid
+    =================== ======= ================================================
 
 ..  function:: bool initialise_epics_device(void)
 
@@ -524,7 +537,7 @@ records.
     any other function listed here.
 
 ..  function:: void set_record_severity( \
-        struct epics_record *epics_record, epicsAlarmSeverity severity)
+        struct epics_record *epics_record, enum epics_alarm_severity severity)
 
     Can be used to update the reported record severity for any IN or WAVEFORM
     `epics_record`.
