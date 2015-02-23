@@ -1,0 +1,7 @@
+#!/bin/sh
+
+DEVICE=TS-TS-TEST-99
+
+cd "$(dirname "$0")"
+
+edm -x -eolc -m device="$DEVICE" example.edl &
