@@ -13,7 +13,6 @@ INC += epics_extra.h
 INC += hashtable.h
 INC += persistence.h
 INC += pvlogging.h
-INC += config_file.h
 INC += vxdefs.h
 
 DBD += epics_device.dbd
@@ -25,7 +24,6 @@ epics_device_SRCS += epics_extra.c      # Miscellanous extra EPICS support
 epics_device_SRCS += hashtable.c        # Simple generic hash table
 epics_device_SRCS += persistence.c      # Persistent value support for EPICS
 epics_device_SRCS += pvlogging.c        # Logging for all caputs
-epics_device_SRCS += config_file.c      # Read configuration
 
 
 include $(TOP)/configure/RULES
