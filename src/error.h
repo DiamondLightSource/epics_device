@@ -94,6 +94,15 @@ void _report_error(char *extra, const char *message, ...)
 char *_extra_io(void);
 
 
+/* Hack for ensuring result is not ignored.  The IGNORE macro is available for
+ * overriding this. */
+static inline bool __attribute__((warn_unused_result))
+    _warn_unused_bool(bool value)
+{
+    return value;
+}
+
+
 /* This function performs a simple error report through the error report
  * mechanism. */
 #define print_error(message...) _report_error(NULL, message)
@@ -103,13 +112,13 @@ char *_extra_io(void);
  * macro), and prints the given error message if the boolean is false.  The
  * boolean result is the value of the entire expression. */
 #define _TEST(COND, EXTRA, expr, message...) \
-    ( { \
+    _warn_unused_bool(( { \
         typeof(expr) __result__ = (expr); \
         bool __ok__ = COND(__result__); \
         if (unlikely(!__ok__)) \
             _report_error(EXTRA(__result__), message); \
         __ok__; \
-    } )
+    } ))
 
 /* An assert for tests that really really should not fail!  This exits
  * immediately. */

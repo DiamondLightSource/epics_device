@@ -242,7 +242,8 @@ static struct persistent_variable *lookup_persistence(const char *name)
 {
     struct persistent_variable *persistence =
         hash_table_lookup(variable_table, name);
-    TEST_NULL_(persistence, "Persistent variable %s not found", name);
+    if (persistence == NULL)
+        print_error("Persistent variable %s not found", name);
     return persistence;
 }
 
