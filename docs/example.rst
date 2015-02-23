@@ -4,6 +4,124 @@ Code Examples
 This file contains a number of examples of code to show many of the features
 documented here.
 
+Basic IOC
+---------
+
+This section describes the minimum code required to build an IOC using this
+framework.  The source tree is:
+
+======================= ========================================================
+File/Directory          Description
+======================= ========================================================
+Db
+Db/Makefile             Needs rules for building ``.db`` from ``.py``
+Db/basic_ioc.py         Minimal example building a simple database
+src
+src/Makefile
+src/main.c              Minimal IOC implementation
+st.cmd                  Startup script for IOC initialisation
+Makefile
+configure               Standard EPICS ``configure`` directory, as generated
+                        by ``makeBaseApp.pl``.
+configure/CONFIG
+configure/CONFIG_APP
+configure/CONFIG_SITE   Must specify ``PYTHON`` and ``IOCBUILDER``
+configure/Makefile
+configure/RELEASE       Must specify ``EPICS_DEVICE``
+configure/RULES
+configure/RULES.ioc
+configure/RULES_DIRS
+configure/RULES_TOP
+======================= ========================================================
+
+The ``EPICS_DEVICE`` support module must be defined as usual, and the build also
+needs the symbols ``PYTHON`` and ``IOCBUILDER`` to be specified.
+
+
+Defining the Database
+~~~~~~~~~~~~~~~~~~~~~
+
+The database defined here is utterly minimal, consisting of a single PV with a 1
+second scan which returns the current timestamp in seconds.  The EPICS Device
+definition to build the database record entry is the following Python line::
+
+    aIn('TSEC', DESC = 'Timestamp in seconds', SCAN = '1 second')
+
+This line defines an ``ai`` record named ``TEST`` with the specified scan
+interval and description.
+
+Alas quite a bit of boilerplate is needed to set things up, to load the
+libraries and write out the result, and so for this minimal example the actual
+code is somewhat longer:
+
+..  literalinclude:: ../examples/basic_ioc/Db/basic_ioc.py
+    :language: python
+    :linenos:
+
+The first 17 lines are needed to pick up the iocbuilder, configure it to build
+template files, and to load the EPICS Device builder definitions.  The last line
+writes out the generated database.
+
+Some support is also needed from the make file, which again contains quite bit
+of boilerplate:
+
+..  literalinclude:: ../examples/basic_ioc/Db/Makefile
+    :language: make
+    :linenos:
+
+The important point here is that the ``.db`` file is generated from the
+corresponding ``.py`` file.
+
+The result of this is the following file in ``db/basic_ioc.db``:
+
+..  code-block:: none
+    :linenos:
+
+    record(ai, "$(DEVICE):TSEC")
+    {
+        field(DESC, "Timestamp in seconds")
+        field(DTYP, "epics_device")
+        field(INP,  "@TSEC")
+        field(MDEL, "-1")
+        field(SCAN, "1 second")
+    }
+
+
+Implementing the IOC
+~~~~~~~~~~~~~~~~~~~~
+
+As this IOC does almost nothing its C implementation is pretty small:
+
+..  literalinclude:: ../examples/basic_ioc/src/main.c
+    :language: c
+    :linenos:
+
+First a minimal set of headers.  Both ``stdbool.h`` and ``unistd.h`` are
+required as a consequence of using ``error.h``, and our implementation will use
+``time.h``.  We need ``iocsh.h`` in order to call :func:`iocsh`.
+
+Then the EPICS Device headers are standard.
+
+The function ``read_timestamp`` actually implements the IOC functionality.  In
+this case when the corresponding record is processed we compute a value which is
+then used to update the PV.
+
+The :func:`PUBLISH_READER` call binds our PV implementation to its definition in
+the database, and we've chosen the appropriate implementation.
+
+Finally IOC initialisation consists of a stereotyped sequence.
+:func:`initialise_epics_device` must be called early, then records can be
+published, then the IOC is started.  In this particular example we've put the
+rest of the initialisation into an external startup script:
+
+..  literalinclude:: ../examples/basic_ioc/st.cmd
+    :language: c
+    :linenos:
+
+Note that it is possible perform complete IOC initialisation without a startup
+script, and with a more complete IOC it can be more convenient to do this.
+
+
 Database
 --------
 
