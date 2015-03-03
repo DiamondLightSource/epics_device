@@ -16,6 +16,9 @@ example_ioc_DBD += epics_device.dbd
 example_ioc_SRCS += example_ioc_registerRecordDeviceDriver.c
 example_ioc_SRCS += main.c
 example_ioc_SRCS += example_pvs.c
+example_ioc_SRCS += support.c
+example_ioc_SRCS += trigger_thread.c
+example_ioc_SRCS += triggered_pvs.c
 
 example_ioc_LIBS += epics_device
 example_ioc_LIBS += $(EPICS_BASE_IOC_LIBS)

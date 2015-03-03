@@ -13,6 +13,7 @@
 #include "pvlogging.h"
 
 #include "example_pvs.h"
+#include "triggered_pvs.h"
 
 
 extern int example_ioc_registerRecordDeviceDriver(struct dbBase *pdb);
@@ -34,6 +35,7 @@ static bool ioc_main(void)
         initialise_epics_device()  &&
 
         initialise_example_pvs()  &&
+        initialise_triggered_pvs()  &&
         start_caRepeater()  &&
         hook_pv_logging("db/access.acf", 10)  &&
         load_persistent_state(persistence_file, persistence_interval, false)  &&
