@@ -81,7 +81,6 @@ The result of this is the following file in ``db/basic_ioc.db``:
         field(DESC, "Timestamp in seconds")
         field(DTYP, "epics_device")
         field(INP,  "@TSEC")
-        field(MDEL, "-1")
         field(SCAN, "1 second")
     }
 

@@ -46,6 +46,15 @@ EpicsDevice = EpicsDevice()
 
 # Functions for creating records
 
+# For some applications it's more convenient for MDEL to be configured so that
+# by default ai and longin records always generate updates; this can be
+# configured by setting this variable to -1
+MDEL_default = None
+def set_MDEL_default(default):
+    global MDEL_default
+    MDEL_default = default
+
+
 # Helper for output records: turns out we want quite a uniform set of defaults.
 def set_out_defaults(fields, name):
     fields.setdefault('address', name)
@@ -62,7 +71,7 @@ def set_scalar_out_defaults(fields, DRVL, DRVH):
 
 
 def aIn(name, LOPR=None, HOPR=None, EGU=None, PREC=None, **fields):
-    fields.setdefault('MDEL', -1)
+    fields.setdefault('MDEL', MDEL_default)
     return EpicsDevice.ai(name,
         LOPR = LOPR, HOPR = HOPR, EGU  = EGU,  PREC = PREC, **fields)
 
@@ -73,7 +82,7 @@ def aOut(name, DRVL=None, DRVH=None, EGU=None, PREC=None, **fields):
         EGU  = EGU,  PREC = PREC, **fields)
 
 def longIn(name, LOPR=None, HOPR=None, EGU=None, **fields):
-    fields.setdefault('MDEL', -1)
+    fields.setdefault('MDEL', MDEL_default)
     return EpicsDevice.longin(name,
         LOPR = LOPR, HOPR = HOPR, EGU = EGU, **fields)
 
@@ -149,4 +158,4 @@ __all__ = [
     'aIn',      'aOut',     'boolIn',   'boolOut',  'longIn',   'longOut',
     'mbbIn',    'mbbOut',   'stringIn', 'stringOut',
     'Waveform', 'WaveformOut',
-    'EpicsDevice']
+    'EpicsDevice', 'set_MDEL_default']

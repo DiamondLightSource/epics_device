@@ -97,6 +97,14 @@ arranged for each record.  The options are:
 
     Creates a ``stringin`` record.
 
+..  function:: set_MDEL_default(default)
+
+    Normally the ``MDEL`` field for ``ai`` and ``longin`` records defaults to 0.
+    This means that record updates which don't change the published value aren't
+    transmitted over channel access.  In some applications this is inconvenient,
+    in which case this function can be called with `default` set to -1 to ensure
+    that all updates are transmitted.
+
 
 Out Records
 ~~~~~~~~~~~
