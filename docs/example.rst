@@ -35,7 +35,7 @@ configure/RULES_TOP
 ======================= ========================================================
 
 The ``EPICS_DEVICE`` support module must be defined as usual, and the build also
-needs the symbols ``PYTHON`` and ``IOCBUILDER`` to be specified.
+needs the symbol ``PYTHON`` to identify the Python interpreter to use.
 
 
 Defining the Database
@@ -94,15 +94,16 @@ As this IOC does almost nothing its C implementation is pretty small:
     :language: c
     :linenos:
 
-First a minimal set of headers.  Both ``stdbool.h`` and ``unistd.h`` are
+First comes a minimal set of headers.  Both ``stdbool.h`` and ``unistd.h`` are
 required as a consequence of using ``error.h``, and our implementation will use
 ``time.h``.  We need ``iocsh.h`` in order to call :func:`iocsh`.
 
-Then the EPICS Device headers are standard.
+Then the EPICS Device headers ``error.h`` and ``epics_device.h`` are needed for
+any use of EPICS Device.
 
 The function ``read_timestamp`` actually implements the IOC functionality.  In
 this case when the corresponding record is processed we compute a value which is
-then used to update the PV.
+used to update the PV.
 
 The :func:`PUBLISH_READER` call binds our PV implementation to its definition in
 the database, and we've chosen the appropriate implementation.
@@ -120,8 +121,37 @@ Note that it is possible perform complete IOC initialisation without a startup
 script, and with a more complete IOC it can be more convenient to do this.
 
 
-Database
---------
+Internalising ``st.cmd``
+~~~~~~~~~~~~~~~~~~~~~~~~
+
+It can be more convenient to internalise the startup script to the IOC source
+code, particularly if a number of template parameters need to be generated.
+This can be done by replacing the line ``TEST_IO(iocsh("st.cmd") == 0)`` in the
+definition of ``main`` above with a call to ``init_ioc()`` as defined here:
+
+..  code-block:: c
+    :linenos:
+
+    extern int basic_ioc_registerRecordDeviceDriver(struct dbBase *pdb);
+
+    static bool init_ioc(void)
+    {
+        return
+            TEST_IO(dbLoadDatabase("dbd/basic_ioc.dbd", NULL, NULL))  &&
+            TEST_IO(basic_ioc_registerRecordDeviceDriver(pdbbase))  &&
+            DO(database_add_macro("DEVICE", "TS-TS-TEST-99"))  &&
+            database_load_file("db/basic_ioc.db")  &&
+            TEST_OK(iocInit() == 0);
+    }
+
+..  x* (vim)
+
+This is significantly more code, but does have the advantage of rather more
+thorough error checking, and much more flexibility in macro generation.
+
+
+A More Complex Example
+----------------------
 
 ..  highlight:: py
     :linenothreshold: 1
