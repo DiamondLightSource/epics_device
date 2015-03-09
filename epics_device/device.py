@@ -54,6 +54,14 @@ def set_MDEL_default(default):
     global MDEL_default
     MDEL_default = default
 
+# In some applications it's useful to have the ability to modify the name of
+# output records.  This hook implements this behaviour.
+def OutName(name):
+    return name
+def set_out_name(function):
+    global OutName
+    OutName = function
+
 
 # Helper for output records: turns out we want quite a uniform set of defaults.
 def set_out_defaults(fields, name):
@@ -73,13 +81,12 @@ def set_scalar_out_defaults(fields, DRVL, DRVH):
 def aIn(name, LOPR=None, HOPR=None, EGU=None, PREC=None, **fields):
     fields.setdefault('MDEL', MDEL_default)
     return EpicsDevice.ai(name,
-        LOPR = LOPR, HOPR = HOPR, EGU  = EGU,  PREC = PREC, **fields)
+        LOPR = LOPR, HOPR = HOPR, EGU = EGU, PREC = PREC, **fields)
 
 def aOut(name, DRVL=None, DRVH=None, EGU=None, PREC=None, **fields):
     set_out_defaults(fields, name)
     set_scalar_out_defaults(fields, DRVL, DRVH)
-    return EpicsDevice.ao(name + '_S',
-        EGU  = EGU,  PREC = PREC, **fields)
+    return EpicsDevice.ao(OutName(name), EGU = EGU, PREC = PREC, **fields)
 
 def longIn(name, LOPR=None, HOPR=None, EGU=None, **fields):
     fields.setdefault('MDEL', MDEL_default)
@@ -89,7 +96,7 @@ def longIn(name, LOPR=None, HOPR=None, EGU=None, **fields):
 def longOut(name, DRVL=None, DRVH=None, EGU=None, **fields):
     set_out_defaults(fields, name)
     set_scalar_out_defaults(fields, DRVL, DRVH)
-    return EpicsDevice.longout(name + '_S', EGU = EGU, **fields)
+    return EpicsDevice.longout(OutName(name), EGU = EGU, **fields)
 
 
 def boolIn(name, ZNAM=None, ONAM=None, **fields):
@@ -97,7 +104,7 @@ def boolIn(name, ZNAM=None, ONAM=None, **fields):
 
 def boolOut(name, ZNAM=None, ONAM=None, **fields):
     set_out_defaults(fields, name)
-    return EpicsDevice.bo(name + '_S', ZNAM = ZNAM, ONAM = ONAM, **fields)
+    return EpicsDevice.bo(OutName(name), ZNAM = ZNAM, ONAM = ONAM, **fields)
 
 
 # Field name prefixes for mbbi/mbbo records.
@@ -128,7 +135,7 @@ def mbbIn(name, *option_values, **fields):
 def mbbOut(name, *option_values, **fields):
     process_mbb_values(fields, option_values)
     set_out_defaults(fields, name)
-    return EpicsDevice.mbbo(name + '_S', **fields)
+    return EpicsDevice.mbbo(OutName(name), **fields)
 
 
 def stringIn(name, **fields):
@@ -136,26 +143,20 @@ def stringIn(name, **fields):
 
 def stringOut(name, **fields):
     set_out_defaults(fields, name)
-    return EpicsDevice.stringout(name + '_S', **fields)
+    return EpicsDevice.stringout(OutName(name), **fields)
 
 
 def Waveform(name, length, FTVL='LONG', **fields):
     return EpicsDevice.waveform(name, NELM = length, FTVL = FTVL, **fields)
 
-def WaveformOut(address, *args, **fields):
+def WaveformOut(name, *args, **fields):
     fields.setdefault('PINI', 'YES')
-    # A hacky trick: if the given name ends with _S then use that for both the
-    # PV name and its address, otherwise add _S to the PV name.  This allows an
-    # easy choice of two options for the address.
-    if address[-2:] == '_S':
-        name = address
-    else:
-        name = address + '_S'
-    return Waveform(name, address = address, *args, **fields)
+    fields.setdefault('address', name)
+    return Waveform(OutName(name), *args, **fields)
 
 
 __all__ = [
     'aIn',      'aOut',     'boolIn',   'boolOut',  'longIn',   'longOut',
     'mbbIn',    'mbbOut',   'stringIn', 'stringOut',
     'Waveform', 'WaveformOut',
-    'EpicsDevice', 'set_MDEL_default']
+    'EpicsDevice', 'set_MDEL_default', 'set_out_name']
