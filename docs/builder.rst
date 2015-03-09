@@ -38,6 +38,15 @@ be exported from the make file and then the following example script will work::
     WriteRecords(sys.argv[1])
 
 Invoking a Python script of this form will write a valid EPICS database file.
+With this script the following lines added to the ``Db/Makefile`` after
+``include $(TOP)/configure/RULES`` will build the database as required:
+
+..  code-block:: make
+
+    export EPICS_DEVICE
+
+    $(COMMON_DIR)/%.db: ../%.py
+            $(PYTHON) $< $@
 
 
 Creating EPICS Records
@@ -50,6 +59,29 @@ appropriate then records can be created directly by calling the appropriate
 methods of :class:`EpicsDevice`.
 
 A number of defaults and naming conventions are applied by the functions below.
+
+Record Address
+~~~~~~~~~~~~~~
+
+By default the name used to look up the record in IOC support, as published by
+:c:func:`PUBLISH` and allies, is the name argument as passed to the appropriate
+record construct documented below, before any name processing occurs.  This can
+be modified in two ways:
+
+1.  Firstly, every record creation function listed below takes an optional
+    keyword argument `address`, which can be used to specify an address other
+    than the record `name`.
+
+2.  Secondly, a prefix can be prepended to every `address` by calling the
+    function :func:`set_address_prefix`.
+
+..  function:: set_address_prefix(prefix)
+
+    This can be used to set a string which is added to the start of every
+    record address.  This is designed to be set to a macro :func:`Parameter` and
+    is to be used to identify a component instance when creating a database with
+    multiple instances.
+
 
 In Records
 ~~~~~~~~~~

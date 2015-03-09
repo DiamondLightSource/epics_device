@@ -9,16 +9,15 @@ import epicsdbbuilder
 # This class wraps the creation of records which talk directly to the EPICS
 # device driver.
 class EpicsDevice:
-    class makeRecord:
-        def __init__(self, builder):
-            self.builder = getattr(epicsdbbuilder.records, builder)
+    def makeRecord(self, builder):
+        builder = getattr(epicsdbbuilder.records, builder)
 
-        def __call__(self, name, address=None, **fields):
+        def make(name, address=None, **fields):
             if address is None:
                 address = name
-            record = self.builder(name, **fields)
+            record = builder(name, **fields)
             record.DTYP = 'epics_device'
-            record.address = '@' + address
+            record.address = '@%s%s' % (self.address_prefix, address)
 
             # Check for a description, make a report if none given.
             if 'DESC' not in fields:
@@ -26,7 +25,10 @@ class EpicsDevice:
 
             return record
 
+        return make
+
     def __init__(self):
+        self.address_prefix = ''
         for name in [
                 'longin',    'longout',
                 'ai',        'ao',
@@ -36,7 +38,14 @@ class EpicsDevice:
                 'waveform']:
             setattr(self, name, self.makeRecord(name))
 
+    # When generating a support module the address prefix can help to identify
+    # the instance.
+    def set_address_prefix(self, prefix):
+        self.address_prefix = prefix
+
+
 EpicsDevice = EpicsDevice()
+set_address_prefix = EpicsDevice.set_address_prefix
 
 
 
@@ -159,4 +168,4 @@ __all__ = [
     'aIn',      'aOut',     'boolIn',   'boolOut',  'longIn',   'longOut',
     'mbbIn',    'mbbOut',   'stringIn', 'stringOut',
     'Waveform', 'WaveformOut',
-    'EpicsDevice', 'set_MDEL_default', 'set_out_name']
+    'EpicsDevice', 'set_MDEL_default', 'set_out_name', 'set_address_prefix']
