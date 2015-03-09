@@ -1,27 +1,27 @@
 Code Examples
 =============
 
-This file contains a number of examples of code to show many of the features
+This file contains a couple of examples of code to show many of the features
 documented here.
 
 Basic IOC
 ---------
 
-This section describes the minimum code required to build an IOC using this
-framework.  The source tree is:
+The IOC in ``examples/basic_ioc`` illustrates the minimum code required to build
+an IOC using this framework.  The source tree is:
 
 ======================= ========================================================
 File/Directory          Description
 ======================= ========================================================
-Db
+Db/
 Db/Makefile             Needs rules for building ``.db`` from ``.py``
 Db/basic_ioc.py         Minimal example building a simple database
-src
+src/
 src/Makefile
 src/main.c              Minimal IOC implementation
 st.cmd                  Startup script for IOC initialisation
 Makefile
-configure               Standard EPICS ``configure`` directory, as generated
+configure/              Standard EPICS ``configure`` directory, as generated
                         by ``makeBaseApp.pl``.
 configure/CONFIG
 configure/CONFIG_APP
@@ -146,74 +146,104 @@ definition of ``main`` above with a call to ``init_ioc()`` as defined here:
 
 ..  x* (vim)
 
-This is significantly more code, but does have the advantage of rather more
-thorough error checking, and much more flexibility in macro generation.
+This is a bit more code, but does have the advantage of rather more thorough
+error checking, and much more flexibility in macro generation.
 
 
 A More Complex Example
 ----------------------
 
-..  highlight:: py
-    :linenothreshold: 1
+The source tree in ``examples/example_ioc`` illustrates a slightly fuller
+functioned IOC.
 
-This database declares three status PVs (``SE:CPU``, ``SE:ADCCLK``,
-``SE:NTPSTAT``) together with a health aggregation PV::
+Database Definition
+~~~~~~~~~~~~~~~~~~~
 
-    # A list of PVs we need to trigger and aggregate severity.
-    system_alarm_pvs = [
-        # CPU usage
-        aIn('SE:CPU', 0, 100, '%', 1,
-            DESC = 'CPU usage',
-            HIGH = 80,      HSV  = 'MINOR',
-            HIHI = 95,      HHSV = 'MAJOR'),
+The database code is as follows:
 
-        boolIn('SE:ADCCLK', 'Clock Ok', 'Clock Dropout',
-            ZSV  = 'NO_ALARM', OSV = 'MAJOR',
-            DESC = 'ADC clock dropout detect'),
+..  literalinclude:: ../examples/example_ioc/Db/example_ioc.py
+    :language: python
+    :linenos:
 
-        # The following list must match the corresponding enum in sensors.c
-        mbbIn('SE:NTPSTAT',
-            ('Not monitored',   0,  'NO_ALARM'),    # Monitoring disabled
-            ('No NTP server',   1,  'MAJOR'),       # Local NTP server not found
-            ('Startup',         2,  'NO_ALARM'),    # No alarm during startup
-            ('No Sync',         3,  'MINOR'),       # NTP server un-synchronised
-            ('Synchronised',    4,  'NO_ALARM'),    # Synchronised
-            DESC = 'Status of NTP server')]
+Here we have the following structures:
 
-    severity = AggregateSeverity(
-        'SE:SYS:OK', 'System health', system_alarm_pvs)
-    Trigger('SE', *trigger_pvs + [severity,])
+1.  Record naming and defaults are set up so that all record names are prefixed
+    with the macro ``$(DEVICE):`` (the default template behaviour) and all out
+    records names are suffixed with ``_S`` (a very convenient naming
+    convention).
+
+2.  An ``ao`` record ``FREQ_S`` used to set the frequency for a waveform record
+    ``WF``; each time ``FREQ_S`` is written the waveform is updated and so is a
+    ``SUM`` record.  In this case processing of ``WF`` and ``SUM`` is entirely
+    driven by writes to ``FREQ_S``.
+
+3.  A pair of records ``TRIFWF`` and ``COUNT`` which update on an internally
+    generated IOC event.  These are controlled by a couple of settings
+    ``INTERVAL_S`` and ``SCALING_S``, and ``COUNT`` can be reset by processing
+    ``RESET_S``.
+
+4.  Another action ``WRITE_S`` which forces the persistent state to be saved.
+
+Of course here the database builder is more useful: 30 lines of source code
+generates 129 lines of database.
 
 
-PV Creation and Update
-----------------------
+Publishing Records
+~~~~~~~~~~~~~~~~~~
 
-..  highlight:: c
-    :linenothreshold: 1
+For each of the records defined above an implementation needs to be defined and
+published.  The following C code publishes the variables above:
 
-The code below publishes and updates the PVs published above::
+..  code-block:: c
+    :linenos:
 
-    static struct epics_interlock *interlock;
-    static double cpu_usage;
-    static bool read_clock_dropout(void) { ... }
-    static unsigned int NTP_status;
+    bool initialise_example_pvs(void)
+    {
+        PUBLISH_WRITER_P(ao, "FREQ", set_frequency);
+        PUBLISH_WF_READ_VAR(double, "WF", WF_LENGTH, waveform);
+        PUBLISH_READ_VAR(ai, "SUM", sum);
 
-    static double update_cpu_usage(void) { ... }
-    static unsigned int update_NTP_status(void) { ... }
+        PUBLISH_ACTION("WRITE", write_persistent_state);
 
-    static void update_sensors(void)
+        PUBLISH_WRITE_VAR_P(ao, "INTERVAL", event_interval);
+        PUBLISH_WRITE_VAR_P(ao, "SCALING", scaling);
+
+        interlock = create_interlock("TRIG", false);
+        PUBLISH_READ_VAR(longin, "COUNT", trigger_count);
+        PUBLISH_WF_READ_VAR(int, "TRIGWF", WF_LENGTH, trigger_waveform);
+        PUBLISH_ACTION("RESET", reset_trigger_count);
+
+        ...
+    }
+
+Note that all of the out variables are published with a ``_P`` suffix,
+indicating that persitence support is enabled.  Here we see a variety of
+different implementations being used: calling a function, reading and writing a
+variable, and finally using an interlock.
+
+
+Notes on Trigger and Interlock
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The most complex structure involves :c:func:`create_interlock`.  Before updating
+the variables ``trigger_count`` and ``trigger_waveform`` associated with the PVs
+which will be updated when the record ``TRIG`` is processed,
+:c:func:`interlock_wait` must first be called -- this blocks processing until
+the library knows that the IOC is no longer reading the variables.  Once the new
+state has been written then :c:func:`interlock_signal` can be called to signal
+the update to EPICS and trigger processing of the associated records.
+
+..  code-block:: c
+    :linenos:
+
+    static void process_event(void)
     {
         interlock_wait(interlock);
-        cpu_usage = update_cpu_usage();
-        NTP_status = update_NTP_status();
+        trigger_count += 1;
+        update_waveform();
         interlock_signal(interlock, NULL);
     }
 
-    bool initialise_sensors(void)
-    {
-        interlock = create_interlock("SE", false);
-
-        PUBLISH_READ_VAR(ai, "SE:CPU", cpu_usage);
-        PUBLISH_READER(bi, "SE:ADCCLK", read_clock_dropout);
-        PUBLISH_READ_VAR(mbbi, "SE:NTPSTAT", NTP_status);
-    }
+Finally, in this example the function ``process_event`` is called internally by
+the driver implementation; in this example a thread is used to call it at an
+interval governed by the variable ``event_interval``.

@@ -8,7 +8,6 @@ set_MDEL_default(-1)
 set_out_name(lambda name: name + '_S')
 SetTemplateRecordNames()
 
-
 WF_LENGTH = 128
 
 # In this simple example setting FREQ_S causes WF and SUM to update.
@@ -19,14 +18,13 @@ aOut('FREQ', PREC = 4,
         aIn('SUM', PREC = 3, DESC = 'Sum of sine wave')),
     DESC = 'Waveform frequency')
 
-Action('WRITE', DESC = 'Force update to persistent state')
-
+Trigger('TRIG',
+    Waveform('TRIGWF', WF_LENGTH, DESC = 'Triggered waveform'),
+    longIn('COUNT', DESC = 'Trigger count'))
+Action('RESET', DESC = 'Reset trigger count')
 aOut('INTERVAL', 1e-2, 100, 's', 2, DESC = 'Trigger interval')
 aOut('SCALING', PREC = 3, DESC = 'Frequency scaling')
-Trigger('TRIG',
-    longIn('COUNT', DESC = 'Trigger count'),
-    Waveform('TRIGWF', WF_LENGTH, DESC = 'Triggered waveform'))
-Action('RESET', DESC = 'Reset trigger count')
 
+Action('WRITE', DESC = 'Force update to persistent state')
 
 WriteRecords(sys.argv[1])
