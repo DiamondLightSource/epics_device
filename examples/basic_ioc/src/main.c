@@ -7,14 +7,14 @@
 #include "error.h"
 #include "epics_device.h"
 
-static double read_timestamp(void)
+static int read_timestamp(void)
 {
-    return (double) time(NULL);
+    return (int) time(NULL);
 }
 
 static bool initialise_pvs(void)
 {
-    PUBLISH_READER(ai, "TSEC", read_timestamp);
+    PUBLISH_READER(longin, "TSEC", read_timestamp);
     return true;
 }
 

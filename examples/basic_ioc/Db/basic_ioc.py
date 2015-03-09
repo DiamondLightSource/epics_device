@@ -17,7 +17,7 @@ iocbuilder.ModuleVersion('epics_device',
 from iocbuilder.modules.epics_device import *
 
 
-aIn('TSEC', DESC = 'Timestamp in seconds', SCAN = '1 second')
+longIn('TSEC', DESC = 'Timestamp in seconds', SCAN = '1 second')
 
 
 # Write out the generate .db file
