@@ -946,7 +946,7 @@ static long process_waveform(waveformRecord *pr)
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
 #define DEFINE_DEVICE(record, length, args...) \
-    static struct record##Device record##Generic = \
+    static struct record##Device record##_epics_device = \
     { \
         length, \
         NULL, \
@@ -955,7 +955,7 @@ static long process_waveform(waveformRecord *pr)
         get_ioint_common, \
         args \
     }; \
-    epicsExportAddress(dset, record##Generic)
+    epicsExportAddress(dset, record##_epics_device)
 
 #include "recordDevice.h"
 
