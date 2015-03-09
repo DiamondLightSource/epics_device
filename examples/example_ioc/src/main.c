@@ -33,11 +33,12 @@ static bool ioc_main(void)
     return
         initialise_epics_device()  &&
         initialise_epics_extra()  &&
-        initialise_persistent_state(persistence_file, persistence_interval) &&
+        initialise_persistent_state(persistence_interval) &&
 
         initialise_example_pvs()  &&
         start_caRepeater()  &&
         hook_pv_logging("db/access.acf", 10)  &&
+        load_persistent_state(persistence_file, true)  &&
 
         /* The following block of code could equivalently be implemented by
          * writing a startup script with the following content with a call to
@@ -48,7 +49,6 @@ static bool ioc_main(void)
          *  dbLoadRecords("db/example_ioc.db", "DEVICE=TS-TS-TEST-99")
          *  iocInit()
          */
-        DO(load_persistent_state())  &&
         TEST_IO(dbLoadDatabase("dbd/example_ioc.dbd", NULL, NULL))  &&
         TEST_IO(example_ioc_registerRecordDeviceDriver(pdbbase))  &&
         load_database("db/example_ioc.db")  &&

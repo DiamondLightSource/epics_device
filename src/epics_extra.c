@@ -314,6 +314,11 @@ bool database_load_file(const char *filename)
 
 bool initialise_epics_extra(void)
 {
-    initHookRegister(init_hook);
+    static bool initialised = false;
+    if (!initialised)
+    {
+        initHookRegister(init_hook);
+        initialised = true;
+    }
     return true;
 }

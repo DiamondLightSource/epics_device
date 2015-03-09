@@ -16,29 +16,31 @@ PVs are published to the device by the IOC.
 
 The following functions provide the persistence interface.
 
-..  function:: bool initialise_persistent_state( \
-        const char *file_name, int save_interval)
+..  function:: bool initialise_persistent_state(int save_interval)
 
     If EPICS Device persistence is to be used then this function must be called
-    once before publishing any PVs with the :member:`persist` field set to
-    ``true``.
+    exactly once before publishing any PVs with the :member:`persist` field set
+    to ``true``.
 
-    The file `file_name` need not exist when the IOC is started, but the
-    directory containing it should be writeable by the IOC.  `save_interval` in
-    seconds determines how frequently changed PVs are written back to the state
-    file.
+    `save_interval` in seconds determines how frequently changed PVs are written
+    back to the state file.
 
-..  function:: bool load_persistent_state(void)
+..  function:: bool load_persistent_state( \
+        const char *file_name, bool check_parse)
 
     This should be called once after publishing all PVs to EPICS device but
-    before calling :func:`iocInit`.  The file named in
-    :func:`initialise_persistent_state` will be loaded, if present,  to
-    determine initial values for all PVs marked for persistence.
+    before calling :func:`iocInit`.  The given `file_name` will be loaded, if
+    present, to determine initial values for all PVs marked for persistence, and
+    after this point updates to PVs will be written at the interval determined
+    by `save_interval` passed to :func:`initialise_persistent_state`.
+
+    If `check_parse` is ``false`` then this function will return success even if
+    there are parsing errors while loading the persistence file.
 
 ..  function:: bool update_persistent_state(void)
 
     This can be called to force the state file to be written if any persistent
-    PVs have changed their state.
+    PVs have changed their state.  Returns ``false`` if an error occurs.
 
 ..  function:: void terminate_persistent_state(void)
 

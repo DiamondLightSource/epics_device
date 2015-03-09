@@ -533,8 +533,9 @@ records.
 
 ..  function:: bool initialise_epics_device(void)
 
-    This function must be called once before publishing any records or calling
-    any other function listed here.
+    This function must be called at least once before publishing any records or
+    calling any other function listed here.  Repeated calls have no further
+    effect.
 
 ..  function:: void set_record_severity( \
         struct epics_record *epics_record, enum epics_alarm_severity severity)

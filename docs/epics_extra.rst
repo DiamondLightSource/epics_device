@@ -12,8 +12,8 @@ Initialisation Etc
 ..  function:: bool initialise_epics_extra(void)
 
     If any of the functionality documented here is to be used this function must
-    be called exactly once before :func:`iocInit` and before calling any other
-    function list here.
+    be called at least once before :func:`iocInit` and before calling any other
+    function listed here.
 
 ..  function:: void wait_for_epics_start(void)
 

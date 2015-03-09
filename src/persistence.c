@@ -442,7 +442,7 @@ static bool parse_assignment(struct line_buffer *line)
 }
 
 
-static bool parse_persistence_file(const char *filename)
+static bool parse_persistence_file(const char *filename, bool check_parse)
 {
     struct line_buffer line = {
         .file = fopen(filename, "r"),
@@ -453,30 +453,17 @@ static bool parse_persistence_file(const char *filename)
         return true;
 
     bool ok = true, eof = false;
-    while (read_line(&line, &eof)  &&  !eof)
+    while (ok  &&  read_line(&line, &eof)  &&  !eof)
     {
         /* Skip lines beginning with # and blank lines. */
         if (line.line[0] != '#'  &&  line.line[0] != '\n')
-            /* A little odd: we allow individual line parsing to fail, but an
-             * overall error code is accumulated and reported.  This means that
-             * we will complete the loading of a broken state file (for example,
-             * if keys have changed), but an error will be returned. */
-            ok = parse_assignment(&line)  &&  ok;
+            /* Although line parsing can fail, we ignore the errors unless
+             * check_parse is set.  This means that we will complete the loading
+             * of a broken state file (for example, if keys have changed), error
+             * messages will be printed, but this function will succeed. */
+            ok = parse_assignment(&line)  ||  !check_parse;
     }
-    fclose(line.file);
-    return ok;
-}
-
-
-bool load_persistent_state(void)
-{
-    bool ok = true;
-    if (state_filename != NULL)
-    {
-        LOCK();
-        ok = parse_persistence_file(state_filename);
-        UNLOCK();
-    }
+    IGNORE(TEST_IO(fclose(line.file)));
     return ok;
 }
 
@@ -614,18 +601,33 @@ static void *persistence_thread(void *context)
 
 
 /* Must be called before marking any variables as persistent. */
-bool initialise_persistent_state(const char *file_name, int save_interval)
+bool initialise_persistent_state(int save_interval)
 {
     /* Due to a bug in the vxWorks compiler's pthread.h we have can't use the
      * static initialiser for pthread_cond_t, so we initialise here. */
     ASSERT_PTHREAD(pthread_mutex_init(&mutex, NULL));
     ASSERT_PTHREAD(pthread_cond_init(&psignal, NULL));
 
-    state_filename = file_name;
     persistence_interval = save_interval;
     variable_table = hash_table_create(false);  // We look after name lifetime
-    return TEST_PTHREAD(pthread_create(
-        &persistence_thread_id, NULL, persistence_thread, NULL));
+    return true;
+}
+
+
+bool load_persistent_state(const char *file_name, bool check_parse)
+{
+    state_filename = file_name;
+
+    LOCK();
+    bool ok = parse_persistence_file(state_filename, check_parse);
+    UNLOCK();
+
+    return
+        ok  &&
+        TEST_OK_(persistence_thread_id == 0,
+            "Persistence already initialised")  &&
+        TEST_PTHREAD(pthread_create(
+            &persistence_thread_id, NULL, persistence_thread, NULL));
 }
 
 

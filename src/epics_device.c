@@ -343,8 +343,11 @@ static void init_hook(initHookState state)
 
 bool initialise_epics_device(void)
 {
-    hash_table = hash_table_create(false);
-    initHookRegister(init_hook);
+    if (hash_table == NULL)
+    {
+        hash_table = hash_table_create(false);
+        initHookRegister(init_hook);
+    }
     return true;
 }
 
