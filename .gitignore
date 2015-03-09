@@ -5,6 +5,8 @@ include/
 lib/
 /docs/html/
 
+/epics_device/builder_path.py
+
 O.*
 *.pyc
 *~
