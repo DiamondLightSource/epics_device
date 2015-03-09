@@ -12,6 +12,9 @@ enum PERSISTENCE_TYPES {
 };
 
 
+/* Must be called before marking any variables as persistent. */
+void initialise_persistent_state(void);
+
 /* Creates new persistent variable.  Note that type is *not* checked for
  * validity, *must* be a valid enum value! */
 void create_persistent_waveform(

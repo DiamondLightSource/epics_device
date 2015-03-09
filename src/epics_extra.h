@@ -52,10 +52,6 @@ void interlock_wait(struct epics_interlock *interlock);
 void interlock_signal(struct epics_interlock *interlock, struct timespec *ts);
 
 
-/* Needs to be called early, before EPICS initialisation completes. */
-bool initialise_epics_extra(void);
-
-
 /* This routine will block until EPICS had finished startup.  This can be called
  * first to ensure that interlock_wait(...) will not block. */
 void wait_for_epics_start(void);

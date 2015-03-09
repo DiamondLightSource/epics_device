@@ -601,22 +601,22 @@ static void *persistence_thread(void *context)
 
 
 /* Must be called before marking any variables as persistent. */
-bool initialise_persistent_state(int save_interval)
+void initialise_persistent_state(void)
 {
     /* Due to a bug in the vxWorks compiler's pthread.h we have can't use the
      * static initialiser for pthread_cond_t, so we initialise here. */
     ASSERT_PTHREAD(pthread_mutex_init(&mutex, NULL));
     ASSERT_PTHREAD(pthread_cond_init(&psignal, NULL));
 
-    persistence_interval = save_interval;
     variable_table = hash_table_create(false);  // We look after name lifetime
-    return true;
 }
 
 
-bool load_persistent_state(const char *file_name, bool check_parse)
+bool load_persistent_state(
+    const char *file_name, bool check_parse, int save_interval)
 {
     state_filename = file_name;
+    persistence_interval = save_interval;
 
     LOCK();
     bool ok = parse_persistence_file(state_filename, check_parse);

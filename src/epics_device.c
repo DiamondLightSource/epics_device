@@ -42,6 +42,7 @@
 #include "error.h"
 #include "hashtable.h"
 #include "persistence_internal.h"
+#include "epics_extra_internal.h"
 
 #include "epics_device.h"
 
@@ -347,7 +348,10 @@ bool initialise_epics_device(void)
     {
         hash_table = hash_table_create(false);
         initHookRegister(init_hook);
+        initialise_epics_extra();
+        initialise_persistent_state();
     }
+
     return true;
 }
 

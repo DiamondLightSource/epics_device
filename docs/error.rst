@@ -26,15 +26,13 @@ implementation of :func:`ioc_main` in ``examples/example_ioc/src/main.c``::
     {
         return
             initialise_epics_device()  &&
-            initialise_epics_extra()  &&
-            initialise_persistent_state(
-                persistence_file, persistence_interval) &&
 
             initialise_example_pvs()  &&
             start_caRepeater()  &&
             hook_pv_logging("db/access.acf", 10)  &&
+            load_persistent_state(
+                persistence_file, false, persistence_interval)  &&
 
-            DO(load_persistent_state())  &&
             TEST_IO(dbLoadDatabase("dbd/example_ioc.dbd", NULL, NULL))  &&
             TEST_IO(example_ioc_registerRecordDeviceDriver(pdbbase))  &&
             load_database("db/example_ioc.db")  &&

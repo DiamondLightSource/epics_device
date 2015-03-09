@@ -15,6 +15,7 @@
 #include "error.h"
 #include "epics_device.h"
 
+#include "epics_extra_internal.h"
 #include "epics_extra.h"
 
 
@@ -312,13 +313,7 @@ bool database_load_file(const char *filename)
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-bool initialise_epics_extra(void)
+void initialise_epics_extra(void)
 {
-    static bool initialised = false;
-    if (!initialised)
-    {
-        initHookRegister(init_hook);
-        initialised = true;
-    }
-    return true;
+    initHookRegister(init_hook);
 }

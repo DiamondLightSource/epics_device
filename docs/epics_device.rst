@@ -15,22 +15,18 @@ maintain this correspondence.
 
 Using this module involves the following steps:
 
-1.  The support module itself must be initialised, the function
-    :func:`initialise_epics_device` must be called early, and
-    :func:`initialise_epics_extra` also be called at the same time if required.
+1.  The support module itself must be initialised by calling the function
+    :func:`initialise_epics_device` before any PVs are declared.
 
-2.  If EPICS Device persistence is to be used then
-    :func:`initialise_persistent_state` should be called before the next step.
-
-3.  All PVs should be internally published using the :func:`PUBLISH` macros and
+2.  All PVs should be internally published using the :func:`PUBLISH` macros and
     numerous allies.  This process establishes a set of valid internal PV names
     with associated processing actions: each :func:`PUBLISH` call binds one name
     to a processing action and possibly an initialisation action.
 
-4.  If persistence is used then :func:`load_persistent_state` should now be
+3.  If persistence is used then :func:`load_persistent_state` should now be
     called.
 
-5.  Finally the IOC itself can be started.  This involves at least the following
+4.  Finally the IOC itself can be started.  This involves at least the following
     steps:
 
     * Load the IOC ``.dbd`` file, which must include the ``epics_device.dbd``
