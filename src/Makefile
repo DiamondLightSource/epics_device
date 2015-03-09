@@ -24,6 +24,7 @@ epics_device_SRCS += epics_extra.c      # Miscellanous extra EPICS support
 epics_device_SRCS += hashtable.c        # Simple generic hash table
 epics_device_SRCS += persistence.c      # Persistent value support for EPICS
 epics_device_SRCS += pvlogging.c        # Logging for all caputs
+epics_device_SRCS += shell_commands.c   # Exports selected commands to IOC shell
 
 
 include $(TOP)/configure/RULES

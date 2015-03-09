@@ -17,17 +17,19 @@ PVs are published to the device by the IOC.
 The following functions provide the persistence interface.
 
 ..  function:: bool load_persistent_state( \
-        const char *file_name, bool check_parse, int save_interval)
+        const char *file_name, int save_interval, bool check_parse)
 
     This should be called once after publishing all PVs to EPICS device but
     before calling :func:`iocInit`.  The given `file_name` will be loaded, if
     present, to determine initial values for all PVs marked for persistence.
+    After this point updates to PVs will be written back to the state file at
+    the interval determined by `save_interval`, in seconds.
 
     If `check_parse` is ``false`` then this function will return success even if
     there are parsing errors while loading the persistence file.
 
-    After this point updates to PVs will be written back to the state file at
-    the interval determined by `save_interval`, in seconds.
+    This function can be called from the IOC shell, but in this case the return
+    code is lost.
 
 ..  function:: bool update_persistent_state(void)
 

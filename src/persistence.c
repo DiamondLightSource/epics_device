@@ -613,9 +613,11 @@ void initialise_persistent_state(void)
 
 
 bool load_persistent_state(
-    const char *file_name, bool check_parse, int save_interval)
+    const char *file_name, int save_interval, bool check_parse)
 {
-    state_filename = file_name;
+    /* It's more robust to take a copy of the passed filename, places fewer
+     * demands on the caller. */
+    state_filename = strdup(file_name);
     persistence_interval = save_interval;
 
     LOCK();
@@ -624,10 +626,9 @@ bool load_persistent_state(
 
     return
         ok  &&
-        TEST_OK_(persistence_thread_id == 0,
-            "Persistence already initialised")  &&
-        TEST_PTHREAD(pthread_create(
-            &persistence_thread_id, NULL, persistence_thread, NULL));
+        IF(persistence_thread_id == 0,
+            TEST_PTHREAD(pthread_create(
+                &persistence_thread_id, NULL, persistence_thread, NULL)));
 }
 
 

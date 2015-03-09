@@ -41,6 +41,22 @@ Using this module involves the following steps:
 In this chapter we document the core PV publishing API.
 
 
+Initialisation
+--------------
+
+One function is provided for initialisation.
+
+..  function:: bool initialise_epics_device(void)
+
+    This function must be called at least once before publishing any records or
+    calling any other function listed here.  Repeated calls have no further
+    effect.  If an error occurs ``false`` is returned and an error message is
+    printed.
+
+    This function can be called from the IOC shell, but in this case the return
+    code is lost.
+
+
 PUBLISH Overview
 ----------------
 
@@ -526,12 +542,6 @@ records.
     epics_sev_major     2       Major alarm status
     epics_sev_invalid   3       PV value is invalid
     =================== ======= ================================================
-
-..  function:: bool initialise_epics_device(void)
-
-    This function must be called at least once before publishing any records or
-    calling any other function listed here.  Repeated calls have no further
-    effect.
 
 ..  function:: void set_record_severity( \
         struct epics_record *epics_record, enum epics_alarm_severity severity)

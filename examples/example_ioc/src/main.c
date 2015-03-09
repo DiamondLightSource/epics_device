@@ -36,7 +36,7 @@ static bool ioc_main(void)
         initialise_example_pvs()  &&
         start_caRepeater()  &&
         hook_pv_logging("db/access.acf", 10)  &&
-        load_persistent_state(persistence_file, false, persistence_interval)  &&
+        load_persistent_state(persistence_file, persistence_interval, false)  &&
 
         /* The following block of code could equivalently be implemented by
          * writing a startup script with the following content with a call to
