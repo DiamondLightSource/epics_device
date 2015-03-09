@@ -21,8 +21,7 @@ include $(TOP)/configure/RULES
 #----------------------------------------
 #  ADD RULES AFTER THIS LINE
 
-
-export IOCBUILDER
+export EPICS_DEVICE
 
 # We use the python library to construct the .db file
 $(COMMON_DIR)/%.db: ../%.py $(wildcard ../*.py)

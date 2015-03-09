@@ -5,7 +5,7 @@ DB += basic_ioc.db
 
 include $(TOP)/configure/RULES
 
-export IOCBUILDER
+export EPICS_DEVICE
 
 # We use the python library to construct the .db file
 $(COMMON_DIR)/%.db: ../%.py $(wildcard ../*.py)

@@ -18,14 +18,11 @@ import sys, os
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 #sys.path.append(os.path.abspath('.'))
 
-from pkg_resources import require
+sys.path.append(os.path.abspath(os.environ['TOP']))
 
-# So that viewcode can create links to the builder files we need to configure
-# the iocbuilder.
-require('iocbuilder==3.41')
-from iocbuilder import ConfigureTemplate, ModuleVersion
-ConfigureTemplate()
-ModuleVersion('epics_device', home = '..', use_name = False)
+import epics_device
+import epicsdbbuilder
+
 
 
 

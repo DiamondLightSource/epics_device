@@ -1,11 +1,7 @@
 # Common definitions for all records
 
-import os
-
-# It is important to import support before importing iocbuilder, as the support
-# module initialises iocbuilder (and determines which symbols it exports!)
-from support import *
-from iocbuilder import *
+from epicsdbbuilder import *
+from device import *
 
 __all__ = [
     'Action', 'Trigger', 'ForwardLink', 'AggregateSeverity', 'concat']

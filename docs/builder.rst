@@ -1,38 +1,40 @@
 ..  default-domain:: py
-..  py:module:: iocbuilder.modules.epics_device
+..  py:module:: epics_device
 
 Database Builder Support
 ========================
 
 The functionality documented here is designed to create EPICS databases
 alongside an IOC developed using the EPICS Device C API.  The database building
-process uses the IOC builder, which is a separate support module and documented
-elsewere.
+process uses the EPICS database builder, which is a separate support module and
+documented elsewere.
 
-The IOC builder can be used to create records with EPICS Device device support.
-The IOC builder must be initialised appropriately and a little boilerplate is
-needed to use this library for database generation.  See for example the example
-IOC.  The following boilerplate Python code can be used to build a database
-(here we assume ``IOCBUILDER`` and ``EPICS_DEVICE`` have been configured in the
-build and exported)::
+Importing :mod:`epics_device` will automatically import and initialise
+:mod:`epicsdbbuilder`.  By default the version configured in
+``configure/SITE_CONFIG`` of ``epics_device`` will be used, but this can be
+overridden by setting the environment variable ``EPICSDBBUILDER`` before
+importing :mod:`epics_device`.
 
-    from pkg_resources import require
-    import os
-    require('iocbuilder==%s' % os.environ['IOCBUILDER'])
+A database building script will normally be invoked from the EPICS build
+environment.  This will have already exported the environment variable
+``EPICS_BASE``, which must be set before importing :mod:`epics_device`.  If
+``EPICS_DEVICE`` has also been configured in ``configure/RELEASE`` then this can
+be exported from the make file and then the following example script will work::
 
-    # Configure the IOC builder as we want to use it and load epics_device
-    from iocbuilder import ModuleVersion, TemplateRecordNames, ConfigureTemplate
-    ConfigureTemplate(record_names = TemplateRecordNames())
-    ModuleVersion('epics_device', os.environ['EPICS_DEVICE'])
+    # Configure path using environment
+    import sys, os
+    sys.path.append(os.environ['EPICS_DEVICE'])
 
-    from iocbuilder import *
-    from iocbuilder.modules.epics_device import *
+    # Import and initialise EPICS device
+    from epics_device import *
+
+    # Configure an appropriate record naming convention
+    SetTemplateRecordNames()
 
     # Now create records, eg
     aOut('RECORD', DESC = 'This is a record')
 
-    # Finally write the records, in this case we use a file name argument
-    import sys
+    # Finally write the records, here the filename is sys.argv
     WriteRecords(sys.argv[1])
 
 Invoking a Python script of this form will write a valid EPICS database file.
@@ -41,11 +43,11 @@ Invoking a Python script of this form will write a valid EPICS database file.
 Creating EPICS Records
 ----------------------
 
-The methods exported by :mod:`iocbuilder.modules.epics_device` provide helper
-functions for creating EPICS records of each of the eleven basic types.  A
-particular coding style is supported by these calls, if the default behaviour is
-not felt to be appropriate then records can be created directly by calling the
-appropriate methods of :class:`EpicsDevice`.
+The methods exported by :mod:`epics_device` provide helper functions for
+creating EPICS records of each of the eleven basic types.  A particular coding
+style is supported by these calls, if the default behaviour is not felt to be
+appropriate then records can be created directly by calling the appropriate
+methods of :class:`EpicsDevice`.
 
 A number of defaults and naming conventions are applied by the functions below.
 
@@ -157,7 +159,7 @@ Raw Record Creation
 The functions listed above are all helper functions with a number of hard-wired
 defaults and actions.  A more direct approach to record creation can be taken by
 invoking the record creation methods for :data:`EpicsDevice` and
-:data:`iocbuilder.records` directly.
+:data:`epicsdbbuilder.records` directly.
 
 ..  data:: EpicsDevice
 
@@ -178,20 +180,7 @@ invoking the record creation methods for :data:`EpicsDevice` and
 
         This method automatically initialises the ``DTYP`` and ``INP`` or
         ``OUT`` fields as appropriate, and is otherwise just a wrapper around
-        the corresponding method of :data:`iocbuilder.records`.
-
-..  data:: iocbuilder.records
-
-    This is part of the IOC builder framework, not documented here.  There is a
-    method for each record type supported by EPICS with the following signature:
-
-    ..  function:: iocbuilder.records.record(name, **fields)
-
-        ..  x** (vim)
-
-        Creates an EPICS record of type `record` with the given `name` and with
-        other `fields` as specified.  These records by default have no EPICS
-        Device support configured.
+        the corresponding method of :data:`epicsdbbuilder.records`.
 
 
 Helper Functions
@@ -292,3 +281,66 @@ update on driver internal events.
 ..  function:: concat(ll)
 
     A simple helper function to concatenate a list of lists.
+
+
+Functions from EPICS Db Builder
+-------------------------------
+
+The following functions are reexported from :mod:`epicsdbbuilder` and are useful
+for database building.  For fuller documentation see the documentation for that
+module, but a selection of useful functions is listed here for reference.
+
+..  data:: records
+
+    This is part of the IOC builder framework, not documented here.  There is a
+    method for each record type supported by EPICS, ie ``ai``, ``ao``, ``calc``,
+    etc, with the following signature:
+
+    ..  method:: records.record_type(name, **fields)
+
+        ..  x** (vim)
+
+        Creates an EPICS record of type `record_type` with the given `name` and
+        with other `fields` as specified.  These records by default have no
+        EPICS Device support configured.
+
+    For example:
+
+    ..  method:: records.calc(name, **fields)
+
+        ..  x** (vim)
+
+        This creates a ``calc`` record with the given `name` (as modified by the
+        appropriate :func:`SetRecordNames` setup).
+
+..  function::
+    PP(record)
+    CP(record)
+    MS(record)
+    NP(record)
+
+    When generating internal record links these add the appropriate link
+    annotation.
+
+..  function::
+    create_fanout(name, *records, **kargs)
+    create_dfanout(name, *records, **kargs)
+
+    Creates processing and data fanouts to an arbitrary list of records.
+
+..  function:: WriteRecords(filename, [header])
+
+    Writes generated database.
+
+..  function::
+    SetRecordNames(names)
+    SetTemplateRecordNames([prefix] [,separator])
+
+    These two functions are used to establish how the full record name written
+    to the generated database is derived from the short form record name passed
+    to the appropriate :data:`records` method.
+
+..  function:: Parameter(name [,description] [,default])
+
+    When generating a template database this can be used to declare template
+    parameters.

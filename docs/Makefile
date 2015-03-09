@@ -1,3 +1,7 @@
+TOP = ..
+
+export TOP
+
 install:
 	sphinx-build -b html . html
 

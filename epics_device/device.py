@@ -3,46 +3,40 @@
 import sys
 import os
 
-from iocbuilder import *
+import epicsdbbuilder
 
 
-# This class wraps the creation of records which talk directly to the
-# Libera device driver.
-class EpicsDevice(Device):
-    DbdFileList = ['epics_device']
-    LibFileList = ['epics_device']
-
+# This class wraps the creation of records which talk directly to the EPICS
+# device driver.
+class EpicsDevice:
     class makeRecord:
-        def __init__(self, builder, addr_name):
-            self.builder = getattr(records, builder)
-            self.addr_name = addr_name
+        def __init__(self, builder):
+            self.builder = getattr(epicsdbbuilder.records, builder)
 
         def __call__(self, name, address=None, **fields):
             if address is None:
                 address = name
             record = self.builder(name, **fields)
             record.DTYP = 'epics_device'
-            setattr(record, self.addr_name, '@' + address)
+            record.address = '@' + address
 
             # Check for a description, make a report if none given.
             if 'DESC' not in fields:
-                print 'No description for', name
+                print >>sys.stderr, 'No description for', name
 
             return record
 
-    @classmethod
-    def init(cls):
-        for name, addr in [
-                ('longin',    'INP'), ('longout',   'OUT'),
-                ('ai',        'INP'), ('ao',        'OUT'),
-                ('bi',        'INP'), ('bo',        'OUT'),
-                ('stringin',  'INP'), ('stringout', 'OUT'),
-                ('mbbi',      'INP'), ('mbbo',      'OUT'),
-                ('waveform',  'INP')]:
-            setattr(cls, name, cls.makeRecord(name, addr))
+    def __init__(self):
+        for name in [
+                'longin',    'longout',
+                'ai',        'ao',
+                'bi',        'bo',
+                'stringin',  'stringout',
+                'mbbi',      'mbbo',
+                'waveform']:
+            setattr(self, name, self.makeRecord(name))
 
-EpicsDevice.init()
-EpicsDevice()
+EpicsDevice = EpicsDevice()
 
 
 

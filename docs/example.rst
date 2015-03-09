@@ -25,7 +25,7 @@ configure               Standard EPICS ``configure`` directory, as generated
                         by ``makeBaseApp.pl``.
 configure/CONFIG
 configure/CONFIG_APP
-configure/CONFIG_SITE   Must specify ``PYTHON`` and ``IOCBUILDER``
+configure/CONFIG_SITE   Must specify ``PYTHON``
 configure/Makefile
 configure/RELEASE       Must specify ``EPICS_DEVICE``
 configure/RULES
@@ -45,39 +45,38 @@ The database defined here is utterly minimal, consisting of a single PV with a 1
 second scan which returns the current timestamp in seconds.  The EPICS Device
 definition to build the database record entry is the following Python line::
 
-    aIn('TSEC', DESC = 'Timestamp in seconds', SCAN = '1 second')
+    longIn('TSEC', DESC = 'Timestamp in seconds', SCAN = '1 second')
 
-This line defines an ``ai`` record named ``TEST`` with the specified scan
+This line defines an ``longin`` record named ``TEST`` with the specified scan
 interval and description.
 
-Alas quite a bit of boilerplate is needed to set things up, to load the
-libraries and write out the result, and so for this minimal example the actual
-code is somewhat longer:
+A little bit of boilerplate is needed to set things up:
 
 ..  literalinclude:: ../examples/basic_ioc/Db/basic_ioc.py
     :language: python
     :linenos:
 
-The first 17 lines are needed to pick up the iocbuilder, configure it to build
-template files, and to load the EPICS Device builder definitions.  The last line
-writes out the generated database.
+This code picks up the configured ``EPICS_DEVICE`` version (as configured in
+``configure/RELEASE``) and configures the database to be generated with a
+``$(DEVICE):`` prefix on each record name.  The last line writes out the
+generated database.
 
-Some support is also needed from the make file, which again contains quite bit
-of boilerplate:
+Some support is also needed from the make file:
 
 ..  literalinclude:: ../examples/basic_ioc/Db/Makefile
     :language: make
     :linenos:
 
 The important point here is that the ``.db`` file is generated from the
-corresponding ``.py`` file.
+corresponding ``.py`` file and the ``EPICS_DEVICE`` symbol is exported to the
+script above.
 
 The result of this is the following file in ``db/basic_ioc.db``:
 
 ..  code-block:: none
     :linenos:
 
-    record(ai, "$(DEVICE):TSEC")
+    record(longin, "$(DEVICE):TSEC")
     {
         field(DESC, "Timestamp in seconds")
         field(DTYP, "epics_device")

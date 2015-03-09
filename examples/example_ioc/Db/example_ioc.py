@@ -1,5 +1,10 @@
-from builder import *
-from iocbuilder import *
+import sys, os
+
+sys.path.append(os.environ['EPICS_DEVICE'])
+
+from epics_device import *
+
+SetTemplateRecordNames()
 
 
 WF_LENGTH = 128

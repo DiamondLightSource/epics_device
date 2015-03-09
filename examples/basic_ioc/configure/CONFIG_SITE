@@ -12,11 +12,5 @@ STATIC_BUILD = YES
 
 CROSS_COMPILER_TARGET_ARCHS =
 
-# Identify which python interpreter to use.  Must be at least version 2.4.
+# Identify which python interpreter to use.
 PYTHON = dls-python
-
-# Identifies either the path to the IOC builder python library or its
-# pkg_resources version identification.  Very simple test: if it begins with /
-# it's a path!  If this is left blank then the builder is assumed to be on the
-# path.
-IOCBUILDER = 3.41

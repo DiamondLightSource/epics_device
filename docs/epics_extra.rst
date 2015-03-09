@@ -1,4 +1,4 @@
-..  py:currentmodule:: iocbuilder.modules.epics_device
+..  py:currentmodule:: epics_device
 
 Extra EPICS Device Support
 ==========================

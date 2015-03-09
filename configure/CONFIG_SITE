@@ -12,6 +12,8 @@ STATIC_BUILD = YES
 
 CROSS_COMPILER_TARGET_ARCHS += linux-arm_el
 
+EPICSDBBUILDER = $(TOP)/../epicsdbbuilder
+
 
 TORNADO = /dls_sw/targetOS/vxWorks/Tornado-2.2
 ALTIVEC_CC = /dls_sw/prod/tools/RHEL6-x86_64/vxworks-gcc-altivec/3-4-6/prefix/bin/powerpc-wrs-vxworks-gcc
