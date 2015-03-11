@@ -115,27 +115,25 @@ The fuller API including the more abstract layer adds the following.
         This structure contains the following fields defining the abstract
         interface to keys.
 
-        ..  member:: hash_t (*hash)(const void *key)
+        ..  member:: hash_t (\*hash)(const void \*key)
 
             Computes the hash value from a key.
 
-        ..  member:: bool (*compare)(const void *key1, const void *key2)
+        ..  member:: bool (\*compare)(const void \*key1, const void \*key2)
 
             Compares two keys, returns ``true`` if equal.
 
-        ..  member:: void *(*copy_key)(const void *key)
+        ..  member:: void \*(\*copy_key)(const void \*key)
 
             If NULL then key lifetime is under control of the user of the hash
             table, who must ensure that the key is valid for the entire time
             it is present in the table.  Otherwise this function is called when
             keys are added to the table.
 
-        ..  member:: void (*release_key)(void *key)
+        ..  member:: void (\*release_key)(void \*key)
 
             Also can be NULL if key lifetime is under user control, otherwise is
             called when keys are removed from the table.
-
-        ..  ** (Comment to help vim colouring get back to normal)
 
     Note that value lifetime is not automatically managed through this
     interface, instead this can be done through the return values from

@@ -192,17 +192,15 @@ section return values of type ``struct epics_record*``.
     \                                                                     IN/OUT
     ===================================================================== ======
     record class `record`
-    `const char *name`
-    `void *context`
-    `bool read(void *context, TYPEOF(in_record) *value)`                  IN
-    `bool io_intr`                                                        IN
-    `bool set_time`                                                       IN
-    `bool write(void *context, const TYPEOF(out_record) *value)`          OUT
-    `bool init(void *context, TYPEOF(out_record) *value)`                 OUT
-    `bool persist`                                                        OUT
+    const char \*\ `name`
+    void \*\ `context`
+    bool `read`\ (void \*context, TYPEOF(`record`) \*value)               IN
+    bool `io_intr`                                                        IN
+    bool `set_time`                                                       IN
+    bool `write`\ (void \*context, const TYPEOF(`record`) \*value)        OUT
+    bool `init`\ (void \*context, TYPEOF(`record`) \*value)               OUT
+    bool `persist`                                                        OUT
     ===================================================================== ======
-
-    .. x* (vim fix)
 
     The PUBLISH macro is used to create a software binding for the appropriate
     record type to the given name.  The corresponding read or write method will
@@ -213,7 +211,7 @@ section return values of type ``struct epics_record*``.
     The macros documented below provide support for more specialised variants of
     these records with hard-wired implementations of the read and write methods.
 
-    Calling :func:`PUBLISH` returns a pointer to :type:`struct epics_record`.
+    Calling :func:`PUBLISH` returns a pointer to :type:`epics_record`.
 
     The arguments are as follows.
 
@@ -235,13 +233,13 @@ section return values of type ``struct epics_record*``.
         :func:`PUBLISH` to bind the callbacks to any local context.  This
         pointer is passed unchanged to the `read`, `write`, and `init` methods.
 
-    `bool read(void *context, TYPEOF(in_record) *value)`
+    bool `read`\ (void \*context, TYPEOF(`record`) \*value)
         For IN records this method will be called when the record is
         processed.  If possible a valid value should be assigned to `*value`
         and ``true`` returned, otherwise false can be returned to indicate no
         value available, in which case the record will be marked as invalid.
 
-    `bool write(void *context, const TYPEOF(out_record) *value)`
+    bool `write`\ (void \*context, const TYPEOF(`record`) \*value)
         For OUT records this will be called on record processing with the
         value written to the record passed by reference.  If the value is
         accepted then true should be return, otherwise if ``false`` is returned
@@ -249,7 +247,7 @@ section return values of type ``struct epics_record*``.
         record will be restored, and any associated Channel Access put will
         fail.
 
-    `bool init(void *context, TYPEOF(out_record) *value)`
+    bool `init`\ (void \*context, TYPEOF(`record`) \*value)
         For OUT records if this function is specified it will be called record
         initialisation to assign an initial value to the record unless a
         persistent initial value can be found.  ``false`` can be returned to
@@ -293,11 +291,9 @@ described below.
 
     ========================================================================== =
     record class `record`
-    `const char *name`
-    `TYPEOF(record) variable`
+    const char \*\ `name`
+    TYPEOF(`record`) `variable`
     ========================================================================== =
-
-    .. x* (vim fix)
 
     The given variable will be read each time the record is processed.  The
     variable must be of type ``TYPEOF(record)`` and should be passed by name to
@@ -309,11 +305,9 @@ described below.
 
     ========================================================================== =
     record class `record`
-    `const char *name`
-    `TYPEOF(record) reader(void)`
+    const char \*\ `name`
+    TYPEOF(`record`) `reader`\ (void)
     ========================================================================== =
-
-    .. x* (vim fix)
 
     This will be called each time the record processes and should return the
     value to be used to update the record.
@@ -323,10 +317,8 @@ described below.
     PUBLISH_TRIGGER_T(name)
 
     ========================================================================== =
-    `const char *name`
+    const char \*\ `name`
     ========================================================================== =
-
-    .. x* (vim fix)
 
     This record is useful for generating triggers into the database.  The record
     type is set to ``bi`` and the `io_intr` flag is set.  Call
@@ -342,11 +334,9 @@ described below.
 
     ========================================================================== =
     record class `record`
-    `const char *name`
-    `TYPEOF(record) variable`
+    const char \*\ `name`
+    TYPEOF(`record`) `variable`
     ========================================================================== =
-
-    .. x* (vim fix)
 
     The variable is written each time the record is processed and is read on
     startup to initialise the associated EPICS record.  The variable must be of
@@ -358,11 +348,9 @@ described below.
 
     ========================================================================== =
     record class `record`
-    `const char *name`
-    `void writer(TYPEOF(record) value)`
+    const char \*\ `name`
+    void `writer`\ (TYPEOF(`record`) value)
     ========================================================================== =
-
-    .. x* (vim fix)
 
     This method will be called each time the record processes with the current
     value of the record.
@@ -373,11 +361,9 @@ described below.
 
     ========================================================================== =
     record class `record`
-    `const char *name`
-    `bool writer(TYPEOF(record) value)`
+    const char \*\ `name`
+    bool `writer`\ (TYPEOF(`record`) value)
     ========================================================================== =
-
-    .. x* (vim fix)
 
     This method will be called each time the record processes.  The writer can
     return a boolean to optionally reject the write, otherwise :type:`void` is
@@ -387,11 +373,9 @@ described below.
     PUBLISH_ACTION(name, action)
 
     ========================================================================== =
-    `const char *name`
-    `void action(void)`
+    const char \*\ `name`
+    void `action`\ (void)
     ========================================================================== =
-
-    .. x* (vim fix)
 
     This method is called when the record processes.
 
@@ -403,24 +387,22 @@ PUBLISH_WAVEFORM API
         field_type, name, max_length, process, \
         .init, .context, .persist, .io_intr)
 
-    =========================================================================== =
+    ================================================================================= =
     type name `field_type`
-    `const char *name`
-    `size_t max_length`
-    `void process(void *context, field_type array[max_length], size_t *length)`
-    `void init(void *context, field_type array[max_length], size_t *length)`
-    `void *context`
-    `bool persist`
-    `bool io_intr`
-    =========================================================================== =
-
-    ..  x* (vim)
+    const char \*\ `name`
+    size_t `max_length`
+    void `process`\ (void \*context, field_type array[`max_length`], size_t \*length)
+    void `init`\ (void \*context, field_type array[`max_length`], size_t \*length)
+    void \*\ `context`
+    bool `persist`
+    bool `io_intr`
+    ================================================================================= =
 
     This macro creates the software binding for waveform records with data of
     the specified type.  The process method will be called each time the record
     processes -- the process method can choose whether to implement reading or
-    writing as the primitive operation.  Again, a pointer to :type:`struct
-    record_type` is returned which can be used for triggering and access.
+    writing as the primitive operation.  Again, a pointer to :type:`record_type`
+    is returned which can be used for triggering and access.
 
     EPICS waveform record support manages a buffer of length `max_length`.  A
     pointer to this buffer is passed into the `process` and `init` functions
@@ -461,14 +443,14 @@ PUBLISH_WAVEFORM API
         can act as either IN or OUT records, both types of functionality are
         supported.
 
-    `void process(void *context, field_type array[max_length], size_t *length)`
+    void `process`\ (void \*context, field_type array[`max_length`], size_t \*length)
         This is called during record processing with `*length` initialised with
         the current waveform length, as set in the ``NORD`` field of the the
         record.  The array can be read or written as required and `*length` (and
         thus ``NORD``) can be updated as appropriate if the data length changes
         (though of course `max_length` must not be exceeded).
 
-    `void init(void *context, field_type array[max_length], size_t *length)`
+    void `init`\ (void \*context, field_type array[`max_length`], size_t \*length)
         This optional function may be called during initialisation to initialise
         the waveform if a persistent value is not specified.
 
@@ -479,12 +461,10 @@ PUBLISH_WAVEFORM API
 
     ========================================================================== =
     type name `field_type`
-    `const char *name`
-    `size_t max_length`
-    `field_type waveform[max_length]`
+    const char \*\ `name`
+    size_t `max_length`
+    `field_type` `waveform`\ [`max_length`]
     ========================================================================== =
-
-    ..  x* (vim)
 
     `waveform` will be copied into the record buffer each time this record
     processes.  This is useful for publishing internally generated waveforms.
@@ -495,12 +475,10 @@ PUBLISH_WAVEFORM API
 
     ========================================================================== =
     type name `field_type`
-    `const char *name`
-    `size_t max_length`
-    `field_type waveform[max_length]`
+    const char \*\ `name`
+    size_t `max_length`
+    `field_type` `waveform`\ [`max_length`]
     ========================================================================== =
-
-    ..  x* (vim)
 
     `waveform` will updated from the record each time the record processes.
 
@@ -511,12 +489,10 @@ PUBLISH_WAVEFORM API
 
     ========================================================================== =
     type name `field_type`
-    `const char *name`
-    `size_t max_length`
-    `void action(field_type value[max_length])`
+    const char \*\ `name`
+    size_t `max_length`
+    void `action`\ (`field_type` value[`max_length`])
     ========================================================================== =
-
-    ..  x* (vim)
 
     This is called each time the record processes.  It is up to the
     implementation of `action` to determine whether this is a read or a
@@ -566,15 +542,13 @@ records.
 
     ========================================================================== =
     record class `record`
-    `const char *name`
+    const char \*\ `name`
     returns ``struct epics_record*``
     ========================================================================== =
 
-    .. x* (vim fix)
-
     If a record of the specified `record` class has been published with the
-    given `name` this function returns the ``struct epics_record*`` for the
-    record, otherwise ``NULL`` is returned.
+    given `name` this function returns a pointer to the :type:`epics_record`
+    structure for the record, otherwise ``NULL`` is returned.
 
 ..  macro::
     WRITE_OUT_RECORD(record, epics_record, value, process)
@@ -582,13 +556,11 @@ records.
 
     ========================================================================== =
     record class `record`
-    `struct epics_record *epics_record`
-    `const char *name`
-    `TYPEOF(record) value`
-    `bool process`
+    struct epics_record \*\ `epics_record`
+    const char \*\ `name`
+    TYPEOF(`record`) `value`
+    bool `process`
     ========================================================================== =
-
-    .. x* (vim fix)
 
     The given `value` is written directly to the EPICS record associated with
     `epics_record`.  `process` can be set to ``false`` to suppress normal record
@@ -605,14 +577,12 @@ records.
 
     ========================================================================== =
     type name `field_type`
-    `struct epics_record *epics_record`
-    `const char *name`
-    `const field_type value[length]`
-    `size_t length`
-    `bool process`
+    struct epics_record \*\ `epics_record`
+    const char \*\ `name`
+    const `field_type` `value`\ [`length`]
+    size_t `length`
+    bool `process`
     ========================================================================== =
-
-    .. x* (vim fix)
 
     As for :func:`WRITE_OUT_RECORD`, and :func:`WRITE_NAMED_RECORD` but for
     waveform records.  The EPICS copy of the waveform is updated, and the record
@@ -624,12 +594,10 @@ records.
 
     ========================================================================== =
     record class `record`
-    `struct epics_record *epics_record`
-    `const char *name`
-    returns `TYPEOF(record)`
+    struct epics_record \*\ `epics_record`
+    const char \*\ `name`
+    returns TYPEOF(`record`)
     ========================================================================== =
-
-    .. x* (vim fix)
 
     Returns the current value of any scalar record.  Can be called with either
     `epics_record` or `name` which is subject to an unchecked lookup.
@@ -640,12 +608,10 @@ records.
 
     ========================================================================== =
     type name `field_type`
-    `struct epics_record *epics_record`
-    `const char *name`
-    `field_type value[length]`
-    `size_t length`
+    struct epics_record \*\ `epics_record`
+    const char \*\ `name`
+    `field_type` `value`\ [`length`]
+    size_t `length`
     ========================================================================== =
-
-    .. x* (vim fix)
 
     Reads the current waveform value of a waveform record.
