@@ -81,7 +81,7 @@ bool database_load_file(const char *filename);
  *
  * The API here consists of the following calls:
  *
- *  record = PUBLISH_IN_VALUE[_I][_T](type, name)
+ *  record = PUBLISH_IN_VALUE[_I](type, name, .set_time, .merge_update)
  *      Publishes EPICS PV with writeable value stored as part of the record.
  *
  *  WRITE_IN_RECORD(type, record, value, .severity, .timestamp, .force_update)
@@ -92,14 +92,14 @@ bool database_load_file(const char *filename);
  *  value = READ_IN_RECORD(type, record)
  *      Returns value written to record.
  *
- * This API is very experimental and is not currently documented in the external
- * documentation for this module. */
+ * This API is still somewhat experimental and although it is now documented in
+ * the external documentation for this module it is still liable to change. */
 
 struct in_epics_record_longin;
 struct in_epics_record_ulongin;
 struct in_epics_record_ai;
 struct in_epics_record_bi;
-struct in_epics_record_string;
+struct in_epics_record_stringin;
 struct in_epics_record_mbbi;
 struct in_epics_record_;
 
@@ -116,7 +116,7 @@ struct in_epics_record_;
 struct publish_in_epics_record_args {
     bool io_intr;
     bool set_time;
-    bool force_update;
+    bool merge_update;
 };
 struct in_epics_record_ *_publish_write_epics_record(
     enum record_type record_type, const char *name,
@@ -126,12 +126,8 @@ struct in_epics_record_ *_publish_write_epics_record(
         struct in_epics_record_ *, struct in_epics_record_##type *, \
         _publish_write_epics_record(RECORD_TYPE_##type, name, \
             &(const struct publish_in_epics_record_args) { args }))
-#define PUBLISH_IN_VALUE_I(type, name) \
-    PUBLISH_IN_VALUE(type, name, .io_intr = true)
-#define PUBLISH_IN_VALUE_T(type, name) \
-    PUBLISH_IN_VALUE(type, name, .set_time = true)
-#define PUBLISH_IN_VALUE_I_T(type, name) \
-    PUBLISH_IN_VALUE(type, name, .io_intr = true, .set_time = true)
+#define PUBLISH_IN_VALUE_I(type, name, args...) \
+    PUBLISH_IN_VALUE(type, name, .io_intr = true, ##args)
 
 
 struct write_in_epics_record_args {
@@ -152,7 +148,7 @@ void _write_in_record(
     _write_in_record( \
         RECORD_TYPE_##type, _CONVERT_TO_IN_RECORD(type, record), NULL, \
         &(const struct write_in_epics_record_args) { \
-            .severity = severity, ##args })
+            .severity = severity, .force_update = true, ##args })
 
 
 void *_read_in_record(

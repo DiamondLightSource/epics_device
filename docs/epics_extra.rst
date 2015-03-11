@@ -94,3 +94,136 @@ function, see that link for an example.
 
     When data processing is complete this function should be called to trigger
     the ``:TRIG`` record and all the associated data records.
+
+
+Records With Data
+-----------------
+
+..  note::
+
+    The API described in this section is *not* intended as core functionality
+    (despite its complexity), instead it is an experimental extension designed
+    to be used sparingly.
+
+Although in most cases it is enough to bind a published "in" record to a single
+value, there are a couple of cases where both the published value and the
+associated record need to be managed together:
+
+1.  When a single value is being updated and triggered separately from any other
+    records.  The standard implementation for this is::
+
+        struct epics_record *record1;
+        double value1;
+        ...
+        // Publish with this code
+        record1 = PUBLISH_READ_VAR_I(ai, "NAME", value1);
+        ...
+        // Update with this code
+        value1 = update_value();
+        trigger_record(record1);
+
+2.  When both the value and severity associated with the record need to be
+    maintained.  The standard implementation is::
+
+        struct epics_record *record2;
+        double value2;
+        ...
+        // Publish with this code
+        record2 = PUBLISH_READ_VAR(ai, "NAME", value2);
+        ...
+        // Update with this code
+        value2 = update_value();
+        set_record_severity(record2, severity);
+
+It is a little irritating to have to carry two values around to perform a single
+function, so the "records with data" API provides support so that for example
+the first code example above can be replaced by::
+
+    struct in_epics_record_ai *record1;
+    ...
+    record1 = PUBLISH_IN_VALUE_I(ai, "NAME");
+    ...
+    WRITE_IN_RECORD(ai, record1, update_value());
+
+The API consists of the following definitions.
+
+..  type::
+    struct in_epics_record_longin
+    struct in_epics_record_ulongin
+    struct in_epics_record_ai
+    struct in_epics_record_bi
+    struct in_epics_record_stringin
+    struct in_epics_record_mbbi
+
+    Each EPICS "in" record type has an associated record wrapper type.  These
+    are created by the appropriate :func:`PUBLISH_IN_VALUE` call and can be
+    passed to any of the other functions documented in this section.
+
+..  macro::
+    PUBLISH_IN_VALUE(record, name, .set_time, .merge_update)
+    PUBLISH_IN_VALUE_I(record, name, .set_time, .merge_update)
+
+    ========================================================================== =
+    record class `record`
+    const char \*\ `name`
+    bool `set_time`
+    bool `merge_update`
+    Returns in_epics_record\_\ `record`\*
+    ========================================================================== =
+
+    Returns a pointer to the appropriate in_epics_record\_\ `record`
+    structure.  A record of the given type and name is published and storage for
+    the associated value is created and initialised to zero.  `set_time` has the
+    same meaning as for :macro:`PUBLISH`.  Unless `merge_update` is set to true
+    every update to the returned value will generate an EPICS value update.
+
+    If the ``_I`` suffix is used then the record will be created with ``I/O
+    Intr`` processing support, and the records ``SCAN`` field must be set to
+    this.
+
+..  macro:: WRITE_IN_RECORD(record, in_record, value, \
+        .severity, .timestamp, .force_update)
+
+    ========================================================================== =
+    record class `record`
+    in_epics_record\_\ `record` \*\ `in_record`
+    TYPEOF(`record`) `value`
+    bool `severity`
+    const struct timespec \*\ `timestamp`
+    bool `force_update`
+    ========================================================================== =
+
+    This call will update the value associated with `in_record` with `value` and
+    if the record was created with ``I/O Intr`` support then record processing
+    will be triggered.  The optional argument `severity` can be set to specify
+    record severity, otherwise severity 0 will be written.
+
+    If the record was created with `set_time` set then a timestamp should be
+    passed using the `timestamp` parameter.
+
+    If the record was created with `merge_update` set then `force_update` can be
+    used to force an update.
+
+..  macro:: WRITE_IN_RECORD_SEV(record, in_record, severity, .timestamp)
+
+    ========================================================================== =
+    record class `record`
+    in_epics_record\_\ `record` \*\ `in_record`
+    bool `severity`
+    const struct timespec \*\ `timestamp`
+    ========================================================================== =
+
+    This updates the `severity` associated with `in_record` without changing the
+    value and triggers a record update if appropriate.  If the record was
+    declared with `set_time` then `timestamp` must be specified.  Note that
+    updating is always forced for this call.
+
+..  macro:: READ_IN_RECORD(record, in_record)
+
+    ========================================================================== =
+    record class `record`
+    in_epics_record\_\ `record` \*\ `in_record`
+    Returns TYPEOF(`record`)
+    ========================================================================== =
+
+    Returns the current value associated with `in_record`.

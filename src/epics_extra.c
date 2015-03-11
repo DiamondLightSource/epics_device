@@ -181,7 +181,8 @@ struct in_epics_record_ {
     enum record_type record_type;
     struct epics_record *record;
     size_t field_size;
-    bool force_update;
+    bool merge_update;
+    bool io_intr;
     char value[] __attribute__((aligned(__BIGGEST_ALIGNMENT__)));
 };
 
@@ -221,7 +222,8 @@ struct in_epics_record_ *_publish_write_epics_record(
         record_type, name, &(const struct record_args_void) {
             .read = read_in_record, .context = record,
             .io_intr = args->io_intr, .set_time = args->set_time });
-    record->force_update = args->force_update;
+    record->merge_update = args->merge_update;
+    record->io_intr = args->io_intr;
     memset(record->value, 0, record->field_size);
     return record;
 }
@@ -232,19 +234,25 @@ void _write_in_record(
     const void *value, const struct write_in_epics_record_args *args)
 {
     ASSERT_OK(record->record_type == record_type);
-    bool do_update = record->force_update;
-    if (value)
-    {
-        do_update = do_update  ||  args->force_update  ||
-            memcmp(record->value, value, record->field_size) != 0;
-        memcpy(record->value, value, record->field_size);
-    }
-    if (do_update)
+
+    /* If the record was created with merged updates, we've not overridden the
+     * merge in this write (needed if we want to force a severity change), then
+     * discard the update if the value hasn't changed. */
+    bool discard_update =
+        record->merge_update  &&
+        !args->force_update  &&
+        (value == NULL  ||
+         memcmp(record->value, value, record->field_size) == 0);
+
+    if (!discard_update)
     {
         set_record_severity(record->record, args->severity);
+        if (value)
+            memcpy(record->value, value, record->field_size);
         if (args->timestamp)
             set_record_timestamp(record->record, args->timestamp);
-        trigger_record(record->record);
+        if (record->io_intr)
+            trigger_record(record->record);
     }
 }
 
