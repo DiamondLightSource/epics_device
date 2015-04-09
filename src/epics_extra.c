@@ -298,13 +298,18 @@ void database_add_macro(const char *macro_name, const char *format, ...)
     va_start(args, format);
 
     /* Arbitrary limit for the length of a single macro definition. */
-    char macro_string[512];
-    vsnprintf(macro_string, sizeof(macro_string), format, args);
+    const int macro_size = 512;
+    char macro_string[macro_size];
+    ASSERT_OK(vsnprintf(macro_string, macro_size, format, args) < macro_size);
     va_end(args);
 
     if (database_macros)
+    {
+        char *macros = database_macros;
         asprintf(&database_macros, "%s,%s=%s",
-            database_macros, macro_name, macro_string);
+            macros, macro_name, macro_string);
+        free(macros);
+    }
     else
         asprintf(&database_macros, "%s=%s", macro_name, macro_string);
 }
