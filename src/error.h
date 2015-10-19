@@ -194,8 +194,6 @@ static inline bool __attribute__((warn_unused_result))
     TEST_OK_(_COND_rw(read, fd, buf, count), message)
 #define TEST_write_(fd, buf, count, message...) \
     TEST_OK_(_COND_rw(write, fd, buf, count), message)
-#define ASSERT_read(fd, buf, count)  ASSERT_OK(_COND_rw(read, fd, buf, count))
-#define ASSERT_write(fd, buf, count) ASSERT_OK(_COND_rw(write, fd, buf, count))
 
 
 /* A tricksy compile time bug checking macro modified from the kernel. */
