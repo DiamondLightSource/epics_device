@@ -42,7 +42,7 @@ static hash_t hash_string(const void *key)
         return 0;
     else
     {
-        hash_t hash = (hash_t) *s << 7;
+        hash_t hash = (hash_t) *s++ << 7;
         for (size_t i = 1; i < length; i++)
             hash = (1000003 * hash) ^ (hash_t) (unsigned int) *s++;
         return hash ^ length;
