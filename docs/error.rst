@@ -1,3 +1,5 @@
+..  _error:
+
 Error Handling Macros and Other Facilities
 ==========================================
 
@@ -61,8 +63,10 @@ otherwise returns some other value.  The :func:`TEST_IO` macro ensures that the
 return code is tested and an error message is generated if necessary.
 
 
-Core Handling Macros
---------------------
+..  _error-core:
+
+Core Error Handling Macros
+--------------------------
 
 The error handling macros defined here are of a uniform style.  For each class
 of test three macros are defined, for example for ``IO`` we have the following:

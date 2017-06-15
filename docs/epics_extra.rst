@@ -227,3 +227,24 @@ The API consists of the following definitions.
     ========================================================================== =
 
     Returns the current value associated with `in_record`.
+
+
+Error Handling for EPICS Calls
+------------------------------
+
+A limited number of EPICS functions return a status code that can be interpreted
+with :func:`ca_message`.  For these functions the following error handling
+macros can be used.  These use the same mechanism as documented in
+:ref:`error-core`.
+
+Do check that the EPICS function to be wrapped does indeed return a suitable
+status code, otherwise the error messages generated may be somewhat misleading.
+
+..  macro::
+    TEST_EPICS(expr)
+    TEST_EPICS_(expr, format...)
+    ASSERT_EPICS(expr)
+
+    These all succeed (returning ``ERROR_OK``) if `expr` evaluates to 0,
+    otherwise `expr` is passed to :func:`ca_message` to generate an error
+    message, possibly together with `format`.

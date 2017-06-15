@@ -156,3 +156,21 @@ void *_read_in_record(
 #define READ_IN_RECORD(type, record) \
     (* (const TYPEOF(type) *) _read_in_record( \
         RECORD_TYPE_##type, _CONVERT_TO_IN_RECORD(type, record))
+
+
+/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
+/* Special error handling for EPICS functions. */
+
+/* A handful of EPICS functions return a status code which can be decoded with
+ * the ca_message() function.  For these functions the TEST_EPICS macros below
+ * can be used. */
+
+#define _COND_EPICS(expr)           ((expr) == 0)
+#define _MSG_EPICS(expr)            _error_extra_epics(expr)
+#define TEST_EPICS_(expr, message...) \
+    _TEST(_COND_EPICS, _MSG_EPICS, expr, message)
+#define TEST_EPICS(expr)            TEST_EPICS_(expr, ERROR_MESSAGE)
+#define ASSERT_EPICS(expr)          _ASSERT(_COND_EPICS, _MSG_EPICS, expr)
+
+/* Internal support function for EPICS tests above. */
+char *_error_extra_epics(int status);

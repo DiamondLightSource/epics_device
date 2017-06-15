@@ -11,6 +11,7 @@
 
 #include <initHooks.h>
 #include <dbAccess.h>
+#include <caerr.h>
 
 #include "error.h"
 #include "epics_device.h"
@@ -322,6 +323,18 @@ error__t database_load_file(const char *filename)
     free(database_macros);
     database_macros = NULL;
     return error;
+}
+
+
+/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
+/* EPICS error handling support. */
+
+/* Essentially we just want to return ca_message(status), but unfortunately our
+ * caller will try to free the result later on!  So we return a freeable copy of
+ * the message instead. */
+char *_error_extra_epics(int status)
+{
+    return strdup(ca_message(status));
 }
 
 
