@@ -124,7 +124,7 @@ bool error_report(error__t error);
 #define ERROR_REPORT(args...)  _id_ERROR_REPORT(UNIQUE_ID(), args)
 
 /* This function silently discards the error code. */
-void error_discard(error__t error);
+bool error_discard(error__t error);
 
 
 /* This function extends the information associated with the given error with

@@ -83,7 +83,7 @@ void error_extend(error__t error, const char *format, ...)
 }
 
 
-void error_discard(error__t error)
+bool error_discard(error__t error)
 {
     if (error)
     {
@@ -92,7 +92,10 @@ void error_discard(error__t error)
         free(error->formatted);
         free(error);
         update_error_count(-1);
+        return true;
     }
+    else
+        return false;
 }
 
 
@@ -124,14 +127,8 @@ const char *error_format(error__t error)
 bool error_report(error__t error)
 {
     if (error)
-    {
-        const char *report = error_format(error);
-        log_error("%s", report);
-        error_discard(error);
-        return true;
-    }
-    else
-        return false;
+        log_error("%s", error_format(error));
+    return error_discard(error);
 }
 
 

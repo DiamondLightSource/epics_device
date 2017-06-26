@@ -186,14 +186,16 @@ managing error codes.
 
     This function disposes of `error`, and this value is no longer valid.
 
-..  macro:: ERROR_REPORT(error, format...)
+..  macro:: bool ERROR_REPORT(error, format...)
 
-    This helper function will augment `error` with the message defined by
+    This helper macro will augment `error` with the message defined by
     `format` before reporting the error by calling :func:`error_report`.
 
-..  function:: void error_discard(error__t error)
+..  function:: bool error_discard(error__t error)
 
     This function silently discards `error`, after which the value is invalid.
+    As for :func:`error_report`, ``true`` is returned if `error` was an error,
+    and ``false`` if it was ``ERROR_OK``.
 
 ..  function:: void error_extend(error__t error, const char *format, ...)
 
@@ -314,26 +316,26 @@ this by mistake.
 
 1.  Deliberately discarding the error code.
 
-    Example where error code is discarded::
+    Example where error code is discarded, here we want to convert an
+    ``error__t`` into a boolean indicating success::
 
         error__t test_function(void) { ... }
 
         bool drop_error(void) {
-            !test_function();
+            return !test_function();
         }
 
     In this case the error code is silently dropped.  This should be rewritten
     in one of the following two forms::
 
         bool drop_error(void) {
-            return !error_report(test_function);
+            return !error_report(test_function());
         }
 
     if the error should be reported, or::
 
         bool drop_error(void) {
-            error_discard(test_function());
-            return !error;
+            return !error_discard(test_function());
         }
 
     if the error needs to be silently discarded.
