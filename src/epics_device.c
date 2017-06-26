@@ -966,12 +966,10 @@ static long process_waveform(waveformRecord *pr)
 
 #include "recordDevice.h"
 
-#ifndef VX_WORKS
 /* The epicsExportAddress macro used in the definitions below casts a structure
  * pointer via (char*) and thus generates a cast alignment error.  We want to
  * just ignore this here. */
 #pragma GCC diagnostic ignored "-Wcast-align"
-#endif
 DEFINE_DEVICE(longin,    5, read_longin);
 DEFINE_DEVICE(longout,   5, write_longout);
 DEFINE_DEVICE(ai,        6, read_ai,  linconv_ai);

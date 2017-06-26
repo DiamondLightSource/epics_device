@@ -10,16 +10,12 @@
 
 STATIC_BUILD = YES
 
-CROSS_COMPILER_TARGET_ARCHS += linux-arm_el
+CROSS_COMPILER_TARGET_ARCHS = linux-arm_el
 
 # This can either be an explicit path to the directory containing the
 # epicsdbbuilder module or a version number understood by pkg_resources.require
 EPICSDBBUILDER = 1.0
 
 PYTHON = dls-python
-
-
-TORNADO = /dls_sw/targetOS/vxWorks/Tornado-2.2
-ALTIVEC_CC = /dls_sw/prod/tools/RHEL6-x86_64/vxworks-gcc-altivec/3-4-6/prefix/bin/powerpc-wrs-vxworks-gcc
 
 # vim: set filetype=make:

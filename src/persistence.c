@@ -9,10 +9,6 @@
 #include <time.h>
 #include <pthread.h>
 
-#ifdef VX_WORKS
-#include <taskLib.h>
-#endif
-
 #include "error.h"
 #include "hashtable.h"
 
@@ -88,11 +84,7 @@ static bool check_number(const char *start, const char *end)
 DEFINE_READ_NUM(int8_t, strtol, 10)
 DEFINE_READ_NUM(int16_t, strtol, 10)
 DEFINE_READ_NUM(int32_t, strtol, 10)
-#ifdef VX_WORKS
-DEFINE_READ_NUM(float, strtod)
-#else
 DEFINE_READ_NUM(float, strtof)
-#endif
 DEFINE_READ_NUM(double, strtod)
 
 
@@ -508,13 +500,7 @@ static bool write_persistent_state(const char *filename)
     /* Start with a timestamp log. */
     char out_buffer[40];
     time_t now = time(NULL);
-#ifdef VX_WORKS
-    /* The vxWorks declaration of ctime_r is mysteriously different! */
-    size_t buf_size = sizeof(out_buffer);
-    const char *timestamp = ctime_r(&now, out_buffer, &buf_size);
-#else
     const char *timestamp = ctime_r(&now, out_buffer);
-#endif
     ok = TEST_OK(fprintf(out, "# Written: %s", timestamp) > 0);
 
     int ix = 0;
@@ -537,11 +523,6 @@ bool update_persistent_state(void)
 {
     if (persistence_dirty  &&  state_filename != NULL)
     {
-#ifdef VX_WORKS
-        /* On vxWorks it would seem that rename (at least over NFS) just doesn't
-         * work, so the best we can do is write the file. */
-        return write_persistent_state(state_filename);
-#else
         /* By writing to a backup file first we can then rely on the OS
          * implementing rename as an atomic operation to achieve a safe atomic
          * update of the stored state. */
@@ -551,7 +532,6 @@ bool update_persistent_state(void)
         return
             write_persistent_state(backup_file)  &&
             TEST_IO(rename(backup_file, state_filename));
-#endif
     }
     else
         return true;

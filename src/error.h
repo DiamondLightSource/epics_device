@@ -70,9 +70,6 @@
  *  IF_ELSE(test, iftrue, iffalse)  Alternative spelling of (?:)
  */
 
-#ifdef VX_WORKS
-#include "vxdefs.h"
-#endif
 
 /* Hint to compiler that x is likely to be 0. */
 #define unlikely(x)   __builtin_expect((x), 0)
