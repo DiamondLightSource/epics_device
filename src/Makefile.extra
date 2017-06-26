@@ -6,18 +6,39 @@ USR_CFLAGS += -g
 USR_LDFLAGS += -g
 USR_LDFLAGS += -rdynamic
 
+USR_CPPFLAGS += -D_GNU_SOURCE
+
 USR_CFLAGS += -std=gnu99
-USR_CFLAGS += -Werror -Wall -Wextra -Wno-unused-parameter
+USR_CFLAGS += -Werror
+USR_CFLAGS += -Wall
+USR_CFLAGS += -Wextra
+
 USR_CFLAGS += -Wundef
 USR_CFLAGS += -Wshadow
 USR_CFLAGS += -Wcast-align
-USR_CFLAGS += -Wcast-qual
 USR_CFLAGS += -Wwrite-strings
 USR_CFLAGS += -Wredundant-decls
 USR_CFLAGS += -Wmissing-prototypes
 USR_CFLAGS += -Wmissing-declarations
 USR_CFLAGS += -Wstrict-prototypes
+USR_CFLAGS += -Wcast-qual
+USR_CFLAGS += -Woverflow
 USR_CFLAGS += -Wconversion
+
+USR_CFLAGS += -fstrict-overflow
+USR_CFLAGS += -Wsign-compare
+
+USR_CFLAGS += -Wstrict-overflow=5
+
+USR_CFLAGS += -Wno-switch-enum
+USR_CFLAGS += -Wno-variadic-macros
+USR_CFLAGS += -Wno-padded
+USR_CFLAGS += -Wno-format-nonliteral
+USR_CFLAGS += -Wno-vla
+USR_CFLAGS += -Wno-c++-compat
+USR_CFLAGS += -Wno-pointer-arith
+USR_CFLAGS += -Wno-unused-parameter
+USR_CFLAGS += -Wno-missing-field-initializers
 
 # Annoyingly we need this when playing tricks with default initialisers
 USR_CFLAGS += -Wno-missing-field-initializers

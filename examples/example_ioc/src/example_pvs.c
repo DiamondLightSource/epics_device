@@ -106,7 +106,7 @@ static void write_persistent_state(void)
 }
 
 
-bool initialise_example_pvs(void)
+error__t initialise_example_pvs(void)
 {
     PUBLISH_WRITER_P(ao, "FREQ", set_frequency);
     PUBLISH_WF_READ_VAR(double, "WF", WF_LENGTH, waveform);

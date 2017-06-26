@@ -3,6 +3,7 @@
 #include <stdbool.h>
 #include <unistd.h>
 #include <stdarg.h>
+#include <stdio.h>
 
 #include "error.h"
 #include "epics_device.h"
@@ -27,9 +28,9 @@ static void call_load_persistent_state(const iocshArgBuf *args)
     const char *file_name = args[0].sval;
     int interval = args[1].ival;
 
-    IGNORE(
-        TEST_NULL_(file_name, "Must specify a filename")  &&
-        TEST_OK_(interval > 1, "Must specify a sensible interval")  &&
+    error_report(
+        TEST_OK_IO_(file_name, "Must specify a filename")  ?:
+        TEST_OK_(interval > 1, "Must specify a sensible interval")  ?:
         load_persistent_state(file_name, interval, false));
 }
 

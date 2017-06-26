@@ -224,6 +224,14 @@ static void initialise_waveform_fields(
 }
 
 
+/* We handle errors by reporting them and then just dying.  A bit crude, but
+ * mostly there's nothing to be done with the error. */
+static void fail_on_error(error__t error)
+{
+    ASSERT_OK(!error_report(error));
+}
+
+
 /* Publishes record of given type with given name as specified by record type
  * specific arguments. */
 struct epics_record *publish_epics_record(
@@ -259,9 +267,8 @@ struct epics_record *publish_epics_record(
             break;
     }
 
-    if (!TEST_OK_(hash_table_insert(hash_table, base->key, base) == NULL,
-            "Record \"%s\" already exists!", key))
-        ASSERT_FAIL();      // Don't allow caller to carry on
+    void *old_key = hash_table_insert(hash_table, base->key, base);
+    fail_on_error(TEST_OK_(!old_key, "Record \"%s\" already exists!", key));
     return base;
 }
 
@@ -271,8 +278,7 @@ struct epics_record *lookup_epics_record(
 {
     BUILD_KEY(key, name, record_type);
     struct epics_record *result = hash_table_lookup(hash_table, key);
-    bool ok = TEST_NULL_(result, "Lookup %s failed", key);
-    ASSERT_OK(ok);
+    fail_on_error(TEST_OK_(result, "Lookup %s failed", key));
     return result;
 }
 
@@ -342,7 +348,7 @@ static void init_hook(initHookState state)
     }
 }
 
-bool initialise_epics_device(void)
+error__t initialise_epics_device(void)
 {
     if (hash_table == NULL)
     {
@@ -351,8 +357,7 @@ bool initialise_epics_device(void)
         initialise_epics_extra();
         initialise_persistent_state();
     }
-
-    return true;
+    return ERROR_OK;
 }
 
 
@@ -414,22 +419,22 @@ static short waveform_type_dbr(enum waveform_type waveform_type)
 
 
 /* Used to convert an internal record name to the associated dbaddr value and
- * performs sanity validation. */
-static bool record_to_dbaddr(
+ * performs sanity validation.  If this fails we just die! */
+static void record_to_dbaddr(
     enum record_type record_type, struct epics_record *record, size_t length,
     struct dbAddr *dbaddr)
 {
-    return
+    fail_on_error(
         TEST_OK_(record->record_type == record_type,
             "%s is %s (%d), not %s (%d)", record->key,
             get_type_name(record->record_type), record->record_type,
-            get_type_name(record_type), record_type)  &&
-        TEST_OK_(length <= record->max_length, "Length request too long")  &&
+            get_type_name(record_type), record_type)  ?:
+        TEST_OK_(length <= record->max_length, "Length request too long")  ?:
 
         // The writing API needs a dbAddr to describe the target
-        TEST_NULL(record->record_name)  &&
+        TEST_OK(record->record_name)  ?:
         TEST_OK_(dbNameToAddr(record->record_name, dbaddr) == 0,
-            "Unable to find record %s", record->record_name);
+            "Unable to find record %s", record->record_name));
 }
 
 
@@ -439,29 +444,26 @@ static void _write_out_record(
     short dbr_type, const void *value, size_t length, bool process)
 {
     struct dbAddr dbaddr;
-    bool ok = record_to_dbaddr(record_type, record, length, &dbaddr);
-    if (ok)
-    {
-        // Finally write the desired value under the database lock: we disable
-        // writing if processing was not requested.
-        dbScanLock(dbaddr.precord);
-        record->out.disable_write = !process;
-        ok = TEST_OK(dbPutField(&dbaddr, dbr_type, value, (long) length) == 0);
-        record->out.disable_write = false;
-        dbScanUnlock(dbaddr.precord);
-    }
-    ASSERT_OK(ok);
+    record_to_dbaddr(record_type, record, length, &dbaddr);
+
+    /* Write the desired value under the database lock: we disable writing if
+     * processing was not requested. */
+    dbScanLock(dbaddr.precord);
+    record->out.disable_write = !process;
+    fail_on_error(TEST_OK(
+        dbPutField(&dbaddr, dbr_type, value, (long) length) == 0));
+    record->out.disable_write = false;
+    dbScanUnlock(dbaddr.precord);
 }
 
 void _write_out_record_value(
     enum record_type record_type, struct epics_record *record,
     const void *value, bool process)
 {
-    bool ok =
-        // Validate the arguments to prevent disaster
-        TEST_OK_(is_out_record(record_type),
-            "%s is not an output type", get_type_name(record_type));
-    ASSERT_OK(ok);
+    // Validate the arguments to prevent disaster
+    fail_on_error(TEST_OK_(
+        is_out_record(record_type),
+        "%s is not an output type", get_type_name(record_type)));
     _write_out_record(
         record_type, record, record_type_dbr(record_type), value, 1, process);
 }
@@ -483,12 +485,11 @@ static void _read_record(
 {
     long get_length = (long) length;
     struct dbAddr dbaddr;
-    bool ok =
-        record_to_dbaddr(record_type, record, length, &dbaddr)  &&
+    record_to_dbaddr(record_type, record, length, &dbaddr);
+    fail_on_error(
         TEST_OK(dbGetField(
-            &dbaddr, dbr_type, value, NULL, &get_length, NULL) == 0)  &&
-        TEST_OK_((size_t) get_length == length, "Failed to get all values");
-    ASSERT_OK(ok);
+            &dbaddr, dbr_type, value, NULL, &get_length, NULL) == 0)  ?:
+        TEST_OK_((size_t) get_length == length, "Failed to get all values"));
 }
 
 void _read_record_value(
@@ -634,16 +635,16 @@ void _publish_waveform_action(void *context, void *array, size_t *length)
 
 /* Looks up the record and records it in dpvt if found.  Also take care to
  * ensure that only one EPICS record binds to any one instance. */
-static bool init_record_common(
+static error__t init_record_common(
     dbCommon *pr, const char *name, enum record_type record_type)
 {
     BUILD_KEY(key, name, record_type);
     struct epics_record *base = hash_table_lookup(hash_table, key);
     return
-        TEST_NULL_(base, "No record found for %s", key)  &&
+        TEST_OK_(base, "No record found for %s", key)  ?:
         TEST_OK_(base->record_name == NULL,
-            "%s already bound to %s", key, base->record_name)  &&
-        DO(base->record_name = pr->name; pr->dpvt = base)  &&
+            "%s already bound to %s", key, base->record_name)  ?:
+        DO(base->record_name = pr->name; pr->dpvt = base)  ?:
         TEST_OK_(
             (pr->scan == menuScanI_O_Intr) == (base->ioscanpvt != NULL),
             "%s has inconsistent scan menu (%d) and ioscanpvt (%p)",
@@ -692,7 +693,7 @@ static long get_ioint_common(int cmd, dbCommon *pr, IOSCANPVT *ioscanpvt)
 /*                          Input record processing.                         */
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-static bool init_in_record(dbCommon *pr)
+static error__t init_in_record(dbCommon *pr)
 {
     struct epics_record *base = pr->dpvt;
     return TEST_OK_(
@@ -727,11 +728,11 @@ static bool process_in_record(dbCommon *pr, void *result)
 #define DEFINE_INIT_IN(record) \
     static long init_record_##record(record##Record *pr) \
     { \
-        bool ok = \
+        error__t error = \
             init_record_common((dbCommon *) pr, \
-                pr->inp.value.instio.string, RECORD_TYPE_##record)  && \
+                pr->inp.value.instio.string, RECORD_TYPE_##record)  ?: \
             init_in_record((dbCommon *) pr); \
-        return ok ? EPICS_OK : EPICS_ERROR; \
+        return error_report(error) ? EPICS_ERROR : EPICS_OK; \
     }
 
 #define DEFINE_DEFAULT_IN(record, VAL, PROC_OK, ADAPTER) \
@@ -817,16 +818,16 @@ static bool process_out_record(dbCommon *pr, size_t value_size, void *result)
 #define DEFINE_INIT_OUT(record, INIT_OK, VAL, ADAPTER, MLST) \
     static long init_record_##record(record##Record *pr) \
     { \
-        bool ok = init_record_common((dbCommon *) pr, \
+        error__t error = init_record_common((dbCommon *) pr, \
             pr->out.value.instio.string, RECORD_TYPE_##record); \
-        if (ok) \
+        if (!error) \
         { \
             ADAPTER(init_out_record, \
                 TYPEOF(record), pr->VAL, \
                 (dbCommon *) pr, sizeof(TYPEOF(record))); \
             MLST(pr->mlst = (typeof(pr->mlst)) pr->VAL); \
         } \
-        return ok ? INIT_OK : EPICS_ERROR; \
+        return error_report(error) ? EPICS_ERROR : EPICS_OK; \
     }
 
 
@@ -870,7 +871,8 @@ static long linconv_ao(aoRecord *pr, int cmd) { return EPICS_OK; }
 
 /* Routine to validate record type: ensure that we don't mismatch the record
  * declarations in the code and in the database. */
-static bool check_waveform_type(waveformRecord *pr, struct epics_record *base)
+static error__t check_waveform_type(
+    waveformRecord *pr, struct epics_record *base)
 {
     /* Validate that the names we're using for the int types match what EPICS
      * expects.  These correspond to the names used in enum waveform_type. */
@@ -890,7 +892,7 @@ static bool check_waveform_type(waveformRecord *pr, struct epics_record *base)
     return
         TEST_OK_(pr->ftvl == expected,
             "Array %s.FTVL mismatch %d != %d (%d)",
-            base->key, pr->ftvl, expected, base->waveform.field_type)  &&
+            base->key, pr->ftvl, expected, base->waveform.field_type)  ?:
         TEST_OK_(pr->nelm == base->max_length,
             "Array %s wrong length, %d != %zd",
             base->key, (int) pr->nelm, base->max_length);
@@ -901,11 +903,13 @@ static bool check_waveform_type(waveformRecord *pr, struct epics_record *base)
  * that fails, try for an (optional) init method. */
 static long init_record_waveform(waveformRecord *pr)
 {
-    bool ok = init_record_common(
-        (dbCommon *) pr, pr->inp.value.instio.string, RECORD_TYPE_waveform)  &&
+    error__t error = init_record_common(
+        (dbCommon *) pr, pr->inp.value.instio.string, RECORD_TYPE_waveform)  ?:
         check_waveform_type(pr, pr->dpvt);
-    if (!ok)
+    if (error)
     {
+        ERROR_REPORT(error,
+            "Creating waveform record %s", pr->inp.value.instio.string);
         pr->dpvt = NULL;
         return EPICS_ERROR;
     }

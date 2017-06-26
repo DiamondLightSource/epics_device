@@ -1,6 +1,5 @@
 /* Extra support built on top of epics_device. */
 
-#define _GNU_SOURCE
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -282,7 +281,7 @@ static void *ca_repeater(void *context)
  * (private communication, 2006/12/04).  This means that this IOC has no
  * external EPICS dependencies (otherwise the caRepeater application needs to be
  * run). */
-bool start_caRepeater(void)
+error__t start_caRepeater(void)
 {
     pthread_t thread_id;
     return TEST_PTHREAD(pthread_create(&thread_id, NULL, ca_repeater, NULL));
@@ -315,12 +314,12 @@ void database_add_macro(const char *macro_name, const char *format, ...)
 }
 
 
-bool database_load_file(const char *filename)
+error__t database_load_file(const char *filename)
 {
-    bool ok = TEST_IO(dbLoadRecords(filename, database_macros));
+    error__t error = TEST_IO(dbLoadRecords(filename, database_macros));
     free(database_macros);
     database_macros = NULL;
-    return ok;
+    return error;
 }
 
 

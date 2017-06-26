@@ -137,7 +137,7 @@ static bool empty_entry(struct table_entry *entry)
  * pointer on copied keys.  Here is where it's done. */
 static void release_key(struct hash_table *table, const void *key)
 {
-    table->key_ops->release_key(REINTERPRET_CAST(void *, key));
+    table->key_ops->release_key(CAST_FROM_TO(const void *, void *, key));
 }
 
 

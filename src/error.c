@@ -1,7 +1,7 @@
 /* Generic error handling framework. */
 
-#define _GNU_SOURCE
 #include <stdbool.h>
+#include <stdint.h>
 #include <stdio.h>
 #include <stddef.h>
 #include <stdlib.h>
@@ -9,31 +9,187 @@
 #include <stdarg.h>
 #include <errno.h>
 #include <string.h>
-#include <taskLib.h>
-
-#include <caerr.h>
+#include <execinfo.h>
+#include <syslog.h>
+#include <pthread.h>
 
 #include "error.h"
 
 
-static void default_error_hook(const char *message)
+/* No more than this many error messages can be nested: more would be insane! */
+#define MAX_ERROR_DEPTH     10
+
+
+/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
+/* Core error reporting mechanism. */
+
+/* For debug, used to check if we've leaked any error codes. */
+static int error_count = 0;
+/* Mutex for guarding error_count.  Ideally we should be using
+ * __sync_add_and_fetch, or even more up to date, __atomic_add_fetch, but the
+ * first fails on ARMv5 and the second isn't in any of our compilers! */
+static pthread_mutex_t count_mutex = PTHREAD_MUTEX_INITIALIZER;
+
+static void update_error_count(int step)
 {
-    fprintf(stderr, "%s\n", message);
+    pthread_mutex_lock(&count_mutex);
+    error_count += step;
+    pthread_mutex_unlock(&count_mutex);
 }
 
 
-static error_hook_t error_hook = default_error_hook;
+/* This encapsulates an error message. */
+struct error__t {
+    /* An error message consists of a list of error strings. */
+    int count;
+    char *messages[MAX_ERROR_DEPTH];
+    /* If error_format has been called the formatted error is stored here. */
+    char *formatted;
+};
 
-error_hook_t set_error_hook(error_hook_t hook)
+
+/* Creates an error__t with one or two messages. */
+error__t _error_create(char *extra, const char *format, ...)
 {
-    error_hook_t result = error_hook;
-    error_hook = hook;
+    va_list args;
+    va_start(args, format);
+    char *message;
+    ASSERT_IO(vasprintf(&message, format, args));
+    va_end(args);
+
+    update_error_count(1);
+
+    struct error__t *error = malloc(sizeof(struct error__t));
+    if (extra)
+        *error = (struct error__t) {
+            .count = 2, .messages = { extra, message }, };
+    else
+        *error = (struct error__t) {
+            .count = 1, .messages = { message }, };
+    return error;
+}
+
+
+void error_extend(error__t error, const char *format, ...)
+{
+    ASSERT_OK(error);   // Cannot extend a success error code!
+    ASSERT_OK(error->count < MAX_ERROR_DEPTH);
+
+    va_list args;
+    va_start(args, format);
+    ASSERT_IO(vasprintf(&error->messages[error->count], format, args));
+    va_end(args);
+    error->count += 1;
+}
+
+
+void error_discard(error__t error)
+{
+    if (error)
+    {
+        for (int i = 0; i < error->count; i ++)
+            free(error->messages[i]);
+        free(error->formatted);
+        free(error);
+        update_error_count(-1);
+    }
+}
+
+
+const char *error_format(error__t error)
+{
+    if (!error)
+        return "OK";
+
+    /* We'll simply format the stack of messages with the most recent message
+     * first.  Count up the length needed. */
+    size_t length = 0;
+    for (int i = 0; i < error->count; i ++)
+        length += strlen(error->messages[i]) + 2;
+
+    char *result = malloc(length);
+    free(error->formatted);      // In case we're not the first
+    error->formatted = result;
+
+    int ix = 0;
+    for (int i = 0; i < error->count; i ++)
+    {
+        int n = error->count - 1 - i;
+        ix += sprintf(result + ix, n ? "%s: " : "%s", error->messages[n]);
+    }
     return result;
 }
 
 
+bool error_report(error__t error)
+{
+    if (error)
+    {
+        const char *report = error_format(error);
+        log_error("%s", report);
+        error_discard(error);
+        return true;
+    }
+    else
+        return false;
+}
+
+
+/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
+
+static bool daemon_mode = false;
+static bool log_verbose = true;
+
+static pthread_mutex_t log_mutex = PTHREAD_MUTEX_INITIALIZER;
+
+
+void start_logging(const char *ident)
+{
+    openlog(ident, 0, LOG_DAEMON);
+    daemon_mode = true;
+}
+
+
+void vlog_message(int priority, const char *format, va_list args)
+{
+    pthread_mutex_lock(&log_mutex);
+    if (daemon_mode)
+        vsyslog(priority, format, args);
+    else
+    {
+        vfprintf(stderr, format, args);
+        fprintf(stderr, "\n");
+    }
+    pthread_mutex_unlock(&log_mutex);
+}
+
+
+void log_message(const char *message, ...)
+{
+    if (log_verbose)
+    {
+        va_list args;
+        va_start(args, message);
+        vlog_message(LOG_INFO, message, args);
+        va_end(args);
+    }
+}
+
+
+void log_error(const char *message, ...)
+{
+    va_list args;
+    va_start(args, message);
+    vlog_message(LOG_ERR, message, args);
+    va_end(args);
+}
+
+
+
+/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
+
 /* Two mechanisms for reporting extra error information. */
-char *_extra_io(void)
+char *_error_extra_io_errno(int error)
 {
     /* This is very annoying: strerror() is not not necessarily thread safe ...
      * but not for any compelling reason, see:
@@ -48,40 +204,24 @@ char *_extra_io(void)
      * Ah well.  We go with the GNU definition, so here is a buffer to maybe use
      * for the message. */
     char str_error[256];
-    int error = errno;
     const char *error_string = strerror_r(error, str_error, sizeof(str_error));
     char *result;
-    asprintf(&result, "(%d) %s", error, error_string);
+    ASSERT_IO(asprintf(&result, "(%d) %s", error, error_string));
     return result;
 }
 
 
-void _report_error(char *extra, const char *format, ...)
+char *_error_extra_io(void)
 {
-    /* Large enough not to really worry about overflow.  If we do generate a
-     * silly message that's too big, then that's just too bad. */
-    const size_t MESSAGE_LENGTH = 512;
-    char error_message[MESSAGE_LENGTH];
-
-    va_list args;
-    va_start(args, format);
-    int count = vsnprintf(error_message, MESSAGE_LENGTH, format, args);
-    va_end(args);
-
-    if (extra)
-        snprintf(error_message + count, MESSAGE_LENGTH - (size_t) count,
-            ": %s", extra);
-
-    error_hook(error_message);
-
-    if (extra)
-        free(extra);
+    return _error_extra_io_errno(errno);
 }
 
 
-void _panic_error(char *extra, const char *filename, int line)
+void _error_panic(char *extra, const char *filename, int line)
 {
-    _report_error(extra, "Unrecoverable error at %s, line %d", filename, line);
+    log_error("Unrecoverable error at %s, line %d", filename, line);
+    if (extra)
+        log_error("Extra context: %s", extra);
     fflush(stderr);
     fflush(stdout);
 
@@ -95,4 +235,44 @@ void _panic_error(char *extra, const char *filename, int line)
     write(STDERR_FILENO, last_line, (size_t) char_count);
 
     _exit(255);
+}
+
+
+
+/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
+/* Utility function with no proper home, occasionally very useful for debug. */
+
+
+void dump_binary(FILE *out, const void *buffer, size_t length)
+{
+    const uint8_t *dump = buffer;
+
+    for (size_t a = 0; a < length; a += 16)
+    {
+        fprintf(out, "%08zx: ", a);
+        for (unsigned int i = 0; i < 16; i ++)
+        {
+            if (a + i < length)
+                fprintf(out, " %02x", dump[a+i]);
+            else
+                fprintf(out, "   ");
+            if (i % 16 == 7)
+                fprintf(out, " ");
+        }
+
+        fprintf(out, "  ");
+        for (unsigned int i = 0; i < 16; i ++)
+        {
+            uint8_t c = dump[a+i];
+            if (a + i < length)
+                fprintf(out, "%c", 32 <= c  &&  c < 127 ? c : '.');
+            else
+                fprintf(out, " ");
+            if (i % 16 == 7)
+                fprintf(out, " ");
+        }
+        fprintf(out, "\n");
+    }
+    if (length % 16 != 0)
+        fprintf(out, "\n");
 }

@@ -37,7 +37,7 @@ struct persistent_action {
     /* Reads value from given character buffer, advancing the character pointer
      * past the characters read, returns false and generates an error message if
      * there is a parsing error. */
-    bool (*read)(const char **in, void *variable);
+    error__t (*read)(const char **in, void *variable);
 };
 
 
@@ -55,14 +55,14 @@ struct persistent_action {
         return fprintf(out, format, value); \
     }
 
-DEFINE_WRITE(int8_t, "%d")
+DEFINE_WRITE(int8_t,  "%d")
 DEFINE_WRITE(int16_t, "%d")
 DEFINE_WRITE(int32_t, "%d")
-DEFINE_WRITE(float, "%.8g")
-DEFINE_WRITE(double, "%.17g")
+DEFINE_WRITE(float,   "%.8g")
+DEFINE_WRITE(double,  "%.17g")
 
 
-static bool check_number(const char *start, const char *end)
+static error__t check_number(const char *start, const char *end)
 {
     return TEST_OK_(end > start  &&  errno == 0, "Error converting number");
 }
@@ -70,7 +70,7 @@ static bool check_number(const char *start, const char *end)
 
 
 #define DEFINE_READ_NUM(type, convert, extra...) \
-    static bool read_##type(const char **string, void *variable) \
+    static error__t read_##type(const char **string, void *variable) \
     { \
         errno = 0; \
         const char *start = *string; \
@@ -96,11 +96,11 @@ static int write_bool(FILE *out, const void *variable)
 }
 
 /* Allow Y or 1 for true, N or 0 for false, though we only write Y/N. */
-static bool read_bool(const char **in, void *variable)
+static error__t read_bool(const char **in, void *variable)
 {
     char ch = *(*in)++;
     *(bool *) variable = ch == 'Y'  ||  ch == '1';
-    return TEST_NULL_(strchr("YN10", ch), "Invalid boolean value");
+    return TEST_OK_(strchr("YN10", ch), "Invalid boolean value");
 }
 
 
@@ -132,41 +132,42 @@ static int write_string(FILE *out, const void *variable)
 }
 
 /* Parses three octal digits as part of an escape sequence. */
-static bool parse_octal(const char **in, char *result)
+static error__t parse_octal(const char **in, char *result)
 {
     unsigned int value = 0;
-    bool ok = true;
-    for (int i = 0; ok  &&  i < 3; i ++)
+    error__t error = ERROR_OK;
+    for (unsigned int i = 0; !error  &&  i < 3; i ++)
     {
         unsigned int ch = (unsigned int) *(*in)++;
-        ok = TEST_OK_('0' <= ch  &&  ch <= '7', "Expected octal digit");
+        error = TEST_OK_('0' <= ch  &&  ch <= '7', "Expected octal digit");
         value = (value << 3) + (ch - '0');
     }
     *result = (char) value;
-    return ok;
+    return error;
 }
 
 /* We go for the most witless string parsing possible, must be double quoted,
  * and we only recognise octal character escapes. */
-static bool read_string(const char **in, void *variable)
+static error__t read_string(const char **in, void *variable)
 {
     char *string = variable;
     memset(variable, 0, EPICS_STRING_LENGTH);
-    bool ok = TEST_OK_(*(*in)++ == '"', "Expected quoted string");
-    for (int i = 0; ok  &&  i < EPICS_STRING_LENGTH; i ++)
+    error__t error = TEST_OK_(*(*in)++ == '"', "Expected quoted string");
+    for (unsigned int i = 0; !error  &&  i < EPICS_STRING_LENGTH; i ++)
     {
         char ch = *(*in)++;
         if (ch == '"')
-            return true;
+            return ERROR_OK;
         else if (ch == '\\')
-            ok = parse_octal(in, &string[i]);
+            error = parse_octal(in, &string[i]);
         else
         {
             string[i] = ch;
-            ok = TEST_OK_(' ' <= ch  &&  ch <= '~', "Invalid string character");
+            error = TEST_OK_(' ' <= ch  &&  ch <= '~',
+                "Invalid string character");
         }
     }
-    return ok  &&  TEST_OK_(*(*in)++ == '"', "Missing closing quote");
+    return error  ?:  TEST_OK_(*(*in)++ == '"', "Missing closing quote");
 }
 
 
@@ -214,7 +215,7 @@ void create_persistent_waveform(
 {
     /* If you try to create a persistent PV without having first initialised the
      * persistence layer then you'll get this error. */
-    ASSERT_NULL(variable_table);
+    ASSERT_OK(variable_table);
 
     const struct persistent_action *action = &persistent_actions[type];
     struct persistent_variable *persistence =
@@ -234,14 +235,15 @@ static struct persistent_variable *lookup_persistence(const char *name)
 {
     struct persistent_variable *persistence =
         hash_table_lookup(variable_table, name);
-    if (persistence == NULL)
-        print_error("Persistent variable %s not found", name);
+    error_report(TEST_OK_(persistence,
+        "Persistent variable %s not found", name));
     return persistence;
 }
 
 
 /* Updates variable from value stored on disk. */
-bool read_persistent_waveform(const char *name, void *variable, size_t *length)
+bool read_persistent_waveform(
+    const char *name, void *variable, size_t *length)
 {
     LOCK();
     struct persistent_variable *persistence = lookup_persistence(name);
@@ -259,11 +261,10 @@ bool read_persistent_waveform(const char *name, void *variable, size_t *length)
 bool read_persistent_variable(const char *name, void *variable)
 {
     size_t length;
-    return
-        read_persistent_waveform(name, variable, &length)  &&
-        TEST_OK_(length == 1,
-            "Persistent variable %s length mismatch: %zd != 1",
-            name, length);
+    bool ok = read_persistent_waveform(name, variable, &length);
+    if (ok)
+        ASSERT_OK(length == 1);
+    return ok;
 }
 
 
@@ -311,7 +312,7 @@ struct line_buffer {
  * and setting *eof accordingly.  Also ensures that we've read a complete
  * newline terminated line.  This will also fail if the input file doesn't end
  * with a newline.  The terminating newline character is then deleted. */
-static bool read_line(struct line_buffer *line, bool *eof)
+static error__t read_line(struct line_buffer *line, bool *eof)
 {
     errno = 0;
     *eof = fgets(line->line, READ_BUFFER_SIZE, line->file) == NULL;
@@ -323,7 +324,7 @@ static bool read_line(struct line_buffer *line, bool *eof)
         line->line_number += 1;
         return
             TEST_OK_(len > 0  &&  line->line[len - 1] == '\n',
-                "Line %d truncated?", line->line_number)  &&
+                "Line %d truncated?", line->line_number)  ?:
             DO(line->line[len - 1] = '\0');
     }
 }
@@ -331,24 +332,24 @@ static bool read_line(struct line_buffer *line, bool *eof)
 
 /* Skips leading whitespace and refills the line buffer if a line continuation
  * character is encountered. */
-static bool fill_line_buffer(struct line_buffer *line, const char **cursor)
+static error__t fill_line_buffer(struct line_buffer *line, const char **cursor)
 {
     while (**cursor == ' ')
         *cursor += 1;
-    bool ok = true;
+    error__t error = ERROR_OK;
     if (**cursor == '\\')
     {
         bool eof;
-        ok = read_line(line, &eof)  &&
+        error = read_line(line, &eof)  ?:
             TEST_OK_(!eof, "End of file after line continuation");
-        if (ok)
+        if (!error)
         {
             *cursor = line->line;
             while (**cursor == ' ')
                 *cursor += 1;
         }
     }
-    return ok;
+    return error;
 }
 
 
@@ -356,15 +357,15 @@ static bool fill_line_buffer(struct line_buffer *line, const char **cursor)
 static void flush_continuation(struct line_buffer *line)
 {
     size_t line_len;
-    bool ok = true;
+    error__t error = ERROR_OK;
     bool discard = false;
     int first_line = 0, last_line = 0;
     while (
         line_len = strlen(line->line),
-        ok  &&  line_len > 0  &&  line->line[line_len - 1] == '\\')
+        !error  &&  line_len > 0  &&  line->line[line_len - 1] == '\\')
     {
         bool eof;
-        ok = read_line(line, &eof)  &&
+        error = read_line(line, &eof)  ?:
             TEST_OK_(!eof, "End of file after line continuation");
 
         /* Record discard parameters so we can make one report when done. */
@@ -375,6 +376,7 @@ static void flush_continuation(struct line_buffer *line)
         }
         last_line = line->line_number;
     }
+    error_report(error);
 
     if (discard)
     {
@@ -389,74 +391,91 @@ static void flush_continuation(struct line_buffer *line)
 /* Parses the right hand side of a <key>=<value> assignment, taking into account
  * the possibility that the value can extend over multiple lines.  A final \ is
  * used to flag line continuation. */
-static bool parse_value(
+static error__t parse_value(
     struct line_buffer *line, const char *cursor,
     struct persistent_variable *persistence)
 {
     void *variable = persistence->variable;
     size_t size = persistence->action->size;
     size_t length = 0;
-    bool ok = true;
-    for (; ok  &&  *cursor != '\0'  &&  length < persistence->max_length;
+    error__t error = ERROR_OK;
+    for (; !error  &&  *cursor != '\0'  &&  length < persistence->max_length;
          length ++)
     {
-        ok = fill_line_buffer(line, &cursor)  &&
+        error = fill_line_buffer(line, &cursor)  ?:
             persistence->action->read(&cursor, variable);
         variable += size;
     }
-    persistence->length = ok ? length : 0;
-    return ok  &&  TEST_OK_(*cursor == '\0', "Unexpected extra characters");
+    persistence->length = error ? 0 : length;
+    return
+        error  ?:
+        TEST_OK_(*cursor == '\0', "Unexpected extra characters");
 }
 
 
 /* Parse variable assignment of the form <key>=<value> using the parsing method
  * associated with <key>, or fail if <key> not known. */
-static bool parse_assignment(struct line_buffer *line)
+static error__t parse_assignment(struct line_buffer *line)
 {
     char *equal;
     struct persistent_variable *persistence = NULL;
-    bool ok =
-        TEST_NULL_(equal = strchr(line->line, '='), "Missing =")  &&
-        DO(*equal++ = '\0')  &&
-        TEST_NULL_(persistence = hash_table_lookup(variable_table, line->line),
-            "Persistence key \"%s\" not found", line->line)  &&
+    error__t error =
+        TEST_OK_(equal = strchr(line->line, '='), "Missing =")  ?:
+        DO(*equal++ = '\0')  ?:
+        TEST_OK_(persistence = hash_table_lookup(variable_table, line->line),
+            "Persistence key \"%s\" not found", line->line)  ?:
         parse_value(line, equal, persistence);
 
     /* Report location of error and flush any continuation lines. */
-    if (!ok)
+    if (error)
     {
-        print_error("Error parsing %s on line %d of state file %s",
+        error_extend(error,
+            "Error parsing %s on line %d of state file %s",
             persistence ? persistence->name : "(unknown)",
             line->line_number, state_filename);
         flush_continuation(line);
     }
-    return ok;
+    return error;
 }
 
 
-static bool parse_persistence_file(const char *filename, bool check_parse)
+static error__t parse_persistence_file(const char *filename, bool check_parse)
 {
     struct line_buffer line = {
         .file = fopen(filename, "r"),
         .line_number = 0 };
-    if (!TEST_NULL_IO_(line.file, "Unable to open state file %s", filename))
+    error__t error = TEST_OK_IO_(line.file,
+        "Unable to open state file %s", filename);
+    if (error_report(error))
         /* If persistence file isn't found we report open failure but don't
          * fail -- this isn't really an error. */
-        return true;
+        return ERROR_OK;
 
-    bool ok = true, eof = false;
-    while (ok  &&  read_line(&line, &eof)  &&  !eof)
+    while (!error)
     {
+        bool eof = false;
+        error = read_line(&line, &eof);
+        if (error  ||  eof)
+            break;
+
         /* Skip lines beginning with # and blank lines. */
         if (line.line[0] != '#'  &&  line.line[0] != '\n')
-            /* Although line parsing can fail, we ignore the errors unless
-             * check_parse is set.  This means that we will complete the loading
-             * of a broken state file (for example, if keys have changed), error
-             * messages will be printed, but this function will succeed. */
-            ok = parse_assignment(&line)  ||  !check_parse;
+        {
+            error = parse_assignment(&line);
+            if (!check_parse)
+            {
+                /* Although line parsing can fail, we only report errors if
+                 * check_parse is not set.  This means that we will complete the
+                 * loading of a broken state file (for example, if keys have
+                 * changed), error messages will be printed, but this function
+                 * will succeed. */
+                error_report(error);
+                error = ERROR_OK;
+            }
+        }
     }
-    IGNORE(TEST_IO(fclose(line.file)));
-    return ok;
+    fclose(line.file);
+    return error;
 }
 
 
@@ -489,24 +508,26 @@ static void write_lines(
 
 
 /* Writes persistent state to given file. */
-static bool write_persistent_state(const char *filename)
+static error__t write_persistent_state(const char *filename)
 {
     FILE *out;
-    bool ok = TEST_NULL_IO_(out = fopen(filename, "w"),
-        "Unable to write persistent state: cannot open \"%s\"", filename);
-    if (!ok)
-        return false;
+    error__t error =
+        TEST_OK_IO_(out = fopen(filename, "w"),
+            "Unable to write persistent state: cannot open \"%s\"",
+            filename);
+    if (error)
+        return error;
 
     /* Start with a timestamp log. */
     char out_buffer[40];
     time_t now = time(NULL);
     const char *timestamp = ctime_r(&now, out_buffer);
-    ok = TEST_OK(fprintf(out, "# Written: %s", timestamp) > 0);
+    fprintf(out, "# Written: %s", timestamp);
 
     int ix = 0;
     const void *key;
     void *value;
-    while (ok  &&  hash_table_walk(variable_table, &ix, &key, &value))
+    while (hash_table_walk(variable_table, &ix, &key, &value))
     {
         const char *name = key;
         struct persistent_variable *persistence = value;
@@ -514,12 +535,13 @@ static bool write_persistent_state(const char *filename)
             write_lines(out, name, persistence);
     }
     fclose(out);
-    return ok;
+    return ERROR_OK;
 }
+
 
 /* Updates persistent state via a backup file to avoid data loss (assuming
  * rename is implemented as an OS atomic action). */
-bool update_persistent_state(void)
+error__t update_persistent_state(void)
 {
     if (persistence_dirty  &&  state_filename != NULL)
     {
@@ -530,11 +552,11 @@ bool update_persistent_state(void)
         char backup_file[name_len + strlen(".backup") + 1];
         sprintf(backup_file, "%s.backup", state_filename);
         return
-            write_persistent_state(backup_file)  &&
+            write_persistent_state(backup_file)  ?:
             TEST_IO(rename(backup_file, state_filename));
     }
     else
-        return true;
+        return ERROR_OK;
 }
 
 
@@ -545,7 +567,7 @@ bool update_persistent_state(void)
 
 /* Wrapper to wait for a pthread condition with a timeout. */
 #define NSECS   1000000000
-static bool pwait_timeout(int secs, long nsecs)
+static void pwait_timeout(int secs, long nsecs)
 {
     struct timespec timeout;
     ASSERT_IO(clock_gettime(CLOCK_REALTIME, &timeout));
@@ -557,8 +579,7 @@ static bool pwait_timeout(int secs, long nsecs)
         timeout.tv_nsec -= NSECS;
         timeout.tv_sec += 1;
     }
-    int rc = pthread_cond_timedwait(&psignal, &mutex, &timeout);
-    return rc != ETIMEDOUT;
+    pthread_cond_timedwait(&psignal, &mutex, &timeout);
 }
 
 
@@ -572,7 +593,7 @@ static void *persistence_thread(void *context)
     while (thread_running)
     {
         pwait_timeout(persistence_interval, 0);
-        update_persistent_state();
+        error_report(update_persistent_state());
         persistence_dirty = false;
     }
     UNLOCK();
@@ -587,7 +608,7 @@ void initialise_persistent_state(void)
 }
 
 
-bool load_persistent_state(
+error__t load_persistent_state(
     const char *file_name, int save_interval, bool check_parse)
 {
     /* It's more robust to take a copy of the passed filename, places fewer
@@ -596,11 +617,11 @@ bool load_persistent_state(
     persistence_interval = save_interval;
 
     LOCK();
-    bool ok = parse_persistence_file(state_filename, check_parse);
+    error__t error = parse_persistence_file(state_filename, check_parse);
     UNLOCK();
 
     return
-        ok  &&
+        error  ?:
         IF(persistence_thread_id == 0,
             TEST_PTHREAD(pthread_create(
                 &persistence_thread_id, NULL, persistence_thread, NULL)));

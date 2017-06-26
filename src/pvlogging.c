@@ -100,10 +100,10 @@ static void epics_pv_put_hook(asTrapWriteMessage *pmessage, int after)
 }
 
 
-bool hook_pv_logging(const char *access_file, int max_length)
+error__t hook_pv_logging(const char *access_file, int max_length)
 {
     max_array_length = max_length;
     asSetFilename("db/access.acf");
     asTrapWriteRegisterListener(epics_pv_put_hook);
-    return true;
+    return ERROR_OK;
 }

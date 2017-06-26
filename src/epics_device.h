@@ -231,7 +231,7 @@ struct timespec;
 
 
 /* This must be called once before publishing any PVs. */
-bool initialise_epics_device(void);
+error__t initialise_epics_device(void);
 
 
 /*****************************************************************************/
