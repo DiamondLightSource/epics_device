@@ -827,7 +827,7 @@ static bool process_out_record(dbCommon *pr, size_t value_size, void *result)
                 (dbCommon *) pr, sizeof(TYPEOF(record))); \
             MLST(pr->mlst = (typeof(pr->mlst)) pr->VAL); \
         } \
-        return error_report(error) ? EPICS_ERROR : EPICS_OK; \
+        return error_report(error) ? EPICS_ERROR : INIT_OK; \
     }
 
 
