@@ -308,7 +308,7 @@ struct epics_record *publish_epics_record(
     base->ioscanpvt = NULL;
     base->ioscan_pending = false;
     base->persist = false;
-    base->severity = epicsSevNone;
+    base->severity = (enum epics_alarm_severity) epicsSevNone;
 
     switch (record_type)
     {

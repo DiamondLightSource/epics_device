@@ -1,6 +1,7 @@
 /* Extra support built on top of epics_device. */
 
 #include <stdbool.h>
+#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdarg.h>
@@ -297,9 +298,10 @@ void database_add_macro(const char *macro_name, const char *format, ...)
     va_start(args, format);
 
     /* Arbitrary limit for the length of a single macro definition. */
-    const int macro_size = 512;
+    const size_t macro_size = 512;
     char macro_string[macro_size];
-    ASSERT_OK(vsnprintf(macro_string, macro_size, format, args) < macro_size);
+    ASSERT_OK(
+        vsnprintf(macro_string, macro_size, format, args) < (int) macro_size);
     va_end(args);
 
     if (database_macros)

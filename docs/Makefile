@@ -2,6 +2,9 @@ TOP = ..
 
 export TOP
 
+include $(TOP)/configure/RELEASE
+export EPICS_BASE
+
 install:
 	sphinx-build -b html . html
 
