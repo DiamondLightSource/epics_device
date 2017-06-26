@@ -16,7 +16,7 @@ PVs are published to the device by the IOC.
 
 The following functions provide the persistence interface.
 
-..  function:: bool load_persistent_state( \
+..  function:: error__t load_persistent_state( \
         const char *file_name, int save_interval, bool check_parse)
 
     This should be called once after publishing all PVs to EPICS device but
@@ -31,10 +31,10 @@ The following functions provide the persistence interface.
     This function can be called from the IOC shell, but in this case the return
     code is lost.
 
-..  function:: bool update_persistent_state(void)
+..  function:: error__t update_persistent_state(void)
 
     This can be called to force the state file to be written if any persistent
-    PVs have changed their state.  Returns ``false`` if an error occurs.
+    PVs have changed their state.
 
 ..  function:: void terminate_persistent_state(void)
 

@@ -3,53 +3,62 @@ Error Handling Macros and Other Facilities
 
 The header file ``error.h`` is designed to support a particular style of error
 handling.  The general approach is that functions which can fail should return a
-boolean return code, returning ``true`` if successful, and returning ``false``
-and reporting the failure reason if failed.  A sequence of such functions can
-then be combined with the ``&&`` operator so that the overall result is success
-only if every stage succeeds.  This can in some sense be thought of as a more
-controlled variant of exception handling, or on the other hand as combining
-success through the ``Maybe`` monad.
+special ``error__t`` return code, returning ``ERROR_OK`` if successful, and
+returning a code with contains a report of the failure reason if failed.  A
+sequence of such functions can then be combined with the ``?:`` operator so that
+the overall result is success only if every stage succeeds.  This can in some
+sense be thought of as a more controlled variant of exception handling, or on
+the other hand as combining success through the ``Maybe`` monad.
 
 Functions can be cascaded in this style if they conform to the following
 requirements:
 
-1.  ``true`` is returned only on successful completion, otherwise all further
-    processing can be aborted.
+1.  ``ERROR_OK`` is returned only on successful completion, otherwise all
+    further processing can be aborted.  Note that ``ERROR_OK`` tests as
+    ``false`` when treated as a boolean.
 
-2.  When ``false`` is returned the error has been reported and handled, all that
-    remains to be done is to abort further processing.
+2.  When any other error code is returned (testing ``true`` when treated as a
+    boolean) the error code can be handed up, or reported there and then.
+
+3.  Every error code must be subject to one of the following fates:
+
+    a)  Passed up to the caller for further processing.
+    b)  Explicitly reported using :func:`error_report` or a related function.
+    c)  Explicitly discarded using :func:`error_discard`.
+
+    In particular, values of type ``error__t`` must not be silently dropped as
+    otherwise errors can go unreported and there will be a memory leak.
 
 An example of this style of coding can be seen in the first half of the
 implementation of :func:`ioc_main` in ``examples/example_ioc/src/main.c``::
 
-    static bool ioc_main(void)
+    static error__t ioc_main(void)
     {
         return
-            initialise_epics_device()  &&
+            initialise_epics_device()  ?:
 
-            initialise_example_pvs()  &&
-            start_caRepeater()  &&
-            hook_pv_logging("db/access.acf", 10)  &&
+            initialise_example_pvs()  ?:
+            start_caRepeater()  ?:
+            hook_pv_logging("db/access.acf", 10)  ?:
             load_persistent_state(
-                persistence_file, false, persistence_interval)  &&
+                persistence_file, persistence_interval, false)  ?:
 
-            TEST_IO(dbLoadDatabase("dbd/example_ioc.dbd", NULL, NULL))  &&
-            TEST_IO(example_ioc_registerRecordDeviceDriver(pdbbase))  &&
-            load_database("db/example_ioc.db")  &&
+            TEST_IO(dbLoadDatabase("dbd/example_ioc.dbd", NULL, NULL))  ?:
+            TEST_IO(example_ioc_registerRecordDeviceDriver(pdbbase))  ?:
+            load_database("db/example_ioc.db")  ?:
             TEST_OK(iocInit() == 0);
     }
 
 The second half of this example uses the error handling macros.  Not all
-functions are of the form described above, returning ``true`` on success,
-reporting their own failure and returning ``false`` on failure, so the macros in
-this file provide functions to convert functions of a more familiar form into
-the format described here.
+functions are of the form described above returning an ``error__t`` error code,
+so the macros in this file provide functions to convert functions of a more
+familiar form into the format described here.
 
 For example, the macro :func:`TEST_IO` takes as argument an expression (which
-may be an assignment) which following the usual C library calling convention,
-that is, which returns -1 on failure and sets :data:`errno`, otherwise returns
-some other value.  The :func:`TEST_IO` macro ensures that the return code is
-tested and an error message is reported if necessary.
+may be an assignment) which following the usual system library calling
+convention, that is, which returns -1 on failure and sets :data:`errno`,
+otherwise returns some other value.  The :func:`TEST_IO` macro ensures that the
+return code is tested and an error message is generated if necessary.
 
 
 Core Handling Macros
@@ -61,14 +70,13 @@ of test three macros are defined, for example for ``IO`` we have the following:
 behave thus:
 
 ``TEST_xx(expr)``
-    If the test fails a canned error message (defined by the macro
-    :macro:`ERROR_MESSAGE`) is generated and the macro evaluates to ``false``,
-    otherwise evaluates to ``true``.
+    If the test fails an error code representing a canned error message (defined
+    by the macro :macro:`ERROR_MESSAGE`) is returned, otherwise
+    ``ERROR_OK`` is returned.
 
 ``TEST_xx_(expr, format...)``
-    If the test fails then the given error message (with :func:`sprintf`
-    formatting) is generated and the macro evaluates to ``false``, otherwise
-    ``true``.
+    If the test fails then an error code representing the given error message
+    (with :func:`sprintf` formatting) is returned, otherwise ``ERROR_OK``.
 
 ``ASSERT_xx(expr)``
     If the test fails then an error report is printing showing the calling file
@@ -95,21 +103,13 @@ The following groups of tests are defined:
     is ``false``.  No extra error information is included in the error message.
 
 ..  macro::
-    TEST_NULL(expr)
-    TEST_NULL_(expr, format...)
-    ASSERT_NULL(expr)
+    TEST_OK_IO(expr)
+    TEST_OK_IO_(expr, format...)
+    ASSERT_OK_IO(expr)
 
-    These all report an error if `expr` evaluates to ``NULL``, but no extra
-    error information is included
-
-..  macro::
-    TEST_NULL_IO(expr)
-    TEST_NULL_IO_(expr, format...)
-    ASSERT_NULL_IO(expr)
-
-    These all report an error if `expr` evaluates to ``NULL``, and it is assumed
-    that :data:`errno` has been set to a valid value which is used to report
-    extra error information.
+    These all report an error if `expr` evaluates to ``false``, and it is
+    assumed that :data:`errno` has been set to a valid value which is used to
+    report extra error information.
 
 ..  macro::
     TEST_PTHREAD(expr)
@@ -117,9 +117,9 @@ The following groups of tests are defined:
     ASSERT_PTHREAD(expr)
 
     These macros are designed to be used with the ``<pthread.h>`` family of
-    functions.  These all return 0 on success and a non-zero error code which is
-    compatible with :data:`errno` on failure.  :data:`errno` is updated with the
-    failure return code by these macros if an error is reported.
+    functions.  These functions all return 0 on success and a non-zero error
+    code which is compatible with :data:`errno` on failure.  Extra information
+    from this error code is included in the returned result.
 
 
 Auxilliary Error Handling Macros
@@ -127,26 +127,23 @@ Auxilliary Error Handling Macros
 
 The following macros are used as helpers.
 
-..  function:: void print_error(message...)
-
-    Prints an error message through the error handling mechanism.
-
-..  macro:: ASSERT_FAIL()
+..  macro:: ASSERT_FAIL( )
 
     Functionally equivalent to ``ASSERT_OK(false)``, unconditionally terminates
     execution and does not return.
 
-..  macro:: FAIL_(message...)
+..  macro::
+    FAIL( )
+    FAIL_(message...)
 
-    Used to return a failure error message, functionally equivalent to
-    ``TEST_OK_(false, message...)``.
+    Used to return a failure error code, functionally equivalent to
+    ``TEST_OK(false)`` or ``TEST_OK_(false, message...)``.
 
 ..  macro:: DO(action)
 
     Used to convert a function returning ``void``, or indeed any sequence of C
     statements, into a successful expression.  Useful for including an
-    unconditionally successful call in a sequence of error tests.  To be used
-    sparingly, as can be used to produce nasty looking code.
+    unconditionally successful call in a sequence of error tests.
 
 ..  macro::
     IF(test, iftrue)
@@ -154,13 +151,88 @@ The following macros are used as helpers.
 
     Conditional execution of tested functions.  In both cases `test` is a
     boolean test; if it evaluates to ``true`` then the `iftrue` expression is
-    evaluated, otherwise `iffalse` (if specified).  Again, should be used
-    sparingly, when needed to help in the cascading of error checking functions.
+    evaluated, otherwise `iffalse` (if specified).
 
-..  macro:: COMPILE_ASSERT(expr)
+..  macro:: TRY_CATCH(action, on_fail...)
 
-    This macro forces a compile time error if `expr` evaluates to ``false`` at
-    compile time.  Alas this cannot be used at the top declaration level.
+    This macro provides a limited form of exception handling.  `action` must
+    return an ``error__t``, which is returned by this macro.  If the error code
+    is not ``ERROR_OK`` then the code `on_fail` is executed before returning.
+    Note that any value returned by `on_fail` is discarded.
+
+..  macro:: DO_FINALLY(action, finally...)
+
+    This macro unconditionally executes `finally` after `action` has been
+    evaluated, and returns the error code from `action`.  Again, any value
+    returned by `finally` is discarded.
+
+    The only difference from :macro:`TRY_CATCH` is that the `finally` code is
+    unconditionally executed by :macro:`DO_FINALLY`.
+
+
+Error Reporting and Management
+------------------------------
+
+The functions described here are used for reporting, discarding, or otherwise
+managing error codes.
+
+..  function:: bool error_report(error__t error)
+
+    Converts `error` into a string and uses :func:`log_error` to report the
+    error.  This is the normal destination for all error codes.  ``true`` is
+    returned if `error` was an error (and an error message was reported), and
+    ``false`` is returned if `error` is ``ERROR_OK``, in which case no action
+    was taken.
+
+    This function disposes of `error`, and this value is no longer valid.
+
+..  macro:: ERROR_REPORT(error, format...)
+
+    This helper function will augment `error` with the message defined by
+    `format` before reporting the error by calling :func:`error_report`.
+
+..  function:: void error_discard(error__t error)
+
+    This function silently discards `error`, after which the value is invalid.
+
+..  function:: void error_extend(error__t error, const char *format, ...)
+
+    The information associated with `error` is augmented with the message
+    defined by `format`.  The lifetime of `error` is unaffected.  Note that
+    `error` must *not* be ``ERROR_OK`` -- it is not possible to extend
+    ``ERROR_OK``.
+
+..  function:: const char *error_format(error__t error)
+
+    Returns a formatted string representing the error code.  The lifetime of the
+    returned string is identical to the lifetime of `error`, which must still be
+    reported or discarded at the appropriate time.
+
+
+Message Logging Control
+-----------------------
+
+By default all error messages are sent to ``stderr``, but syslog can be used
+instead.
+
+..  function:: void vlog_message(int priority, const char *format, va_list args)
+
+    Sends the given message to ``stderr`` or to syslog, depending on whether
+    :func:`start_logging` has been called.
+
+..  function::
+    void log_message(const char *message, ...)
+    void log_error(const char *message, ...)
+
+    Calls :func:`vlog_message` with with `priority` set to ``LOG_INFO`` for
+    :func:`log_message`, and ``LOG_ERR`` for :func:`log_error`.
+
+    Note that :func:`error_report` uses :func:`log_error`.
+
+..  function:: void start_logging(const char *ident)
+
+    This invokes :func:`openlog` (3) and sends all future messages to the system
+    log with the log identifier `ident`.
 
 
 Miscellaneous Helpers
@@ -174,14 +246,14 @@ header file.
     If the number of elements of `array` is known at compile time this macro
     returns the number of elements.
 
-..  macro:: type REINTERPRET_CAST(type, value)
+..  macro:: to_type CAST_FROM_TO(from_type, to_type, value)
 
     In some situations the compiler will not accept an ordinary C cast of the
     form ``(type) value`` because of anxieties about aliasing, or if a ``const``
     attribute needs to be removed, or if some other low level bit preserving
     conversion is required.  This macro performs this cast in a more compiler
-    friendly manner (via a ``union`` type), and checks that `value` and `type`
-    have the same size.
+    friendly manner (via a ``union`` type), and checks that `value` has type
+    `from_type` and that `to_type` and `value` have the same size.
 
     For example, this macro is used to remove the ``const`` attribute from a
     hashtable key in ``hashtable.c`` thus (here :func:`release_key` takes a
@@ -189,63 +261,101 @@ header file.
 
         static void release_key(struct hash_table *table, const void *key)
         {
-            table->key_ops->release_key(REINTERPRET_CAST(void *, key));
+            table->key_ops->release_key(
+                CAST_FROM_TO(const void *, void *, key));
         }
 
     Another application is the following which extracts the bit pattern of a
     floating point number as an integer::
 
-        uint32_t bit_pattern = REINTERPRET_CAST(uint32_t, 0.1F);
+        uint32_t bit_pattern = CAST_FROM_TO(float, uint32_t, 0.1F);
+
+..  macro:: ENSURE_TYPE(type, value)
+
+    This is a weak cast from `value` to `type` which ensures that it is valid to
+    assign `value` to this `type`.
 
 ..  macro:: IGNORE(expr)
 
     Discards a return value without compiler warning even when
     ``warn_unused_result`` is in force.
 
+..  macro:: unlikely(expr)
 
-Extending Error Handling
-------------------------
+    Provides a hint to the compiler that ``expr`` is likely to be ``0``, can
+    help in the optimisation of very rarely taken branches.
 
-There are two aspects to extending error handling: intercepting the generated
-error message and creating new error macros.
+..  macro::
+    COMPILE_ASSERT(expr)
+    STATIC_COMPILE_ASSERT(expr)
 
-..  type:: typedef void (*error_hook_t)(const char *message)
+    This macro forces a compile time error if `expr` evaluates to ``false`` at
+    compile time.  :macro:`COMPILE_ASSERT` must be used inside a function
+    declaration, while :macro:`STATIC_COMPILE_ASSERT` must be used at the top
+    declaration level.
 
-    A function of this type is called to output each error message.  The default
-    action is to print the message followed by a newline character to
-    ``stderr``.
+..  macro::
+    MIN(x, y)
+    MAX(x, y)
 
-..  function:: error_hook_t set_error_hook(error_hook_t hook)
+    Macro safe minimum and maximum functions.
 
-    The default error reporting action can be modified by calling this function.
-    The previous error handling function is returned.  The error hook must be
-    valid.
+..  macro:: container_of(ptr, type, member)
 
-To extend error handling two auxillary macros ``COND`` and ``EXTRA`` need to be
-defined and passed to the :func:`_TEST` and :func:`_ASSERT` macros, for instance
-the IO macros are defined by the following code::
+    Casts a member of a structure out to the containing structure.
 
-    #define _COND_IO(expr)              ((intptr_t) (expr) != -1)
-    #define _MSG_IO(expr)               _extra_io()
-    #define TEST_IO_(expr, message...)  _TEST(_COND_IO, _MSG_IO, expr, message)
-    #define TEST_IO(expr)               TEST_IO_(expr, ERROR_MESSAGE)
-    #define ASSERT_IO(expr)             _ASSERT(_COND_IO, _MSG_IO, expr)
 
-Here :func:`_extra_io` is an auxiliary function which computes a sensible error
-message from the error code in :data:`errno`.  Note that the cast in
-``_COND_IO`` is needed to cope with functions which can return pointers or an
-error code of -1 (hang your head in shame, :func:`mmap`).  These are the helper
-macros used here:
+Pitfalls
+--------
 
-..  macro:: _TEST(COND, EXTRA, expr, message...)
+The main pitfall is that if an error code is discarded then a memory leak will
+be created and errors will not be reported.  Unfortunately it is very easy to do
+this by mistake.
 
-    Remembers the result of evaluating `expr`, invokes `COND` on the result, if
-    that returns ``false`` then invokes `EXTRA` on the result, finally performs
-    a full error report using `message` as the format string.  Note that any
-    non ``NULL`` value returned by `EXTRA` will be freed by a call to
-    :func:`free`.
+1.  Deliberately discarding the error code.
 
-..  macro:: _ASSERT(COND, EXTRA, expr)
+    Example where error code is discarded::
 
-    As for :func:`_TEST` invokes `expr`, then `COND`, then `EXTRA` if necessary
-    before reporting a fatal error and halting program execution.
+        error__t test_function(void) { ... }
+
+        bool drop_error(void) {
+            !test_function();
+        }
+
+    In this case the error code is silently dropped.  This should be rewritten
+    in one of the following two forms::
+
+        bool drop_error(void) {
+            return !error_report(test_function);
+        }
+
+    if the error should be reported, or::
+
+        bool drop_error(void) {
+            error_discard(test_function());
+            return !error;
+        }
+
+    if the error needs to be silently discarded.
+
+2.  Accidentially discarding the error code.
+
+    Inevitably there are many ways of doing this, but one way is particularly
+    easy and unfortunate: consider this code::
+
+        error__t chained(void) {
+            error__t error =
+                function1()  ?:
+                function2();
+                function3()  ?:
+                function4();
+            return error;
+        }
+
+    Oops.  This code has two very unfortunate behaviours.  Firstly, any error
+    code returned by ``function3()`` or ``function4()`` will be silently
+    discarded ... and worse, even if ``function1()`` or ``function2()`` fails,
+    the last two functions will still be called.
+
+    Do try not to do this.  I think it's impossible to persuade the compiler to
+    pick this up, alas.

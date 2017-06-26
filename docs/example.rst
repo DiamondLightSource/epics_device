@@ -134,13 +134,13 @@ definition of ``main`` above with a call to ``init_ioc()`` as defined here:
 
     extern int basic_ioc_registerRecordDeviceDriver(struct dbBase *pdb);
 
-    static bool init_ioc(void)
+    static error__t init_ioc(void)
     {
         return
-            TEST_IO(dbLoadDatabase("dbd/basic_ioc.dbd", NULL, NULL))  &&
-            TEST_IO(basic_ioc_registerRecordDeviceDriver(pdbbase))  &&
-            DO(database_add_macro("DEVICE", "TS-TS-TEST-99"))  &&
-            database_load_file("db/basic_ioc.db")  &&
+            TEST_IO(dbLoadDatabase("dbd/basic_ioc.dbd", NULL, NULL))  ?:
+            TEST_IO(basic_ioc_registerRecordDeviceDriver(pdbbase))  ?:
+            DO(database_add_macro("DEVICE", "TS-TS-TEST-99"))  ?:
+            database_load_file("db/basic_ioc.db")  ?:
             TEST_OK(iocInit() == 0);
     }
 
@@ -197,7 +197,7 @@ published.  The following C code publishes the variables above:
 ..  code-block:: c
     :linenos:
 
-    bool initialise_example_pvs(void)
+    error__t initialise_example_pvs(void)
     {
         PUBLISH_WRITER_P(ao, "FREQ", set_frequency);
         PUBLISH_WF_READ_VAR(double, "WF", WF_LENGTH, waveform);

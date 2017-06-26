@@ -20,7 +20,7 @@ Initialisation Etc
     reported yet.  If ``true`` is returned the :func:`wait_for_epics_start` is
     guaranteed not to block.
 
-..  function:: bool start_caRepeater(void)
+..  function:: error__t start_caRepeater(void)
 
     This will start a background caRepeater thread.  This is useful for embedded
     use where arranging for an extra caRepeater application to run is an extra
@@ -29,7 +29,7 @@ Initialisation Etc
 ..  function::
     void database_add_macro( \
         const char *macro, const char *format, ...)
-    bool database_load_file(const char *filename)
+    error__t database_load_file(const char *filename)
 
     These two functions are designed to be used together to load EPICS database
     files, and are designed to be called before calling :func:`iocInit`.  If

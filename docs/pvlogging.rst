@@ -7,7 +7,7 @@ enable logging.
 
 The functionality described here is defined in the header file ``pvlogging.h``.
 
-..  function:: bool hook_pv_logging(const char *access_file, int max_length)
+..  function:: error__t hook_pv_logging(const char *access_file, int max_length)
 
     When called enables logging of all Channel Access PV puts.  The parameter
     `max_length` determines how many elements of waveforms are logged.  The

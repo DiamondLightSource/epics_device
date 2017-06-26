@@ -46,12 +46,11 @@ Initialisation
 
 One function is provided for initialisation.
 
-..  function:: bool initialise_epics_device(void)
+..  function:: error__t initialise_epics_device(void)
 
     This function must be called at least once before publishing any records or
     calling any other function listed here.  Repeated calls have no further
-    effect.  If an error occurs ``false`` is returned and an error message is
-    printed.
+    effect.
 
     This function can be called from the IOC shell, but in this case the return
     code is lost.
