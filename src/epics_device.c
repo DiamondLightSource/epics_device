@@ -53,6 +53,10 @@
 #define NO_CONVERT      2       // Special code for ai/ao conversion
 
 
+/* Maximum length of record prefix. */
+#define MAX_NAME_PREFIX_COUNT     8
+#define MAX_NAME_PREFIX_LENGTH    80
+
 
 /****************************************************************************/
 /*                   Core Record Publishing and Lookup                      */
@@ -170,11 +174,75 @@ static const char *get_type_name(enum record_type record_type)
 }
 
 
+/* We handle errors by reporting them and then just dying.  A bit crude, but
+ * mostly there's nothing to be done with the error. */
+static void fail_on_error(error__t error)
+{
+    ASSERT_OK(!error_report(error));
+}
+
+
+/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
+/*                        Record name and key generation                     */
+/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
+
+struct name_prefix {
+    unsigned int count;
+    size_t length;
+    char prefix[MAX_NAME_PREFIX_LENGTH];
+    size_t offsets[MAX_NAME_PREFIX_COUNT];
+};
+
+static struct name_prefix name_prefix = {
+    .count = 0,
+    .length = 0,
+};
+
+
+void push_record_name_prefix(const char *prefix)
+{
+    size_t length = strlen(prefix);
+    size_t new_length = name_prefix.length + length;
+
+    fail_on_error(
+        TEST_OK_(name_prefix.count < ARRAY_SIZE(name_prefix.offsets),
+            "Too many record name prefixes specified")  ?:
+        TEST_OK_(new_length < ARRAY_SIZE(name_prefix.prefix),
+            "Record name prefix too long"));
+
+    strcpy(name_prefix.prefix + name_prefix.length, prefix);
+    name_prefix.offsets[name_prefix.count] = name_prefix.length;
+    name_prefix.length = new_length;
+    name_prefix.count += 1;
+}
+
+
+void pop_record_name_prefix(void)
+{
+    fail_on_error(TEST_OK_(name_prefix.count > 0,
+        "No record name prefix to pop"));
+    name_prefix.count -= 1;
+    size_t new_length = name_prefix.offsets[name_prefix.count];
+    name_prefix.prefix[new_length] = '\0';
+    name_prefix.length = new_length;
+}
+
+
 /* Construct key by concatenating record_type and name. */
 #define BUILD_KEY(key, name, record_type) \
     char key[strlen(name) + 20]; \
     sprintf(key, "%s:%s", get_type_name(record_type), name)
 
+/* Constructs key with name including the name prefix. */
+#define BUILD_KEY_PREFIX(key, name, record_type) \
+    char key[name_prefix.length + strlen(name) + 20]; \
+    sprintf(key, "%s:%s%s", get_type_name(record_type), \
+        name_prefix.prefix, name)
+
+
+/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
+/*                          Record publishing API                            */
+/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
 /* For each of the three record classes (IN, OUT, WAVEFORM) we extract the
  * appropriate fields from the given arguments, which are guaranteed to be of
@@ -224,14 +292,6 @@ static void initialise_waveform_fields(
 }
 
 
-/* We handle errors by reporting them and then just dying.  A bit crude, but
- * mostly there's nothing to be done with the error. */
-static void fail_on_error(error__t error)
-{
-    ASSERT_OK(!error_report(error));
-}
-
-
 /* Publishes record of given type with given name as specified by record type
  * specific arguments. */
 struct epics_record *publish_epics_record(
@@ -240,7 +300,7 @@ struct epics_record *publish_epics_record(
     struct epics_record *base = malloc(sizeof(struct epics_record));
 
     /* Construct lookup key of form <record-type>:<name>. */
-    BUILD_KEY(key, name, record_type);
+    BUILD_KEY_PREFIX(key, name, record_type);
     base->record_type = record_type;
     base->key = strdup(key);
 
@@ -903,8 +963,10 @@ static error__t check_waveform_type(
  * that fails, try for an (optional) init method. */
 static long init_record_waveform(waveformRecord *pr)
 {
-    error__t error = init_record_common(
-        (dbCommon *) pr, pr->inp.value.instio.string, RECORD_TYPE_waveform)  ?:
+    error__t error =
+        init_record_common(
+            (dbCommon *) pr, pr->inp.value.instio.string,
+            RECORD_TYPE_waveform)  ?:
         check_waveform_type(pr, pr->dpvt);
     if (error)
     {

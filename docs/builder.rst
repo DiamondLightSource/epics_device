@@ -75,6 +75,14 @@ be modified in two ways:
 2.  Secondly, a prefix can be prepended to every `address` by calling the
     function :func:`set_address_prefix`.
 
+..  function::
+    push_name_prefix(prefix)
+    pop_name_prefix()
+
+    These two functions mirror the action of :func:`push_record_name_prefix` and
+    :func:`pop_record_name_prefix`, and affect both the record name and the
+    associated address.
+
 ..  function:: set_address_prefix(prefix)
 
     This can be used to set a string which is added to the start of every

@@ -3,6 +3,7 @@
 #include <stddef.h>
 #include <stdarg.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <errno.h>
 #include <math.h>
 #include <pthread.h>
@@ -106,6 +107,18 @@ static void write_persistent_state(void)
 }
 
 
+/* We publish a group of PVs to check prefix handling. */
+static void publish_group(const char *prefix)
+{
+    int *target = calloc(1, sizeof(int));
+
+    push_record_name_prefix(prefix);
+    PUBLISH_READ_VAR(longin, "READ", *target);
+    PUBLISH_WRITE_VAR(longout, "WRITE", *target);
+    pop_record_name_prefix();
+}
+
+
 error__t initialise_example_pvs(void)
 {
     PUBLISH_WRITER_P(ao, "FREQ", set_frequency);
@@ -121,6 +134,9 @@ error__t initialise_example_pvs(void)
     PUBLISH_READ_VAR(longin, "COUNT", trigger_count);
     PUBLISH_WF_READ_VAR(int, "TRIGWF", WF_LENGTH, trigger_waveform);
     PUBLISH_ACTION("RESET", reset_trigger_count);
+
+    publish_group("A:");
+    publish_group("B:");
 
     pthread_t thread_id;
     return TEST_PTHREAD(pthread_create(&thread_id, NULL, event_thread, NULL));

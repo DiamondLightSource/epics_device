@@ -15,9 +15,10 @@ class EpicsDevice:
         def make(name, address=None, **fields):
             if address is None:
                 address = name
-            record = builder(name, **fields)
+            prefix = ''.join(self.name_prefix)
+            record = builder(prefix + name, **fields)
             record.DTYP = 'epics_device'
-            record.address = '@%s%s' % (self.address_prefix, address)
+            record.address = '@%s%s%s' % (self.address_prefix, prefix, address)
 
             # Check for a description, make a report if none given.
             if 'DESC' not in fields:
@@ -29,6 +30,7 @@ class EpicsDevice:
 
     def __init__(self):
         self.address_prefix = ''
+        self.name_prefix = []
         for name in [
                 'longin',    'longout',
                 'ai',        'ao',
@@ -43,9 +45,17 @@ class EpicsDevice:
     def set_address_prefix(self, prefix):
         self.address_prefix = prefix
 
+    def push_name_prefix(self, prefix):
+        self.name_prefix.append(prefix)
+
+    def pop_name_prefix(self):
+        self.name_prefix.pop()
+
 
 EpicsDevice = EpicsDevice()
 set_address_prefix = EpicsDevice.set_address_prefix
+push_name_prefix = EpicsDevice.push_name_prefix
+pop_name_prefix = EpicsDevice.pop_name_prefix
 
 
 
@@ -168,4 +178,5 @@ __all__ = [
     'aIn',      'aOut',     'boolIn',   'boolOut',  'longIn',   'longOut',
     'mbbIn',    'mbbOut',   'stringIn', 'stringOut',
     'Waveform', 'WaveformOut',
-    'EpicsDevice', 'set_MDEL_default', 'set_out_name', 'set_address_prefix']
+    'EpicsDevice', 'set_MDEL_default', 'set_out_name',
+    'set_address_prefix', 'push_name_prefix', 'pop_name_prefix']
