@@ -11,16 +11,6 @@
 STATIC_BUILD = YES
 
 CROSS_COMPILER_TARGET_ARCHS = linux-arm_el
-CROSS_COMPILER_TARGET_ARCHS = vxWorks-ppc604_long
 
 # Identify which python interpreter to use.  Must be at least version 2.4.
 PYTHON = dls-python
-
-# Identifies either the path to the IOC builder python library or its
-# pkg_resources version identification.  Very simple test: if it begins with /
-# it's a path!  If this is left blank then the builder is assumed to be on the
-# path.
-IOCBUILDER = 3.41
-
-TORNADO = /dls_sw/targetOS/vxWorks/Tornado-2.2
-ALTIVEC_CC = /dls_sw/prod/tools/RHEL6-x86_64/vxworks-gcc-altivec/3-4-6/prefix/bin/powerpc-wrs-vxworks-gcc

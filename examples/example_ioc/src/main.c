@@ -54,20 +54,6 @@ static bool ioc_main(void)
 }
 
 
-
-#ifdef VX_WORKS
-
-void vxWorksMain(const char *persist, int interval);
-void vxWorksMain(const char *persist, int interval)
-{
-    persistence_file = persist;
-    persistence_interval = interval;
-    ioc_main();
-}
-
-#else
-
-
 static bool parse_args(int argc, const char *argv[])
 {
     if (TEST_OK_(argc == 3, "Wrong number of arguments"))
@@ -90,4 +76,3 @@ int main(int argc, const char *argv[])
         DO(terminate_persistent_state());
     return ok ? 0 : 1;
 }
-#endif
