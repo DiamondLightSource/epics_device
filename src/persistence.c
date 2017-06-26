@@ -196,8 +196,8 @@ static int persistence_interval;
 
 /* To ensure state is updated in a timely way we have a background thread
  * responsible for this. */
-static pthread_mutex_t mutex;
-static pthread_cond_t psignal;
+static pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
+static pthread_cond_t psignal = PTHREAD_COND_INITIALIZER;
 /* Used to signal thread termination. */
 static bool thread_running = true;
 /* Thread handle used for shutdown. */
@@ -583,11 +583,6 @@ static void *persistence_thread(void *context)
 /* Must be called before marking any variables as persistent. */
 void initialise_persistent_state(void)
 {
-    /* Due to a bug in the vxWorks compiler's pthread.h we have can't use the
-     * static initialiser for pthread_cond_t, so we initialise here. */
-    ASSERT_PTHREAD(pthread_mutex_init(&mutex, NULL));
-    ASSERT_PTHREAD(pthread_cond_init(&psignal, NULL));
-
     variable_table = hash_table_create(false);  // We look after name lifetime
 }
 
