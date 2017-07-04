@@ -360,6 +360,27 @@ void set_record_name_separator(const char *separator);
             .field_type = waveform_TYPE_##type, .max_length = length, ##args })
 
 
+/* Some shortcuts for some common PUBLISH cases not caught by the more specific
+ * macros below. */
+#define PUBLISH_C(record, name, process, ctxt, args...) \
+    PUBLISH(record, name, process, .context = ctxt, ##args)
+#define PUBLISH_C_P(record, name, process, ctxt, args...) \
+    PUBLISH(record, name, process, .context = ctxt, .persist = true, ##args)
+#define PUBLISH_P(record, name, process, args...) \
+    PUBLISH(record, name, process, .persist = true, ##args)
+
+#define PUBLISH_WAVEFORM_C(type, record_name, length, process, ctxt, args...) \
+    PUBLISH_WAVEFORM(type, record_name, length, process, \
+        .context = ctxt, ##args)
+#define PUBLISH_WAVEFORM_C_P( \
+        type, record_name, length, process, ctxt, args...) \
+    PUBLISH_WAVEFORM(type, record_name, length, process, \
+        .context = ctxt, .persist = true, ##args)
+#define PUBLISH_WAVEFORM_P(type, record_name, length, process, args...) \
+    PUBLISH_WAVEFORM(type, record_name, length, process, \
+        .persist = true, ##args)
+
+
 /* This function (wrapped by a type dispatch macro) allows the value of an out
  * record to be updated from within the device.  If process is False then the
  * generated process callback is suppressed (as far as possible).  This method

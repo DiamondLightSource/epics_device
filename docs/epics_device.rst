@@ -280,6 +280,26 @@ section return values of type ``struct epics_record*``.
         instead of calling its `init` function.
 
 
+The following macros provide shortcuts when setting the `context` and `persist`
+attributes of a record definition:
+
+..  macro::
+    PUBLISH_C(record, name, process, context, args...)
+
+    This macro publishes a record with the ``.context`` field set to `context`.
+
+..  macro::
+    PUBLISH_P(record, name, process, args...)
+
+    This macro publishes a persistent record with ``.persist`` set to ``true``.
+
+..  macro::
+    PUBLISH_C_P(record, name, process, context, args...)
+
+    This macro combines the actions of :macro:`PUBLISH_C` and
+    :macro:`PUBLISH_P`.
+
+
 The following macros provide specialisation for specific types of record.  See
 the descriptions for :func:`PUBLISH` above for descriptions of arguments not
 described below.
@@ -452,6 +472,28 @@ PUBLISH_WAVEFORM API
     void `init`\ (void \*context, field_type array[`max_length`], size_t \*length)
         This optional function may be called during initialisation to initialise
         the waveform if a persistent value is not specified.
+
+The following macros provide shortcuts when setting the `context` and `persist`
+attributes of a waveform definition:
+
+..  macro::
+    PUBLISH_WAVEFORM_C(field_type, name, length, process, context, args...)
+
+    This macro publishes a waveform record with the ``.context`` field set to
+    `context`.
+
+..  macro::
+    PUBLISH_WAVEFORM_P(field_type, name, length, process, args...)
+
+    This macro publishes a persistent waveform record with ``.persist`` set to
+    ``true``.
+
+..  macro::
+    PUBLISH_WAVEFORM_C_P(field_type, name, length, process, context, args...)
+
+    This macro combines the actions of :macro:`PUBLISH_WAVEFORM_C` and
+    :macro:`PUBLISH_WAVEFORM_P`.
+
 
 
 ..  macro::
