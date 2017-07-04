@@ -199,10 +199,11 @@ static struct name_prefix name_prefix = {
 };
 
 
-void push_record_name_prefix(const char *prefix)
+void push_record_name_prefix(const char *prefix, const char *separator)
 {
-    size_t length = strlen(prefix);
-    size_t new_length = name_prefix.length + length;
+    size_t prefix_length = strlen(prefix);
+    size_t separator_length = strlen(prefix);
+    size_t new_length = name_prefix.length + prefix_length + separator_length;
 
     fail_on_error(
         TEST_OK_(name_prefix.count < ARRAY_SIZE(name_prefix.offsets),
@@ -210,7 +211,11 @@ void push_record_name_prefix(const char *prefix)
         TEST_OK_(new_length < ARRAY_SIZE(name_prefix.prefix),
             "Record name prefix too long"));
 
-    strcpy(name_prefix.prefix + name_prefix.length, prefix);
+    char *current_prefix = name_prefix.prefix;
+    current_prefix += name_prefix.length;
+    strcpy(current_prefix, prefix);
+    current_prefix += prefix_length;
+    strcpy(current_prefix, separator);
     name_prefix.offsets[name_prefix.count] = name_prefix.length;
     name_prefix.length = new_length;
     name_prefix.count += 1;
@@ -701,7 +706,7 @@ static error__t init_record_common(
     BUILD_KEY(key, name, record_type);
     struct epics_record *base = hash_table_lookup(hash_table, key);
     return
-        TEST_OK_(base, "No record found for %s", key)  ?:
+        TEST_OK_(base, "No handler found for %s", key)  ?:
         TEST_OK_(base->record_name == NULL,
             "%s already bound to %s", key, base->record_name)  ?:
         DO(base->record_name = pr->name; pr->dpvt = base)  ?:
@@ -758,7 +763,7 @@ static error__t init_in_record(dbCommon *pr)
     struct epics_record *base = pr->dpvt;
     return TEST_OK_(
         base->in.set_time == (pr->tse == epicsTimeEventDeviceTime),
-        "Inconsistent timestamping (%d/%d) for %s\n",
+        "Inconsistent timestamping (%d/%d) for %s",
             base->in.set_time, pr->tse, base->key);
 }
 

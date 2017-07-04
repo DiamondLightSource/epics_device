@@ -505,13 +505,13 @@ A handful of auxiliary functions and macros allow some further processing of
 records.
 
 ..  function::
-    void push_record_name_prefix(const char *prefix)
+    void push_record_name_prefix(const char *prefix, const char *separator)
     void pop_record_name_prefix(void)
 
     These two functions can be used to manage a string prefixed to the name of
     each record published by any of the :macro:`PUBLISH` macros.  The list of
     pushed prefixes is prepended to the record name generated, and prefixes are
-    deleted in reverse order.
+    deleted in reverse order.  Each `prefix` is followed by the `separator`.
 
 ..  type:: enum epics_alarm_severity
 

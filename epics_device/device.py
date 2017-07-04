@@ -45,8 +45,8 @@ class EpicsDevice:
     def set_address_prefix(self, prefix):
         self.address_prefix = prefix
 
-    def push_name_prefix(self, prefix):
-        self.name_prefix.append(prefix)
+    def push_name_prefix(self, prefix, separator = ''):
+        self.name_prefix.append('%s%s' % (prefix, separator))
 
     def pop_name_prefix(self):
         self.name_prefix.pop()

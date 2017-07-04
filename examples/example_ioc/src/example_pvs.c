@@ -112,7 +112,7 @@ static void publish_group(const char *prefix)
 {
     int *target = calloc(1, sizeof(int));
 
-    push_record_name_prefix(prefix);
+    push_record_name_prefix(prefix, ":");
     PUBLISH_READ_VAR(longin, "READ", *target);
     PUBLISH_WRITE_VAR(longout, "WRITE", *target);
     pop_record_name_prefix();
@@ -135,8 +135,8 @@ error__t initialise_example_pvs(void)
     PUBLISH_WF_READ_VAR(int, "TRIGWF", WF_LENGTH, trigger_waveform);
     PUBLISH_ACTION("RESET", reset_trigger_count);
 
-    publish_group("A:");
-    publish_group("B:");
+    publish_group("A");
+    publish_group("B");
 
     pthread_t thread_id;
     return TEST_PTHREAD(pthread_create(&thread_id, NULL, event_thread, NULL));

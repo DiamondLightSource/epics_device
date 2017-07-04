@@ -270,6 +270,4 @@ void dump_binary(FILE *out, const void *buffer, size_t length)
         }
         fprintf(out, "\n");
     }
-    if (length % 16 != 0)
-        fprintf(out, "\n");
 }
