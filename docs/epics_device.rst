@@ -505,13 +505,19 @@ A handful of auxiliary functions and macros allow some further processing of
 records.
 
 ..  function::
-    void push_record_name_prefix(const char *prefix, const char *separator)
+    void push_record_name_prefix(const char *prefix)
     void pop_record_name_prefix(void)
+    void set_record_name_separator(const char *separator)
 
     These two functions can be used to manage a string prefixed to the name of
     each record published by any of the :macro:`PUBLISH` macros.  The list of
     pushed prefixes is prepended to the record name generated, and prefixes are
-    deleted in reverse order.  Each `prefix` is followed by the `separator`.
+    deleted in reverse order.  Each `prefix` is followed by the `separator`,
+    which defaults to ``":"`` at startup, but can be changed.
+
+    Note that when :func:`set_record_name_separator` is used to change the
+    record name separator, the change only affects subsequent calls to
+    :func:`push_record_name_prefix`, any existing prefix is unchanged.
 
 ..  type:: enum epics_alarm_severity
 

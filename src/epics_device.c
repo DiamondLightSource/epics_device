@@ -54,8 +54,9 @@
 
 
 /* Maximum length of record prefix. */
-#define MAX_NAME_PREFIX_COUNT     8
-#define MAX_NAME_PREFIX_LENGTH    80
+#define MAX_NAME_PREFIX_COUNT       8
+#define MAX_NAME_PREFIX_LENGTH      80
+#define MAX_NAME_SEPARATOR_LENGTH   8
 
 
 /****************************************************************************/
@@ -190,19 +191,30 @@ struct name_prefix {
     unsigned int count;
     size_t length;
     char prefix[MAX_NAME_PREFIX_LENGTH];
+    char separator[MAX_NAME_SEPARATOR_LENGTH];
     size_t offsets[MAX_NAME_PREFIX_COUNT];
 };
 
 static struct name_prefix name_prefix = {
     .count = 0,
     .length = 0,
+    .separator = ":",
 };
 
 
-void push_record_name_prefix(const char *prefix, const char *separator)
+void set_record_name_separator(const char *separator)
+{
+    fail_on_error(
+        TEST_OK_(strlen(separator) < sizeof(name_prefix.separator),
+            "Separator \"%s\" too long", separator));
+    strcpy(name_prefix.separator, separator);
+}
+
+
+void push_record_name_prefix(const char *prefix)
 {
     size_t prefix_length = strlen(prefix);
-    size_t separator_length = strlen(prefix);
+    size_t separator_length = strlen(name_prefix.separator);
     size_t new_length = name_prefix.length + prefix_length + separator_length;
 
     fail_on_error(
@@ -215,7 +227,7 @@ void push_record_name_prefix(const char *prefix, const char *separator)
     current_prefix += name_prefix.length;
     strcpy(current_prefix, prefix);
     current_prefix += prefix_length;
-    strcpy(current_prefix, separator);
+    strcpy(current_prefix, name_prefix.separator);
     name_prefix.offsets[name_prefix.count] = name_prefix.length;
     name_prefix.length = new_length;
     name_prefix.count += 1;
@@ -973,10 +985,8 @@ static long init_record_waveform(waveformRecord *pr)
             (dbCommon *) pr, pr->inp.value.instio.string,
             RECORD_TYPE_waveform)  ?:
         check_waveform_type(pr, pr->dpvt);
-    if (error)
+    if (error_report(error))
     {
-        ERROR_REPORT(error,
-            "Creating waveform record %s", pr->inp.value.instio.string);
         pr->dpvt = NULL;
         return EPICS_ERROR;
     }

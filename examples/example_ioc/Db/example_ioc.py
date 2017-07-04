@@ -28,7 +28,7 @@ aOut('SCALING', PREC = 3, DESC = 'Frequency scaling')
 Action('WRITE', DESC = 'Force update to persistent state')
 
 for prefix in ['A', 'B']:
-    push_name_prefix(prefix, ':')
+    push_name_prefix(prefix)
     read = longIn('READ')
     write = longOut('WRITE', FLNK = read)
     pop_name_prefix()
