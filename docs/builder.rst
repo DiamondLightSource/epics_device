@@ -72,8 +72,8 @@ be modified in two ways:
     keyword argument `address`, which can be used to specify an address other
     than the record `name`.
 
-2.  Secondly, a prefix can be prepended to every `address` by calling the
-    function :func:`set_address_prefix`.
+2.  Secondly, a prefix can be prepended to every `address` and `name` by calling
+    the functions :func:`push_name_prefix` and :func:`pop_name_prefix`.
 
 ..  function::
     push_name_prefix(prefix)
@@ -87,13 +87,6 @@ be modified in two ways:
 
     By default component of the prefix and the record name are separated by ':',
     but this function can be used to change the separator.
-
-..  function:: set_address_prefix(prefix)
-
-    This can be used to set a string which is added to the start of every
-    record address.  This is designed to be set to a macro :func:`Parameter` and
-    is to be used to identify a component instance when creating a database with
-    multiple instances.
 
 
 In Records

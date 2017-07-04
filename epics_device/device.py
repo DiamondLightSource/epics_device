@@ -15,9 +15,8 @@ class EpicsDevice:
         def make(name, address=None, **fields):
             if address is None:
                 address = name
-            address = '@%s%s' % (
-                self.extra_prefix,
-                self.separator.join(self.address_prefix + [address]))
+            address = '@%s' % \
+                self.separator.join(self.address_prefix + [address])
 
             record = builder(name,
                 address = address,
@@ -33,7 +32,6 @@ class EpicsDevice:
 
     def __init__(self):
         self.separator = ':'
-        self.extra_prefix = ''
         self.address_prefix = []
         for name in [
                 'longin',    'longout',
@@ -43,11 +41,6 @@ class EpicsDevice:
                 'mbbi',      'mbbo',
                 'waveform']:
             setattr(self, name, self.makeRecord(name))
-
-    # When generating a support module the address prefix can help to identify
-    # the instance.
-    def set_address_prefix(self, prefix):
-        self.extra_prefix = prefix
 
     def push_name_prefix(self, prefix):
         epicsdbbuilder.PushPrefix(prefix)
@@ -64,7 +57,6 @@ class EpicsDevice:
 
 EpicsDevice = EpicsDevice()
 
-set_address_prefix = EpicsDevice.set_address_prefix
 push_name_prefix   = EpicsDevice.push_name_prefix
 pop_name_prefix    = EpicsDevice.pop_name_prefix
 set_name_separator = EpicsDevice.set_name_separator
@@ -190,4 +182,4 @@ __all__ = [
     'mbbIn',    'mbbOut',   'stringIn', 'stringOut',
     'Waveform', 'WaveformOut',
     'EpicsDevice', 'set_MDEL_default', 'set_out_name',
-    'set_address_prefix', 'push_name_prefix', 'pop_name_prefix']
+    'push_name_prefix', 'pop_name_prefix']
