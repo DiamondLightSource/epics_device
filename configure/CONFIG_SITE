@@ -15,7 +15,6 @@ CROSS_COMPILER_TARGET_ARCHS = linux-arm_el
 # This can either be an explicit path to the directory containing the
 # epicsdbbuilder module or a version number understood by pkg_resources.require
 EPICSDBBUILDER = 1.2
-EPICSDBBUILDER = /home/mga83/epics/epicsdbbuilder
 
 PYTHON = dls-python
 
