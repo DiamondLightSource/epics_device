@@ -272,6 +272,11 @@ header file.
 
         uint32_t bit_pattern = CAST_FROM_TO(float, uint32_t, 0.1F);
 
+..  macro:: to_type CAST_TO(to_type, value)
+
+    This is a short-cut wrapper for :macro:`CAST_FROM_TO` for use in the case
+    when `from_type` is no more specific than ``typeof(value)``.
+
 ..  macro:: ENSURE_TYPE(type, value)
 
     This is a weak cast from `value` to `type` which ensures that it is valid to

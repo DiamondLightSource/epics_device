@@ -304,6 +304,8 @@ void start_logging(const char *ident);
 #define CAST_FROM_TO(args...) \
     _id_CAST_FROM_TO(UNIQUE_ID(), args)
 
+#define CAST_TO(to_type, value) CAST_FROM_TO(typeof(value), to_type, value)
+
 /* A macro for ensuring that a value really is assign compatible to the
  * requested type. */
 #define ENSURE_TYPE(type, value)    (*(type []) { (value) })
