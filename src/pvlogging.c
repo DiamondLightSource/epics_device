@@ -3,6 +3,7 @@
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <limits.h>
 
 #define db_accessHFORdb_accessC     // Needed to get correct DBF_ values
 #include <dbAccess.h>
@@ -103,7 +104,10 @@ static void epics_pv_put_hook(asTrapWriteMessage *pmessage, int after)
 error__t hook_pv_logging(const char *access_file, int max_length)
 {
     max_array_length = max_length;
-    asSetFilename("db/access.acf");
-    asTrapWriteRegisterListener(epics_pv_put_hook);
-    return ERROR_OK;
+    char full_path[PATH_MAX];
+    return
+        TEST_OK(realpath(access_file, full_path))  ?:
+        DO(
+            asSetFilename(full_path);
+            asTrapWriteRegisterListener(epics_pv_put_hook));
 }
