@@ -15,10 +15,13 @@ class EpicsDevice:
         def make(name, address=None, **fields):
             if address is None:
                 address = name
-            prefix = ''.join(self.name_prefix)
-            record = builder(prefix + name, **fields)
-            record.DTYP = 'epics_device'
-            record.address = '@%s%s%s' % (self.address_prefix, prefix, address)
+            address = '@%s%s' % (
+                self.extra_prefix,
+                self.separator.join(self.address_prefix + [address]))
+
+            record = builder(name,
+                address = address,
+                DTYP = 'epics_device', **fields)
 
             # Check for a description, make a report if none given.
             if 'DESC' not in fields:
@@ -29,8 +32,9 @@ class EpicsDevice:
         return make
 
     def __init__(self):
-        self.address_prefix = ''
-        self.name_prefix = []
+        self.separator = ':'
+        self.extra_prefix = ''
+        self.address_prefix = []
         for name in [
                 'longin',    'longout',
                 'ai',        'ao',
@@ -43,20 +47,27 @@ class EpicsDevice:
     # When generating a support module the address prefix can help to identify
     # the instance.
     def set_address_prefix(self, prefix):
-        self.address_prefix = prefix
+        self.extra_prefix = prefix
 
-    def push_name_prefix(self, prefix, separator = ''):
-        self.name_prefix.append('%s%s' % (prefix, separator))
+    def push_name_prefix(self, prefix):
+        epicsdbbuilder.PushPrefix(prefix)
+        self.address_prefix.append(str(prefix))
 
     def pop_name_prefix(self):
-        self.name_prefix.pop()
+        self.address_prefix.pop()
+        epicsdbbuilder.PopPrefix()
+
+    def set_name_separator(self, separator):
+        epicsdbbuilder.SetSeparator(separator)
+        self.separator = separator
 
 
 EpicsDevice = EpicsDevice()
-set_address_prefix = EpicsDevice.set_address_prefix
-push_name_prefix = EpicsDevice.push_name_prefix
-pop_name_prefix = EpicsDevice.pop_name_prefix
 
+set_address_prefix = EpicsDevice.set_address_prefix
+push_name_prefix   = EpicsDevice.push_name_prefix
+pop_name_prefix    = EpicsDevice.pop_name_prefix
+set_name_separator = EpicsDevice.set_name_separator
 
 
 # ----------------------------------------------------------------------------

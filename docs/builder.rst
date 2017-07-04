@@ -76,13 +76,17 @@ be modified in two ways:
     function :func:`set_address_prefix`.
 
 ..  function::
-    push_name_prefix(prefix, separator='')
+    push_name_prefix(prefix)
     pop_name_prefix()
 
     These two functions mirror the action of :func:`push_record_name_prefix` and
     :func:`pop_record_name_prefix`, and affect both the record name and the
-    associated address.  If `separator` is specified, it is added to the end of
-    the prefix.
+    associated address.
+
+..  function:: set_name_separator(separator)
+
+    By default component of the prefix and the record name are separated by ':',
+    but this function can be used to change the separator.
 
 ..  function:: set_address_prefix(prefix)
 
