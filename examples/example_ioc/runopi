@@ -4,4 +4,4 @@ DEVICE=TS-TS-TEST-99
 
 cd "$(dirname "$0")"
 
-edm -x -eolc -m device="$DEVICE" example.edl &
+edm -x -eolc -m device="$DEVICE" opi/example.edl &

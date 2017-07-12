@@ -1,0 +1,3 @@
+#!/bin/sh
+cd "$(dirname "$0")"
+bin/linux-x86_64/example_ioc persistence 10
