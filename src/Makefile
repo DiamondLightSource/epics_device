@@ -4,6 +4,8 @@ include $(TOP)/configure/CONFIG
 
 include $(TOP)/src/Makefile.extra
 
+USR_CFLAGS += -Werror
+
 
 LIBRARY_IOC += epics_device
 

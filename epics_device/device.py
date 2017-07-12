@@ -24,7 +24,8 @@ class EpicsDevice:
 
             # Check for a description, make a report if none given.
             if 'DESC' not in fields:
-                print >>sys.stderr, 'No description for', name
+                print >>sys.stderr, 'No description for', \
+                    self.separator.join(self.address_prefix + [name])
 
             return record
 
