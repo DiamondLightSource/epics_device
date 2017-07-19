@@ -55,6 +55,14 @@ One function is provided for initialisation.
     This function can be called from the IOC shell, but in this case the return
     code is lost.
 
+..  function:: unsigned int check_unused_record_bindings(bool verbose)
+
+    This function is useful for checking for any mis-match between the published
+    record bindings and the EPICS database.  This should be called after
+    :func:`iocInit` has been called, and will return the number of published
+    bindings with no corresponding bound EPICS record.  If `verbose` is set a
+    message will be printed naming each missing binding.
+
 
 PUBLISH Overview
 ----------------

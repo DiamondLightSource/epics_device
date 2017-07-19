@@ -233,6 +233,10 @@ struct timespec;
 /* This must be called once before publishing any PVs. */
 error__t initialise_epics_device(void);
 
+/* This can be called after iocInit() to check how many published record
+ * bindings are not bound to active records. */
+unsigned int check_unused_record_bindings(bool verbose);
+
 
 /*****************************************************************************/
 /* Basic types. */

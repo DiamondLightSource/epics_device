@@ -438,6 +438,25 @@ error__t initialise_epics_device(void)
 }
 
 
+unsigned int check_unused_record_bindings(bool verbose)
+{
+    int hash_ix = 0;
+    void *value;
+    unsigned int count = 0;
+    while (hash_table_walk(hash_table, &hash_ix, NULL, &value))
+    {
+        struct epics_record *record = value;
+        if (!record->record_name)
+        {
+            count += 1;
+            if (verbose)
+                printf("%s not bound\n", record->key);
+        }
+    }
+    return count;
+}
+
+
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 /*                 Support for direct writing to OUT records                 */
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
