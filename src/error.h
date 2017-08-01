@@ -307,7 +307,9 @@ void start_logging(const char *ident);
 #define CAST_TO(to_type, value) CAST_FROM_TO(typeof(value), to_type, value)
 
 /* A macro for ensuring that a value really is assign compatible to the
- * requested type. */
+ * requested type.  Note that due to restrictions on syntax this won't work if
+ * type is a written out function type, as in that case the [] part needs to be
+ * inside the type definition! */
 #define ENSURE_TYPE(type, value)    (*(type []) { (value) })
 
 

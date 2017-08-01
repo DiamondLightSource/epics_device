@@ -402,10 +402,11 @@ void _write_out_record_waveform(
     const void *value, size_t length, bool process);
 #define WRITE_OUT_RECORD(type, record, value, process) \
     _write_out_record_value( \
-        RECORD_TYPE_##type, record, (const TYPEOF(type)[]) { value }, process)
+        RECORD_TYPE_##type, record, \
+        &ENSURE_TYPE(const TYPEOF(type), value), process)
 #define WRITE_OUT_RECORD_WF(type, record, value, length, process) \
     _write_out_record_waveform( \
-        waveform_TYPE_##type, record, *(const type*[]) { value }, \
+        waveform_TYPE_##type, record, ENSURE_TYPE(const type *, value), \
         length, process)
 /* Helper macro for writing a value to a named record. */
 #define WRITE_NAMED_RECORD(record, name, value) \
@@ -430,7 +431,7 @@ void _read_record_waveform(
     } )
 #define READ_RECORD_VALUE_WF(type, record, value, length) \
     _read_record_waveform( \
-        waveform_TYPE_##type, record, *(type *[]) { value }, length)
+        waveform_TYPE_##type, record, ENSURE_TYPE(type *, value), length)
 
 #define READ_NAMED_RECORD(record, name) \
     READ_RECORD_VALUE(record, LOOKUP_RECORD(record, name))
@@ -552,7 +553,7 @@ _DECLARE_WAVEFORM_ARGS(double);
     PUBLISH(record, name, \
         .write = _publish_var_write_##record, \
         .init = _publish_var_read_##record, \
-        .context = *(TYPEOF(record)*[]) { &(variable) }, ##args)
+        .context = ENSURE_TYPE(TYPEOF(record) *, &(variable)), ##args)
 #define PUBLISH_WRITE_VAR(record, name, variable) \
     PUBLISH_WRITE_VAR_(record, name, variable)
 #define PUBLISH_WRITE_VAR_P(record, name, variable) \
@@ -597,7 +598,7 @@ _DECLARE_WAVEFORM_ARGS(double);
         .process = (PROC_WAVEFORM_T(type)) _publish_waveform_write_var, \
         .init    = (PROC_WAVEFORM_T(type)) _publish_waveform_read_var, \
         .context = _make_waveform_context( \
-            sizeof(type), length, *(type *[]) { waveform }), ##args)
+            sizeof(type), length, ENSURE_TYPE(type *, waveform), ##args)
 #define PUBLISH_WF_WRITE_VAR(type, name, length, waveform) \
     PUBLISH_WF_WRITE_VAR_(type, name, length, waveform)
 #define PUBLISH_WF_WRITE_VAR_P(type, name, length, waveform) \

@@ -142,7 +142,7 @@ void _write_in_record(
 #define WRITE_IN_RECORD(type, record, value, args...) \
     _write_in_record( \
         RECORD_TYPE_##type, _CONVERT_TO_IN_RECORD(type, record), \
-        (const TYPEOF(type)[]) { value }, \
+        &ENSURE_TYPE(const TYPEOF(type), value), \
         &(const struct write_in_epics_record_args) { args })
 #define WRITE_IN_RECORD_SEV(type, record, severity, args...) \
     _write_in_record( \
