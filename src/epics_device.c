@@ -10,7 +10,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
-#include <math.h>
+#include <pthread.h>
 
 #include <devSup.h>
 #include <recSup.h>
@@ -65,6 +65,9 @@
 
 static struct hash_table *hash_table = NULL;
 
+/* Mutex used to initialise record if not specified in record initialiser. */
+static pthread_mutex_t *default_mutex = NULL;
+
 
 /* This is the core of the generic EPICS record implementation.  There are
  * essentially three underlying classes of record: IN records, OUT records and
@@ -81,6 +84,7 @@ struct epics_record {
     bool persist;                   // Set for persistently written data
     enum epics_alarm_severity severity;    // Reported record status
     void *context;                  // Context for all user callbacks
+    pthread_mutex_t *mutex;         // Lock for record processing
 
     /* The following fields are record class specific. */
     union {
@@ -272,6 +276,7 @@ static void initialise_in_fields(
     base->in.read = in_args->read;
     base->max_length = 1;
     base->context = in_args->context;
+    base->mutex = in_args->mutex ?: default_mutex;
     if (in_args->io_intr)
         scanIoInit(&base->ioscanpvt);
 }
@@ -285,6 +290,7 @@ static void initialise_out_fields(
     base->out.disable_write = false;
     base->max_length = 1;
     base->context = out_args->context;
+    base->mutex = out_args->mutex ?: default_mutex;
     base->persist = out_args->persist;
     if (base->persist)
         create_persistent_waveform(base->key,
@@ -299,6 +305,7 @@ static void initialise_waveform_fields(
     base->waveform.init = waveform_args->init;
     base->max_length = waveform_args->max_length;
     base->context = waveform_args->context;
+    base->mutex = waveform_args->mutex ?: default_mutex;
     base->persist = waveform_args->persist;
     if (base->persist)
         create_persistent_waveform(base->key,
@@ -454,6 +461,14 @@ unsigned int check_unused_record_bindings(bool verbose)
         }
     }
     return count;
+}
+
+
+pthread_mutex_t *set_default_epics_device_mutex(pthread_mutex_t *mutex)
+{
+    pthread_mutex_t *old_mutex = default_mutex;
+    default_mutex = mutex;
+    return old_mutex;
 }
 
 
@@ -804,7 +819,9 @@ static bool process_in_record(dbCommon *pr, void *result)
     if (base == NULL)
         return false;
 
+    if (base->mutex)  pthread_mutex_lock(base->mutex);
     bool ok = base->in.read(base->context, result);
+    if (base->mutex)  pthread_mutex_unlock(base->mutex);
 
     recGblSetSevr(pr, READ_ALARM, base->severity);
     if (base->in.set_time)
@@ -881,9 +898,14 @@ static bool process_out_record(dbCommon *pr, size_t value_size, void *result)
     if (base == NULL)
         return false;
 
-    bool write_ok =
-        base->out.disable_write  ||
-        base->out.write(base->context, result);
+    bool write_ok = base->out.disable_write;
+    if (!base->out.disable_write)
+    {
+        if (base->mutex)  pthread_mutex_lock(base->mutex);
+        write_ok = base->out.write(base->context, result);
+        if (base->mutex)  pthread_mutex_unlock(base->mutex);
+    }
+
     if (write_ok)
     {
         /* On successful update take a record (in case we have to revert) and
@@ -1036,7 +1058,10 @@ static long process_waveform(waveformRecord *pr)
         return EPICS_ERROR;
 
     size_t nord = pr->nord;
+    if (base->mutex)  pthread_mutex_lock(base->mutex);
     base->waveform.process(base->context, pr->bptr, &nord);
+    if (base->mutex)  pthread_mutex_unlock(base->mutex);
+
     pr->nord = (epicsUInt32) nord;
     if (base->persist)
         write_persistent_waveform(base->key, pr->bptr, pr->nord);

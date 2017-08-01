@@ -7,7 +7,7 @@
  *  IN records
  *  ----------
  *      Record types: [u]longin, ai, bi, stringin, mbbi
- *      PUBLISH(record, name, read, .context, .io_intr, .set_time)
+ *      PUBLISH(record, name, read, .context, .io_intr, .set_time, .mutex)
  *      PUBLISH_READ_VAR[_I](record, name, variable)
  *      PUBLISH_READER[_I](record, name, reader)
  *      PUBLISH_TRIGGER[_T](name)
@@ -15,7 +15,7 @@
  *  OUT records
  *  -----------
  *      Record types: [u]longout, ao, bo, stringout, mbbo
- *      PUBLISH(record, name, write, .init, .context, .persist)
+ *      PUBLISH(record, name, write, .init, .context, .persist, .mutex)
  *      PUBLISH_WRITE_VAR[_P](record, name, variable)
  *      PUBLISH_WRITER[_B][_P](record, name, writer)
  *      PUBLISH_ACTION(name, action)
@@ -24,7 +24,7 @@
  *  ----------------
  *      Record type: waveform
  *      PUBLISH_WAVEFORM(field_type, name, length, process,
- *          .init, .context, .persist, .io_intr)
+ *          .init, .context, .persist, .io_intr, .mutex)
  *      PUBLISH_WF_READ_VAR[_I](field_type, name, length, waveform)
  *      PUBLISH_WF_WRITE_VAR[_P](field_type, name, length, waveform)
  *      PUBLISH_WF_ACTION{,_I,_P}(field_type, name, length, action)
@@ -44,8 +44,8 @@
  *
  * The following two macros define the core interface.
  *
- *  PUBLISH(in_record, name, read, .context, .io_intr, .set_time)
- *  PUBLISH(out_record, name, write, .init, .context, .persist)
+ *  PUBLISH(in_record, name, read, .context, .io_intr, .set_time, .mutex)
+ *  PUBLISH(out_record, name, write, .init, .context, .persist, .mutex)
  *
  *      The PUBLISH macro is used to create a software binding for the
  *      appropriate record type to the given name.  The corresponding read or
@@ -79,7 +79,7 @@
  *          read from storage then this method will be ignored.
  *
  *  PUBLISH_WAVEFORM(field_type, name, max_length, process,
- *      .init, .context, .persist, .io_intr)
+ *      .init, .context, .persist, .io_intr, .mutex)
  *
  *      The PUBLISH_WAVEFORM creates the software binding for waveform records
  *      with data of the specified type.  The process method will be called each
@@ -236,6 +236,11 @@ error__t initialise_epics_device(void);
 /* This can be called after iocInit() to check how many published record
  * bindings are not bound to active records. */
 unsigned int check_unused_record_bindings(bool verbose);
+
+/* This sets the default mutex associated with each published record, and
+ * returns the previously set default.  The default mutex is used if the .mutex
+ * argument is not assigned. */
+pthread_mutex_t *set_default_epics_device_mutex(pthread_mutex_t *mutex);
 
 
 /*****************************************************************************/
@@ -455,6 +460,7 @@ void _read_record_waveform(
         void *context; \
         bool io_intr; \
         bool set_time; \
+        pthread_mutex_t *mutex; \
     }
 #define _DECLARE_IN_ARGS(record) \
     _DECLARE_IN_ARGS_(record, TYPEOF(record))
@@ -465,6 +471,7 @@ void _read_record_waveform(
         bool (*init)(void *context, type *value); \
         void *context; \
         bool persist; \
+        pthread_mutex_t *mutex; \
     }
 #define _DECLARE_OUT_ARGS(record) \
     _DECLARE_OUT_ARGS_(record, TYPEOF(record))
@@ -478,6 +485,7 @@ void _read_record_waveform(
         void *context; \
         bool persist; \
         bool io_intr; \
+        pthread_mutex_t *mutex; \
     }
 
 

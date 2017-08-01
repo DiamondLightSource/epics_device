@@ -63,6 +63,14 @@ One function is provided for initialisation.
     bindings with no corresponding bound EPICS record.  If `verbose` is set a
     message will be printed naming each missing binding.
 
+..  function::
+    pthread_mutex_t *set_default_epics_device_mutex(pthread_mutex_t *mutex)
+
+    Each record can associated with a mutex which is locked when the record is
+    processed.  The mutex can be specified by setting the ``.mutex`` attribute,
+    or if this is not set then the default specified by this function is used.
+    The previously set default is returned.
+
 
 PUBLISH Overview
 ----------------
@@ -82,36 +90,36 @@ macros, defined below.  Three classes of record are supported with slightly
 different macros and arguments.  The table below summarises the options for
 record publishing.
 
-============================================================================== =
+====================================================================================== =
 IN records
-============================================================================== =
+====================================================================================== =
 Record types: ``[u]longin``, ``ai``, ``bi``, ``stringin``, ``mbbi``
-:func:`PUBLISH(record, name, read, .context, .io_intr, .set_time) <PUBLISH>`
+:func:`PUBLISH(record, name, read, .context, .io_intr, .set_time, .mutex) <PUBLISH>`
 :func:`PUBLISH_READ_VAR[_I](record, name, variable) <PUBLISH_READ_VAR>`
 :func:`PUBLISH_READER[_I](record, name, reader) <PUBLISH_READER>`
 :func:`PUBLISH_TRIGGER[_T](name) <PUBLISH_TRIGGER>`
-============================================================================== =
+====================================================================================== =
 
-============================================================================== =
+====================================================================================== =
 OUT records
-============================================================================== =
+====================================================================================== =
 Record types: ``[u]longout``, ``ao``, ``bo``, ``stringout``, ``mbbo``
-:func:`PUBLISH(record, name, write, .init, .context, .persist) <PUBLISH>`
+:func:`PUBLISH(record, name, write, .init, .context, .persist, .mutex) <PUBLISH>`
 :func:`PUBLISH_WRITE_VAR[_P](record, name, variable) <PUBLISH_WRITE_VAR>`
 :func:`PUBLISH_WRITER[_B][_P](record, name, writer) <PUBLISH_WRITER>`
 :func:`PUBLISH_ACTION(name, action) <PUBLISH_ACTION>`
-============================================================================== =
+====================================================================================== =
 
-=========================================================================================================================================================== =
+============================================================================================================================== =
 WAVEFORM records
-=========================================================================================================================================================== =
+============================================================================================================================== =
 Record type: ``waveform``
 Field types: ``char``, ``short``, ``int``, ``float``, ``double``
-:func:`PUBLISH_WAVEFORM(field_type, name, length, process, .init, .context, .persist, .io_intr) <PUBLISH_WAVEFORM>`
+:func:`PUBLISH_WAVEFORM(field_type, name, length, process, .init, .context, .persist, .io_intr, .mutex) <PUBLISH_WAVEFORM>`
 :func:`PUBLISH_WF_READ_VAR[_I](field_type, name, length, waveform) <PUBLISH_WF_READ_VAR>`
 :func:`PUBLISH_WF_WRITE_VAR[_P](field_type, name, length, waveform) <PUBLISH_WF_WRITE_VAR>`
 :func:`PUBLISH_WF_ACTION{,_I,_P}(field_type, name, length, action) <PUBLISH_WF_ACTION>`
-=========================================================================================================================================================== =
+============================================================================================================================== =
 
 ..  I really did want to do properly line wrapping above, but I can't split
     these very long markup lines over more than one line.
@@ -192,8 +200,8 @@ section return values of type ``struct epics_record*``.
         ``longout``, ``ulongout``, ``ao``, ``bo``, ``stringout``, ``mbbo``
 
 ..  macro::
-    PUBLISH(record, name, read, .context, .io_intr, .set_time)
-    PUBLISH(record, name, write, .init, .context, .persist)
+    PUBLISH(record, name, read, .context, .io_intr, .set_time, .mutex)
+    PUBLISH(record, name, write, .init, .context, .persist, .mutex)
 
     ===================================================================== ======
     \                                                                     IN/OUT
@@ -207,6 +215,7 @@ section return values of type ``struct epics_record*``.
     bool `write`\ (void \*context, const TYPEOF(`record`) \*value)        OUT
     bool `init`\ (void \*context, TYPEOF(`record`) \*value)               OUT
     bool `persist`                                                        OUT
+    pthread_mutex_t \*\ `mutex`
     ===================================================================== ======
 
     The PUBLISH macro is used to create a software binding for the appropriate
@@ -286,6 +295,11 @@ section return values of type ``struct epics_record*``.
         initialisation (during :func:`iocInit`) the persistence store will be
         checked for an initial value which will be loaded into the record
         instead of calling its `init` function.
+
+    `mutex`
+        If a pthread mutex is specified here or is set by
+        :func:`set_default_epics_device_mutex` then this mutex will be locked
+        while calling the associated `read`, `write`, or `process` method.
 
 
 The following macros provide shortcuts when setting the `context` and `persist`
@@ -423,6 +437,7 @@ PUBLISH_WAVEFORM API
     void \*\ `context`
     bool `persist`
     bool `io_intr`
+    pthread_mutex_t \*\ `mutex`
     ================================================================================= =
 
     This macro creates the software binding for waveform records with data of
@@ -465,7 +480,7 @@ PUBLISH_WAVEFORM API
         This specifies the number of points in the waveform and must match the
         value specified in the ``NELM`` field of the record.
 
-    `name`, `context`, `io_intr`, `persist`
+    `name`, `context`, `io_intr`, `persist`, `mutex`
         As documented above for :func:`PUBLISH`.  Note that as WAVEFORM records
         can act as either IN or OUT records, both types of functionality are
         supported.
@@ -501,7 +516,6 @@ attributes of a waveform definition:
 
     This macro combines the actions of :macro:`PUBLISH_WAVEFORM_C` and
     :macro:`PUBLISH_WAVEFORM_P`.
-
 
 
 ..  macro::

@@ -4,6 +4,7 @@
 #include <unistd.h>
 #include <stdarg.h>
 #include <stdio.h>
+#include <pthread.h>
 
 #include "error.h"
 #include "epics_device.h"
