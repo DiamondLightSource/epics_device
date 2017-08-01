@@ -517,7 +517,8 @@ _DECLARE_WAVEFORM_ARGS(double);
 #define PUBLISH_READ_VAR_(record, name, variable, args...) \
     PUBLISH(record, name, \
         .read = _publish_var_read_##record, \
-        .context = *(TYPEOF(record)*[]) { &(variable) }, ##args)
+        .context = CAST_FROM_TO(const TYPEOF(record)*, void *, &(variable)), \
+        ##args)
 #define PUBLISH_READ_VAR(record, name, variable) \
     PUBLISH_READ_VAR_(record, name, variable)
 #define PUBLISH_READ_VAR_I(record, name, variable) \
@@ -576,7 +577,8 @@ _DECLARE_WAVEFORM_ARGS(double);
         .process = (PROC_WAVEFORM_T(type)) _publish_waveform_read_var, \
         .init    = (PROC_WAVEFORM_T(type)) _publish_waveform_read_var, \
         .context = _make_waveform_context( \
-            sizeof(type), length, *(type *[]) { waveform }), ##args)
+            sizeof(type), length, \
+            CAST_FROM_TO(const type *, void *, (waveform))), ##args)
 #define PUBLISH_WF_READ_VAR(type, name, length, waveform) \
     PUBLISH_WF_READ_VAR_(type, name, length, waveform)
 #define PUBLISH_WF_READ_VAR_I(type, name, length, waveform) \

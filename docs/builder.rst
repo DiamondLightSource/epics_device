@@ -282,7 +282,7 @@ update on driver internal events.
         {
             interlock_wait(update);
             compute_update(&v1, &v2, &v3, wf);
-            interlock_trigger(update, NULL);
+            interlock_signal(update, NULL);
         }
 
         // Publish the PVs
