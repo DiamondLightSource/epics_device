@@ -528,36 +528,36 @@ _DECLARE_WAVEFORM_ARGS(double);
         .read = _publish_var_read_##record, \
         .context = CAST_FROM_TO(const TYPEOF(record)*, void *, &(variable)), \
         ##args)
-#define PUBLISH_READ_VAR(record, name, variable) \
-    PUBLISH_READ_VAR_(record, name, variable)
-#define PUBLISH_READ_VAR_I(record, name, variable) \
-    PUBLISH_READ_VAR_(record, name, variable, .io_intr = true)
+#define PUBLISH_READ_VAR(record, name, variable, args...) \
+    PUBLISH_READ_VAR_(record, name, variable, ##args)
+#define PUBLISH_READ_VAR_I(record, name, variable, args...) \
+    PUBLISH_READ_VAR_(record, name, variable, .io_intr = true, ##args)
 
 #define PUBLISH_READER_(record, name, reader, args...) \
     PUBLISH(record, name, \
         .read = _publish_reader_##record, \
         .context = *(TYPEOF(record) (*[])(void)) { reader }, ##args)
-#define PUBLISH_READER(record, name, reader) \
-    PUBLISH_READER_(record, name, reader)
-#define PUBLISH_READER_I(record, name, reader) \
-    PUBLISH_READER_(record, name, reader, .io_intr = true)
+#define PUBLISH_READER(record, name, reader, args...) \
+    PUBLISH_READER_(record, name, reader, ##args)
+#define PUBLISH_READER_I(record, name, reader, args...) \
+    PUBLISH_READER_(record, name, reader, .io_intr = true, ##args)
 
 #define PUBLISH_TRIGGER_(name, args...) \
     PUBLISH(bi, name, .read = _publish_trigger_bi, .io_intr = true, ##args)
-#define PUBLISH_TRIGGER(name) \
-    PUBLISH_TRIGGER_(name)
-#define PUBLISH_TRIGGER_T(name) \
-    PUBLISH_TRIGGER_(name, .set_time = true)
+#define PUBLISH_TRIGGER(name, args...) \
+    PUBLISH_TRIGGER_(name, ##args)
+#define PUBLISH_TRIGGER_T(name, args...) \
+    PUBLISH_TRIGGER_(name, .set_time = true, ##args)
 
 #define PUBLISH_WRITE_VAR_(record, name, variable, args...) \
     PUBLISH(record, name, \
         .write = _publish_var_write_##record, \
         .init = _publish_var_read_##record, \
         .context = ENSURE_TYPE(TYPEOF(record) *, &(variable)), ##args)
-#define PUBLISH_WRITE_VAR(record, name, variable) \
-    PUBLISH_WRITE_VAR_(record, name, variable)
-#define PUBLISH_WRITE_VAR_P(record, name, variable) \
-    PUBLISH_WRITE_VAR_(record, name, variable, .persist = true)
+#define PUBLISH_WRITE_VAR(record, name, variable, args...) \
+    PUBLISH_WRITE_VAR_(record, name, variable, ##args)
+#define PUBLISH_WRITE_VAR_P(record, name, variable, args...) \
+    PUBLISH_WRITE_VAR_(record, name, variable, .persist = true, ##args)
 
 #define PUBLISH_WRITER(record, name, writer, args...) \
     PUBLISH(record, name, \
@@ -573,9 +573,9 @@ _DECLARE_WAVEFORM_ARGS(double);
 #define PUBLISH_WRITER_B_P(record, name, writer, args...) \
     PUBLISH_WRITER_B_(record, name, writer, .persist = true, ##args)
 
-#define PUBLISH_ACTION(name, action) \
+#define PUBLISH_ACTION(name, action, args...) \
     PUBLISH(bo, name, .write = _publish_action_bo, \
-        .context = *(void (*[])(void)) { action })
+        .context = *(void (*[])(void)) { action }, ##args)
 
 
 #define PROC_WAVEFORM_T(type) \
@@ -588,10 +588,10 @@ _DECLARE_WAVEFORM_ARGS(double);
         .context = _make_waveform_context( \
             sizeof(type), length, \
             CAST_FROM_TO(const type *, void *, (waveform))), ##args)
-#define PUBLISH_WF_READ_VAR(type, name, length, waveform) \
-    PUBLISH_WF_READ_VAR_(type, name, length, waveform)
-#define PUBLISH_WF_READ_VAR_I(type, name, length, waveform) \
-    PUBLISH_WF_READ_VAR_(type, name, length, waveform, .io_intr = true)
+#define PUBLISH_WF_READ_VAR(type, name, length, waveform, args...) \
+    PUBLISH_WF_READ_VAR_(type, name, length, waveform, ##args)
+#define PUBLISH_WF_READ_VAR_I(type, name, length, waveform, args...) \
+    PUBLISH_WF_READ_VAR_(type, name, length, waveform, .io_intr = true, ##args)
 
 #define PUBLISH_WF_WRITE_VAR_(type, name, length, waveform, args...) \
     PUBLISH_WAVEFORM(type, name, length, \
@@ -599,20 +599,20 @@ _DECLARE_WAVEFORM_ARGS(double);
         .init    = (PROC_WAVEFORM_T(type)) _publish_waveform_read_var, \
         .context = _make_waveform_context( \
             sizeof(type), length, ENSURE_TYPE(type *, waveform), ##args)
-#define PUBLISH_WF_WRITE_VAR(type, name, length, waveform) \
-    PUBLISH_WF_WRITE_VAR_(type, name, length, waveform)
-#define PUBLISH_WF_WRITE_VAR_P(type, name, length, waveform) \
-    PUBLISH_WF_WRITE_VAR_(type, name, length, waveform, .persist = true)
+#define PUBLISH_WF_WRITE_VAR(type, name, length, waveform, args...) \
+    PUBLISH_WF_WRITE_VAR_(type, name, length, waveform, ##args)
+#define PUBLISH_WF_WRITE_VAR_P(type, name, length, waveform, args...) \
+    PUBLISH_WF_WRITE_VAR_(type, name, length, waveform, .persist = true, ##args)
 
 #define PUBLISH_WF_ACTION(type, name, length, action, args...) \
     PUBLISH_WAVEFORM(type, name, length, \
         .process = (PROC_WAVEFORM_T(type)) _publish_waveform_action, \
         .context = _make_waveform_context( \
             sizeof(type), length, *(void (*[])(type *)) { action }), ##args)
-#define PUBLISH_WF_ACTION_I(type, name, length, action) \
-    PUBLISH_WF_ACTION(type, name, length, action, .io_intr = true)
-#define PUBLISH_WF_ACTION_P(type, name, length, action) \
-    PUBLISH_WF_ACTION(type, name, length, action, .persist = true)
+#define PUBLISH_WF_ACTION_I(type, name, length, action, args...) \
+    PUBLISH_WF_ACTION(type, name, length, action, .io_intr = true, ##args)
+#define PUBLISH_WF_ACTION_P(type, name, length, action, args...) \
+    PUBLISH_WF_ACTION(type, name, length, action, .persist = true, ##args)
 
 
 /* Declarations for the support methods referenced above. */
