@@ -96,7 +96,7 @@ struct epics_record {
         } in;
         // OUT record support
         struct {
-            bool (*write)(void *context, const void *value);
+            bool (*write)(void *context, void *value);
             bool (*init)(void *context, void *result);
             void *save_value;       // Used to restore after rejected write
             bool disable_write;     // Used for write_out_record
@@ -681,7 +681,7 @@ bool _publish_trigger_bi(void *context, bool *value)
     return true;
 }
 
-bool _publish_action_bo(void *context, const bool *value)
+bool _publish_action_bo(void *context, bool *value)
 {
     void (*action)(void) = context;
     action();

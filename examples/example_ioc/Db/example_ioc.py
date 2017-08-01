@@ -33,4 +33,6 @@ for prefix in ['A', 'B']:
     write = longOut('WRITE', FLNK = read)
     pop_name_prefix()
 
+longOut('ADD_ONE', DESC = 'Adds one to the written value')
+
 WriteRecords(sys.argv[1])

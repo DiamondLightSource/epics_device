@@ -119,6 +119,13 @@ static void publish_group(const char *prefix)
 }
 
 
+static bool add_one(void *context, int *value)
+{
+    *value += 1;
+    return true;
+}
+
+
 error__t initialise_example_pvs(void)
 {
     PUBLISH_WRITER_P(ao, "FREQ", set_frequency);
@@ -137,6 +144,8 @@ error__t initialise_example_pvs(void)
 
     publish_group("A");
     publish_group("B");
+
+    PUBLISH(longout, "ADD_ONE", add_one);
 
     pthread_t thread_id;
     return TEST_PTHREAD(pthread_create(&thread_id, NULL, event_thread, NULL));

@@ -66,7 +66,7 @@
  *          and true returned, otherwise false can be returned to indicate no
  *          value available.
  *
- *      bool write(void *context, const TYPEOF(out_record) *value)
+ *      bool write(void *context, TYPEOF(out_record) *value)
  *          For OUT records this will be called on record processing with the
  *          value written to the record passed by reference.  If the value is
  *          accepted then true should be return, otherwise if false is returned
@@ -467,7 +467,7 @@ void _read_record_waveform(
 
 #define _DECLARE_OUT_ARGS_(record, type) \
     struct record_args_##record { \
-        bool (*write)(void *context, const type *value); \
+        bool (*write)(void *context, type *value); \
         bool (*init)(void *context, type *value); \
         void *context; \
         bool persist; \
@@ -618,13 +618,13 @@ _DECLARE_WAVEFORM_ARGS(double);
 #define _DECLARE_READ_VAR(record) \
     bool _publish_var_read_##record(void *context, TYPEOF(record) *value)
 #define _DECLARE_WRITE_VAR(record) \
-    bool _publish_var_write_##record(void *context, const TYPEOF(record) *value)
+    bool _publish_var_write_##record(void *context, TYPEOF(record) *value)
 #define _DECLARE_READER(record) \
     bool _publish_reader_##record(void *context, TYPEOF(record) *value)
 #define _DECLARE_WRITER(record) \
-    bool _publish_writer_##record(void *context, const TYPEOF(record) *value)
+    bool _publish_writer_##record(void *context, TYPEOF(record) *value)
 #define _DECLARE_WRITER_B(record) \
-    bool _publish_writer_b_##record(void *context, const TYPEOF(record) *value)
+    bool _publish_writer_b_##record(void *context, TYPEOF(record) *value)
 
 _FOR_IN_RECORDS(_DECLARE_READ_VAR, ;)
 _FOR_OUT_RECORDS(_DECLARE_WRITE_VAR, ;)
@@ -634,7 +634,7 @@ _FOR_OUT_RECORDS(_DECLARE_WRITER, ;)
 _FOR_OUT_RECORDS(_DECLARE_WRITER_B, ;)
 
 bool _publish_trigger_bi(void *context, bool *value);
-bool _publish_action_bo(void *context, const bool *value);
+bool _publish_action_bo(void *context, bool *value);
 
 void _publish_waveform_action(void *context, void *array, size_t *length);
 void _publish_waveform_write_var(void *context, void *array, size_t *length);

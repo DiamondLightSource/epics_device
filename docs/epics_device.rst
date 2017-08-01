@@ -212,7 +212,7 @@ section return values of type ``struct epics_record*``.
     bool `read`\ (void \*context, TYPEOF(`record`) \*value)               IN
     bool `io_intr`                                                        IN
     bool `set_time`                                                       IN
-    bool `write`\ (void \*context, const TYPEOF(`record`) \*value)        OUT
+    bool `write`\ (void \*context, TYPEOF(`record`) \*value)              OUT
     bool `init`\ (void \*context, TYPEOF(`record`) \*value)               OUT
     bool `persist`                                                        OUT
     pthread_mutex_t \*\ `mutex`
@@ -255,13 +255,13 @@ section return values of type ``struct epics_record*``.
         and ``true`` returned, otherwise false can be returned to indicate no
         value available, in which case the record will be marked as invalid.
 
-    bool `write`\ (void \*context, const TYPEOF(`record`) \*value)
+    bool `write`\ (void \*context, TYPEOF(`record`) \*value)
         For OUT records this will be called on record processing with the
         value written to the record passed by reference.  If the value is
         accepted then true should be return, otherwise if ``false`` is returned
         then value is treated as being rejected, the previous value of the
         record will be restored, and any associated Channel Access put will
-        fail.
+        fail.  Note that the value being written can be modified if required.
 
     bool `init`\ (void \*context, TYPEOF(`record`) \*value)
         For OUT records if this function is specified it will be called record
