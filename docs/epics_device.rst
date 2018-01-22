@@ -117,7 +117,9 @@ Record type: ``waveform``
 Field types: ``char``, ``short``, ``int``, ``float``, ``double``
 :func:`PUBLISH_WAVEFORM(field_type, name, length, process, .init, .context, .persist, .io_intr, .mutex) <PUBLISH_WAVEFORM>`
 :func:`PUBLISH_WF_READ_VAR[_I](field_type, name, length, waveform) <PUBLISH_WF_READ_VAR>`
+:func:`PUBLISH_WF_READ_VAR_LEN[_I](field_type, name, max_len, len, waveform) <PUBLISH_WF_READ_VAR_LEN>`
 :func:`PUBLISH_WF_WRITE_VAR[_P](field_type, name, length, waveform) <PUBLISH_WF_WRITE_VAR>`
+:func:`PUBLISH_WF_WRITE_VAR_LEN[_P](field_type, name, max_len, len, waveform) <PUBLISH_WF_WRITE_VAR_LEN>`
 :func:`PUBLISH_WF_ACTION{,_I,_P}(field_type, name, length, action) <PUBLISH_WF_ACTION>`
 ============================================================================================================================== =
 
@@ -533,6 +535,22 @@ attributes of a waveform definition:
     processes.  This is useful for publishing internally generated waveforms.
 
 ..  macro::
+    PUBLISH_WF_READ_VAR_LEN(field_type, name, max_length, length, waveform, ...)
+    PUBLISH_WF_READ_VAR_LEN_I(field_type, name, max_length, length, waveform, ...)
+
+    ========================================================================== =
+    type name `field_type`
+    const char \*\ `name`
+    unsigned int `max_length`
+    const unsigned int \*\ `length`
+    `field_type` `waveform`\ [`max_length`]
+    ========================================================================== =
+
+    `waveform` will be copied into the record buffer each time this record
+    processes.  This is useful for publishing internally generated waveforms.
+    `length` will be read and used to update the length of the waveform.
+
+..  macro::
     PUBLISH_WF_WRITE_VAR(field_type, name, max_length, waveform, ...)
     PUBLISH_WF_WRITE_VAR_P(field_type, name, max_length, waveform, ...)
 
@@ -544,6 +562,21 @@ attributes of a waveform definition:
     ========================================================================== =
 
     `waveform` will updated from the record each time the record processes.
+
+..  macro::
+    PUBLISH_WF_WRITE_VAR_LEN(field_type, name, max_length, length, waveform, ...)
+    PUBLISH_WF_WRITE_VAR_LEN_P(field_type, name, max_length, length, waveform, ...)
+
+    ========================================================================== =
+    type name `field_type`
+    const char \*\ `name`
+    unsigned int `max_length`
+    unsigned int \*\ `length`
+    `field_type` `waveform`\ [`max_length`]
+    ========================================================================== =
+
+    `waveform` will updated from the record each time the record processes and
+    `length` will be updated with the new length of `waveform`.
 
 ..  macro::
     PUBLISH_WF_ACTION(field_type, name, max_length, action, ...)

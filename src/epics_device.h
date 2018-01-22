@@ -25,8 +25,10 @@
  *      Record type: waveform
  *      PUBLISH_WAVEFORM(field_type, name, length, process,
  *          .init, .context, .persist, .io_intr, .mutex)
- *      PUBLISH_WF_READ_VAR[_I](field_type, name, length, waveform)
+ *      PUBLISH_WF_READ_VAR[_I](field_type, name, max_length, waveform)
+ *      PUBLISH_WF_READ_VAR_LEN[_I](field_type, name, max_len, length, waveform)
  *      PUBLISH_WF_WRITE_VAR[_P](field_type, name, length, waveform)
+ *      PUBLISH_WF_WRITE_VAR_LEN[_P](field_type, name, max_len, len, waveform)
  *      PUBLISH_WF_ACTION{,_I,_P}(field_type, name, length, action)
  *
  * Suffixes:
@@ -171,10 +173,22 @@
  *
  *      The waveform will be read each time the record processes.
  *
+ *  PUBLISH_WF_READ_VAR_LEN(field_type, name, max_length, length, waveform)
+ *  PUBLISH_WF_READ_VAR_LEN_I(field_type, name, max_length, length, waveform)
+ *
+ *      The waveform will be read each time the record processes and the current
+ *      length of the waveform will be updated from length.
+ *
  *  PUBLISH_WF_WRITE_VAR(field_type, name, max_length, waveform)
  *  PUBLISH_WF_WRITE_VAR_P(field_type, name, max_length, waveform)
  *
  *      The waveform will be written each time the record processes.
+ *
+ *  PUBLISH_WF_WRITE_VAR_LEN(field_type, name, max_length, length, waveform)
+ *  PUBLISH_WF_WRITE_VAR_LEN_P(field_type, name, max_length, length, waveform)
+ *
+ *      The waveform will be written each time the record processes and the
+ *      current length of the waveform will be updated.
  *
  *  PUBLISH_WF_ACTION(field_type, name, max_length, action)
  *  PUBLISH_WF_ACTION_I(field_type, name, max_length, action)
@@ -581,34 +595,60 @@ _DECLARE_WAVEFORM_ARGS(double);
 #define PROC_WAVEFORM_T(type) \
     void (*)(void *context, type *array, unsigned int *length)
 
-#define PUBLISH_WF_READ_VAR_(type, name, length, waveform, args...) \
-    PUBLISH_WAVEFORM(type, name, length, \
+#define PUBLISH_WF_READ_VAR(type, name, max_length, waveform, args...) \
+    PUBLISH_WAVEFORM(type, name, max_length, \
         .process = (PROC_WAVEFORM_T(type)) _publish_waveform_read_var, \
         .init    = (PROC_WAVEFORM_T(type)) _publish_waveform_read_var, \
         .context = _make_waveform_context( \
-            sizeof(type), length, \
+            sizeof(type), max_length, NULL, \
             CAST_FROM_TO(const type *, void *, (waveform))), ##args)
-#define PUBLISH_WF_READ_VAR(type, name, length, waveform, args...) \
-    PUBLISH_WF_READ_VAR_(type, name, length, waveform, ##args)
-#define PUBLISH_WF_READ_VAR_I(type, name, length, waveform, args...) \
-    PUBLISH_WF_READ_VAR_(type, name, length, waveform, .io_intr = true, ##args)
+#define PUBLISH_WF_READ_VAR_I(type, name, max_length, waveform, args...) \
+    PUBLISH_WF_READ_VAR( \
+        type, name, max_length, waveform, .io_intr = true, ##args)
 
-#define PUBLISH_WF_WRITE_VAR_(type, name, length, waveform, args...) \
-    PUBLISH_WAVEFORM(type, name, length, \
+#define PUBLISH_WF_READ_VAR_LEN( \
+        type, name, max_length, length, waveform, args...) \
+    PUBLISH_WAVEFORM(type, name, max_length, \
+        .process = (PROC_WAVEFORM_T(type)) _publish_waveform_read_var, \
+        .init    = (PROC_WAVEFORM_T(type)) _publish_waveform_read_var, \
+        .context = _make_waveform_context( \
+            sizeof(type), max_length, &(length), \
+            CAST_FROM_TO(const type *, void *, (waveform))), ##args)
+#define PUBLISH_WF_READ_VAR_LEN_I( \
+        type, name, max_length, length, waveform, args...) \
+    PUBLISH_WF_READ_VAR_LEN( \
+        type, name, max_length, length, waveform, .io_intr = true, ##args)
+
+#define PUBLISH_WF_WRITE_VAR(type, name, max_length, waveform, args...) \
+    PUBLISH_WAVEFORM(type, name, max_length, \
         .process = (PROC_WAVEFORM_T(type)) _publish_waveform_write_var, \
         .init    = (PROC_WAVEFORM_T(type)) _publish_waveform_read_var, \
         .context = _make_waveform_context( \
-            sizeof(type), length, ENSURE_TYPE(type *, waveform), ##args)
-#define PUBLISH_WF_WRITE_VAR(type, name, length, waveform, args...) \
-    PUBLISH_WF_WRITE_VAR_(type, name, length, waveform, ##args)
-#define PUBLISH_WF_WRITE_VAR_P(type, name, length, waveform, args...) \
-    PUBLISH_WF_WRITE_VAR_(type, name, length, waveform, .persist = true, ##args)
+            sizeof(type), max_length, NULL, \
+            ENSURE_TYPE(type *, waveform), ##args)
+#define PUBLISH_WF_WRITE_VAR_P(type, name, max_length, waveform, args...) \
+    PUBLISH_WF_WRITE_VAR( \
+        type, name, max_length, waveform, .persist = true, ##args)
+
+#define PUBLISH_WF_WRITE_VAR_LEN( \
+        type, name, max_length, length, waveform, args...) \
+    PUBLISH_WAVEFORM(type, name, max_length, \
+        .process = (PROC_WAVEFORM_T(type)) _publish_waveform_write_var, \
+        .init    = (PROC_WAVEFORM_T(type)) _publish_waveform_read_var, \
+        .context = _make_waveform_context( \
+            sizeof(type), max_length, &(length), \
+            ENSURE_TYPE(type *, waveform), ##args)
+#define PUBLISH_WF_WRITE_VAR_LEN_P( \
+        type, name, max_length, length, waveform, args...) \
+    PUBLISH_WF_WRITE_VAR_LEN( \
+        type, name, max_length, length, waveform, .persist = true, ##args)
 
 #define PUBLISH_WF_ACTION(type, name, length, action, args...) \
     PUBLISH_WAVEFORM(type, name, length, \
         .process = (PROC_WAVEFORM_T(type)) _publish_waveform_action, \
         .context = _make_waveform_context( \
-            sizeof(type), length, *(void (*[])(type *)) { action }), ##args)
+            sizeof(type), length, NULL, \
+            *(void (*[])(type *)) { action }), ##args)
 #define PUBLISH_WF_ACTION_I(type, name, length, action, args...) \
     PUBLISH_WF_ACTION(type, name, length, action, .io_intr = true, ##args)
 #define PUBLISH_WF_ACTION_P(type, name, length, action, args...) \
@@ -643,4 +683,5 @@ void _publish_waveform_write_var(
 void _publish_waveform_read_var(
     void *context, void *array, unsigned int *length);
 void *_make_waveform_context(
-    unsigned int size, unsigned int length, void *context);
+    unsigned int size, unsigned int max_length, unsigned int *current_length,
+    void *context);

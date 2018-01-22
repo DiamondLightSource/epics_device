@@ -702,17 +702,22 @@ bool _publish_action_bo(void *context, bool *value)
 
 struct waveform_context {
     unsigned int size;
-    unsigned int length;
+    unsigned int max_length;
+    unsigned int *current_length;
     void *context;
 };
 
 void *_make_waveform_context(
-    unsigned int size, unsigned int length, void *context)
+    unsigned int size, unsigned int max_length, unsigned int *current_length,
+    void *context)
 {
     struct waveform_context *info = malloc(sizeof(struct waveform_context));
-    info->size = size;
-    info->length = length;
-    info->context = context;
+    *info = (struct waveform_context) {
+        .size = size,
+        .max_length = max_length,
+        .current_length = current_length,
+        .context = context,
+    };
     return info;
 }
 
@@ -720,16 +725,25 @@ void _publish_waveform_write_var(
     void *context, void *array, unsigned int *length)
 {
     struct waveform_context *info = context;
-    memcpy(info->context, array, info->length * info->size);
-    *length = info->length;
+    memcpy(info->context, array, info->max_length * info->size);
+    /* If we can do something with the new length then update our current record
+     * of the waveform length, otherwise reset the external length back to
+     * maximum length. */
+    if (info->current_length)
+        *info->current_length = *length;
+    else
+        *length = info->max_length;
 }
 
 void _publish_waveform_read_var(
     void *context, void *array, unsigned int *length)
 {
     struct waveform_context *info = context;
-    memcpy(array, info->context, info->length * info->size);
-    *length = info->length;
+    memcpy(array, info->context, info->max_length * info->size);
+    if (info->current_length)
+        *length = MIN(*info->current_length, info->max_length);
+    else
+        *length = info->max_length;
 }
 
 void _publish_waveform_action(void *context, void *array, unsigned int *length)
@@ -737,7 +751,7 @@ void _publish_waveform_action(void *context, void *array, unsigned int *length)
     struct waveform_context *info = context;
     void (*action)(void *) = info->context;
     action(array);
-    *length = info->length;
+    *length = info->max_length;
 }
 
 
