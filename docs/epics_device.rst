@@ -428,17 +428,17 @@ PUBLISH_WAVEFORM API
         field_type, name, max_length, process, \
         .init, .context, .persist, .io_intr)
 
-    ================================================================================= =
+    ======================================================================================== =
     type name `field_type`
     const char \*\ `name`
-    size_t `max_length`
-    void `process`\ (void \*context, field_type array[`max_length`], size_t \*length)
-    void `init`\ (void \*context, field_type array[`max_length`], size_t \*length)
+    unsigned int `max_length`
+    void `process`\ (void \*context, field_type array[`max_length`], unsigned int \*length)
+    void `init`\ (void \*context, field_type array[`max_length`], unsigned int \*length)
     void \*\ `context`
     bool `persist`
     bool `io_intr`
     pthread_mutex_t \*\ `mutex`
-    ================================================================================= =
+    ======================================================================================== =
 
     This macro creates the software binding for waveform records with data of
     the specified type.  The process method will be called each time the record
@@ -485,14 +485,14 @@ PUBLISH_WAVEFORM API
         can act as either IN or OUT records, both types of functionality are
         supported.
 
-    void `process`\ (void \*context, field_type array[`max_length`], size_t \*length)
+    void `process`\ (void \*context, field_type array[`max_length`], unsigned int \*length)
         This is called during record processing with `*length` initialised with
         the current waveform length, as set in the ``NORD`` field of the the
         record.  The array can be read or written as required and `*length` (and
         thus ``NORD``) can be updated as appropriate if the data length changes
         (though of course `max_length` must not be exceeded).
 
-    void `init`\ (void \*context, field_type array[`max_length`], size_t \*length)
+    void `init`\ (void \*context, field_type array[`max_length`], unsigned int \*length)
         This optional function may be called during initialisation to initialise
         the waveform if a persistent value is not specified.
 
@@ -525,7 +525,7 @@ attributes of a waveform definition:
     ========================================================================== =
     type name `field_type`
     const char \*\ `name`
-    size_t `max_length`
+    unsigned int `max_length`
     `field_type` `waveform`\ [`max_length`]
     ========================================================================== =
 
@@ -539,7 +539,7 @@ attributes of a waveform definition:
     ========================================================================== =
     type name `field_type`
     const char \*\ `name`
-    size_t `max_length`
+    unsigned int `max_length`
     `field_type` `waveform`\ [`max_length`]
     ========================================================================== =
 
@@ -553,7 +553,7 @@ attributes of a waveform definition:
     ========================================================================== =
     type name `field_type`
     const char \*\ `name`
-    size_t `max_length`
+    unsigned int `max_length`
     void `action`\ (`field_type` value[`max_length`])
     ========================================================================== =
 
@@ -658,7 +658,7 @@ records.
     struct epics_record \*\ `epics_record`
     const char \*\ `name`
     const `field_type` `value`\ [`length`]
-    size_t `length`
+    unsigned int `length`
     bool `process`
     ========================================================================== =
 
@@ -689,7 +689,7 @@ records.
     struct epics_record \*\ `epics_record`
     const char \*\ `name`
     `field_type` `value`\ [`length`]
-    size_t `length`
+    unsigned int `length`
     ========================================================================== =
 
     Reads the current waveform value of a waveform record.

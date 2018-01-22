@@ -21,8 +21,8 @@
 struct persistent_variable {
     const struct persistent_action *action;
     const char *name;
-    size_t max_length;
-    size_t length;
+    unsigned int max_length;
+    unsigned int length;
     char variable[0];
 };
 
@@ -30,7 +30,7 @@ struct persistent_variable {
 /* Used to implement core persistent actions, essentially converting values to
  * and from external strings. */
 struct persistent_action {
-    size_t size;
+    unsigned int size;
     /* Write value to output buffer (which must be long enough!), returns number
      * of characters written. */
     int (*write)(FILE *out, const void *variable);
@@ -211,7 +211,7 @@ static pthread_t persistence_thread_id;
 
 /* Creates new persistent variable. */
 void create_persistent_waveform(
-    const char *name, enum PERSISTENCE_TYPES type, size_t max_length)
+    const char *name, enum PERSISTENCE_TYPES type, unsigned int max_length)
 {
     /* If you try to create a persistent PV without having first initialised the
      * persistence layer then you'll get this error. */
@@ -243,7 +243,7 @@ static struct persistent_variable *lookup_persistence(const char *name)
 
 /* Updates variable from value stored on disk. */
 bool read_persistent_waveform(
-    const char *name, void *variable, size_t *length)
+    const char *name, void *variable, unsigned int *length)
 {
     LOCK();
     struct persistent_variable *persistence = lookup_persistence(name);
@@ -260,7 +260,7 @@ bool read_persistent_waveform(
 
 bool read_persistent_variable(const char *name, void *variable)
 {
-    size_t length;
+    unsigned int length;
     bool ok = read_persistent_waveform(name, variable, &length);
     if (ok)
         ASSERT_OK(length == 1);
@@ -270,7 +270,7 @@ bool read_persistent_variable(const char *name, void *variable)
 
 /* Writes value to persistent variable. */
 void write_persistent_waveform(
-    const char *name, const void *value, size_t length)
+    const char *name, const void *value, unsigned int length)
 {
     LOCK();
     struct persistent_variable *persistence = lookup_persistence(name);
@@ -278,7 +278,7 @@ void write_persistent_waveform(
     {
         /* Don't force a write of the persistence file if nothing has actually
          * changed. */
-        size_t size = length * persistence->action->size;
+        unsigned int size = length * persistence->action->size;
         persistence_dirty =
             persistence_dirty  ||
             persistence->length != length  ||
@@ -396,8 +396,8 @@ static error__t parse_value(
     struct persistent_variable *persistence)
 {
     void *variable = persistence->variable;
-    size_t size = persistence->action->size;
-    size_t length = 0;
+    unsigned int size = persistence->action->size;
+    unsigned int length = 0;
     error__t error = ERROR_OK;
     for (; !error  &&  *cursor != '\0'  &&  length < persistence->max_length;
          length ++)
@@ -486,9 +486,9 @@ static void write_lines(
     FILE *out, const char *name, const struct persistent_variable *persistence)
 {
     const void *variable = persistence->variable;
-    size_t size = persistence->action->size;
+    unsigned int size = persistence->action->size;
     int line_length = fprintf(out, "%s=", name);
-    for (size_t i = 0; i < persistence->length; i ++)
+    for (unsigned int i = 0; i < persistence->length; i ++)
     {
         if (line_length > 72)
         {

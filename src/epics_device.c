@@ -76,7 +76,7 @@ struct epics_record {
     char *key;                      // Name of lookup for record
     enum record_type record_type;
     const char *record_name;        // Full record name, once bound
-    size_t max_length;              // Waveform length
+    unsigned int max_length;        // Waveform length
 
     /* The following fields are shared between pairs of record classes. */
     IOSCANPVT ioscanpvt;            // Used for I/O intr enabled records
@@ -104,8 +104,8 @@ struct epics_record {
         // WAVEFORM record support
         struct {
             enum waveform_type field_type;
-            void (*process)(void *context, void *array, size_t *length);
-            void (*init)(void *context, void *array, size_t *length);
+            void (*process)(void *context, void *array, unsigned int *length);
+            void (*init)(void *context, void *array, unsigned int *length);
         } waveform;
     };
 };
@@ -532,8 +532,8 @@ static short waveform_type_dbr(enum waveform_type waveform_type)
 /* Used to convert an internal record name to the associated dbaddr value and
  * performs sanity validation.  If this fails we just die! */
 static void record_to_dbaddr(
-    enum record_type record_type, struct epics_record *record, size_t length,
-    struct dbAddr *dbaddr)
+    enum record_type record_type, struct epics_record *record,
+    unsigned int length, struct dbAddr *dbaddr)
 {
     fail_on_error(
         TEST_OK_(record->record_type == record_type,
@@ -552,7 +552,7 @@ static void record_to_dbaddr(
 /* Wrapper around dbPutField to write value to EPICS database. */
 static void _write_out_record(
     enum record_type record_type, struct epics_record *record,
-    short dbr_type, const void *value, size_t length, bool process)
+    short dbr_type, const void *value, unsigned int length, bool process)
 {
     struct dbAddr dbaddr;
     record_to_dbaddr(record_type, record, length, &dbaddr);
@@ -581,7 +581,7 @@ void _write_out_record_value(
 
 void _write_out_record_waveform(
     enum waveform_type waveform_type, struct epics_record *record,
-    const void *value, size_t length, bool process)
+    const void *value, unsigned int length, bool process)
 {
     _write_out_record(
         RECORD_TYPE_waveform, record, waveform_type_dbr(waveform_type),
@@ -592,7 +592,7 @@ void _write_out_record_waveform(
 /* Wrapper around dbGetField to read value from EPICS. */
 static void _read_record(
     enum record_type record_type, struct epics_record *record,
-    short dbr_type, void *value, size_t length)
+    short dbr_type, void *value, unsigned int length)
 {
     long get_length = (long) length;
     struct dbAddr dbaddr;
@@ -600,7 +600,8 @@ static void _read_record(
     fail_on_error(
         TEST_OK(dbGetField(
             &dbaddr, dbr_type, value, NULL, &get_length, NULL) == 0)  ?:
-        TEST_OK_((size_t) get_length == length, "Failed to get all values"));
+        TEST_OK_((unsigned int) get_length == length,
+            "Failed to get all values"));
 }
 
 void _read_record_value(
@@ -611,7 +612,7 @@ void _read_record_value(
 
 void _read_record_waveform(
     enum waveform_type waveform_type, struct epics_record *record,
-    void *value, size_t length)
+    void *value, unsigned int length)
 {
     _read_record(
         RECORD_TYPE_waveform, record, waveform_type_dbr(waveform_type),
@@ -700,12 +701,13 @@ bool _publish_action_bo(void *context, bool *value)
  * can sensibly be treated as an action on the full waveform. */
 
 struct waveform_context {
-    size_t size;
-    size_t length;
+    unsigned int size;
+    unsigned int length;
     void *context;
 };
 
-void *_make_waveform_context(size_t size, size_t length, void *context)
+void *_make_waveform_context(
+    unsigned int size, unsigned int length, void *context)
 {
     struct waveform_context *info = malloc(sizeof(struct waveform_context));
     info->size = size;
@@ -714,21 +716,23 @@ void *_make_waveform_context(size_t size, size_t length, void *context)
     return info;
 }
 
-void _publish_waveform_write_var(void *context, void *array, size_t *length)
+void _publish_waveform_write_var(
+    void *context, void *array, unsigned int *length)
 {
     struct waveform_context *info = context;
     memcpy(info->context, array, info->length * info->size);
     *length = info->length;
 }
 
-void _publish_waveform_read_var(void *context, void *array, size_t *length)
+void _publish_waveform_read_var(
+    void *context, void *array, unsigned int *length)
 {
     struct waveform_context *info = context;
     memcpy(array, info->context, info->length * info->size);
     *length = info->length;
 }
 
-void _publish_waveform_action(void *context, void *array, size_t *length)
+void _publish_waveform_action(void *context, void *array, unsigned int *length)
 {
     struct waveform_context *info = context;
     void (*action)(void *) = info->context;
@@ -874,7 +878,7 @@ static void post_init_process(dbCommon *pr)
 /* Common out record initialisation: we look in a couple of places for an
  * initial value.  If there's a persistent value stored used that, otherwise
  * call init if defined.  This is saved so we can restore rejected writes. */
-static bool init_out_record(dbCommon *pr, size_t value_size, void *result)
+static bool init_out_record(dbCommon *pr, unsigned int value_size, void *result)
 {
     struct epics_record *base = pr->dpvt;
     bool read_ok =
@@ -892,7 +896,8 @@ static bool init_out_record(dbCommon *pr, size_t value_size, void *result)
 
 /* Common out record processing.  If writing fails then restore saved value,
  * otherwise maintain saved and persistent settings. */
-static bool process_out_record(dbCommon *pr, size_t value_size, void *result)
+static bool process_out_record(
+    dbCommon *pr, unsigned int value_size, void *result)
 {
     struct epics_record *base = pr->dpvt;
     if (base == NULL)
@@ -1012,7 +1017,7 @@ static error__t check_waveform_type(
             "Array %s.FTVL mismatch %d != %d (%d)",
             base->key, pr->ftvl, expected, base->waveform.field_type)  ?:
         TEST_OK_(pr->nelm == base->max_length,
-            "Array %s wrong length, %d != %zd",
+            "Array %s wrong length, %d != %u",
             base->key, (int) pr->nelm, base->max_length);
 }
 
@@ -1033,7 +1038,7 @@ static long init_record_waveform(waveformRecord *pr)
     }
 
     struct epics_record *base = pr->dpvt;
-    size_t nord = 0;
+    unsigned int nord = 0;
     bool read_ok =
         base->persist  &&
         read_persistent_waveform(base->key, pr->bptr, &nord);
@@ -1043,7 +1048,7 @@ static long init_record_waveform(waveformRecord *pr)
         base->waveform.init(base->context, pr->bptr, &nord);
         read_ok = true;
     }
-    pr->nord = (epicsUInt32) nord;
+    pr->nord = nord;
     pr->udf = !read_ok;
 
     post_init_process((dbCommon *) pr);
@@ -1057,12 +1062,12 @@ static long process_waveform(waveformRecord *pr)
     if (base == NULL)
         return EPICS_ERROR;
 
-    size_t nord = pr->nord;
+    unsigned int nord = pr->nord;
     if (base->mutex)  pthread_mutex_lock(base->mutex);
     base->waveform.process(base->context, pr->bptr, &nord);
     if (base->mutex)  pthread_mutex_unlock(base->mutex);
 
-    pr->nord = (epicsUInt32) nord;
+    pr->nord = nord;
     if (base->persist)
         write_persistent_waveform(base->key, pr->bptr, pr->nord);
 

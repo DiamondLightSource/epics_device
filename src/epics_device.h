@@ -86,13 +86,13 @@
  *      time the record processes -- the process method can choose whether to
  *      implement reading or writing as the primitive operation.
  *
- *      void process(void *context, field_type *array, size_t *length)
+ *      void process(void *context, field_type *array, unsigned int *length)
  *          This is called during record processing with *length initialised
  *          with the current waveform length.  The array can be read or written
  *          as required and *length can be updated as appropriate if the data
  *          length changes (though of course max_length must not be exceeded).
  *
- *      void init(void *context, field_type *array, size_t *length)
+ *      void init(void *context, field_type *array, unsigned int *length)
  *          This may be called during initialisation to read an initial value.
  *
  *
@@ -222,7 +222,7 @@
  *          Specifies the data type for the waveform, can be one of: char,
  *          short, int, float, double.
  *
- *      size_t max_length
+ *      unsigned int max_length
  *          Intrinsic size of the waveform.  This will be checked against the
  *          database when binding the record.
  */
@@ -399,7 +399,7 @@ void _write_out_record_value(
     const void *value, bool process);
 void _write_out_record_waveform(
     enum waveform_type waveform_type, struct epics_record *record,
-    const void *value, size_t length, bool process);
+    const void *value, unsigned int length, bool process);
 #define WRITE_OUT_RECORD(type, record, value, process) \
     _write_out_record_value( \
         RECORD_TYPE_##type, record, \
@@ -422,7 +422,7 @@ void _read_record_value(
     enum record_type record_type, struct epics_record *record, void *value);
 void _read_record_waveform(
     enum waveform_type waveform_type, struct epics_record *record,
-    void *value, size_t length);
+    void *value, unsigned int length);
 #define READ_RECORD_VALUE(type, record) \
     ( { \
         TYPEOF(type) value__; \
@@ -480,9 +480,9 @@ void _read_record_waveform(
 #define _DECLARE_WAVEFORM_ARGS(type) \
     struct waveform_args_##type { \
         enum waveform_type field_type; \
-        size_t max_length; \
-        void (*process)(void *context, type *array, size_t *length); \
-        void (*init)(void *context, type *array, size_t *length); \
+        unsigned int max_length; \
+        void (*process)(void *context, type *array, unsigned int *length); \
+        void (*init)(void *context, type *array, unsigned int *length); \
         void *context; \
         bool persist; \
         bool io_intr; \
@@ -579,7 +579,7 @@ _DECLARE_WAVEFORM_ARGS(double);
 
 
 #define PROC_WAVEFORM_T(type) \
-    void (*)(void *context, type *array, size_t *length)
+    void (*)(void *context, type *array, unsigned int *length)
 
 #define PUBLISH_WF_READ_VAR_(type, name, length, waveform, args...) \
     PUBLISH_WAVEFORM(type, name, length, \
@@ -637,7 +637,10 @@ _FOR_OUT_RECORDS(_DECLARE_WRITER_B, ;)
 bool _publish_trigger_bi(void *context, bool *value);
 bool _publish_action_bo(void *context, bool *value);
 
-void _publish_waveform_action(void *context, void *array, size_t *length);
-void _publish_waveform_write_var(void *context, void *array, size_t *length);
-void _publish_waveform_read_var(void *context, void *array, size_t *length);
-void *_make_waveform_context(size_t size, size_t length, void *context);
+void _publish_waveform_action(void *context, void *array, unsigned int *length);
+void _publish_waveform_write_var(
+    void *context, void *array, unsigned int *length);
+void _publish_waveform_read_var(
+    void *context, void *array, unsigned int *length);
+void *_make_waveform_context(
+    unsigned int size, unsigned int length, void *context);
