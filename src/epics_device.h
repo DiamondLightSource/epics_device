@@ -408,10 +408,10 @@ void set_record_name_separator(const char *separator);
  * record to be updated from within the device.  If process is False then the
  * generated process callback is suppressed (as far as possible).  This method
  * is only available for out records. */
-void _write_out_record_value(
+bool _write_out_record_value(
     enum record_type record_type, struct epics_record *record,
     const void *value, bool process);
-void _write_out_record_waveform(
+bool _write_out_record_waveform(
     enum waveform_type waveform_type, struct epics_record *record,
     const void *value, unsigned int length, bool process);
 #define WRITE_OUT_RECORD(type, record, value, process) \

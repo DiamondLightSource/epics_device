@@ -550,7 +550,7 @@ static void record_to_dbaddr(
 
 
 /* Wrapper around dbPutField to write value to EPICS database. */
-static void _write_out_record(
+static bool _write_out_record(
     enum record_type record_type, struct epics_record *record,
     short dbr_type, const void *value, unsigned int length, bool process)
 {
@@ -561,13 +561,13 @@ static void _write_out_record(
      * processing was not requested. */
     dbScanLock(dbaddr.precord);
     record->out.disable_write = !process;
-    fail_on_error(TEST_OK(
-        dbPutField(&dbaddr, dbr_type, value, (long) length) == 0));
+    bool put_ok = dbPutField(&dbaddr, dbr_type, value, (long) length) == 0;
     record->out.disable_write = false;
     dbScanUnlock(dbaddr.precord);
+    return put_ok;
 }
 
-void _write_out_record_value(
+bool _write_out_record_value(
     enum record_type record_type, struct epics_record *record,
     const void *value, bool process)
 {
@@ -575,15 +575,15 @@ void _write_out_record_value(
     fail_on_error(TEST_OK_(
         is_out_record(record_type),
         "%s is not an output type", get_type_name(record_type)));
-    _write_out_record(
+    return _write_out_record(
         record_type, record, record_type_dbr(record_type), value, 1, process);
 }
 
-void _write_out_record_waveform(
+bool _write_out_record_waveform(
     enum waveform_type waveform_type, struct epics_record *record,
     const void *value, unsigned int length, bool process)
 {
-    _write_out_record(
+    return _write_out_record(
         RECORD_TYPE_waveform, record, waveform_type_dbr(waveform_type),
         value, length, process);
 }
