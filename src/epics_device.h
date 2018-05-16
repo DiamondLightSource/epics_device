@@ -585,7 +585,7 @@ _DECLARE_WAVEFORM_ARGS(double);
         .write = _publish_writer_b_##record, \
         .context = *(bool (*[])(TYPEOF(record))) { writer }, ##args)
 #define PUBLISH_WRITER_B_P(record, name, writer, args...) \
-    PUBLISH_WRITER_B_(record, name, writer, .persist = true, ##args)
+    PUBLISH_WRITER_B(record, name, writer, .persist = true, ##args)
 
 #define PUBLISH_ACTION(name, action, args...) \
     PUBLISH(bo, name, .write = _publish_action_bo, \
