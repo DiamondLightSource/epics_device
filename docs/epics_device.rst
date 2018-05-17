@@ -676,7 +676,8 @@ records.
     The given `value` is written directly to the EPICS record associated with
     `epics_record`.  `process` can be set to ``false`` to suppress normal record
     processing, otherwise normal record processing will occur and the driver's
-    `write` method will be called.
+    `write` method will be called.  ``false`` is returned if writing to the
+    record fails, typically if the update is rejected during record processing.
 
     The :func:`WRITE_NAMED_RECORD` variant includes an unchecked call to
     :func:`LOOKUP_RECORD` to translate a record name to the appropriate ``struct
