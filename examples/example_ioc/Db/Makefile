@@ -27,6 +27,16 @@ export EPICS_DEVICE
 $(COMMON_DIR)/%.db: ../%.py $(wildcard ../*.py)
 	$(PYTHON) $< $@
 
+CLEANS += *.pyc
 
+
+# EPICS 3.15 and later has changed the build system.  The following rules are
+# needed to make things work.
+
+%.db.d:
+	touch $@
+
+ifndef BASE_3_15
 clean::
-	rm -f *.pyc
+	$(RM) -f $(CLEANS)
+endif

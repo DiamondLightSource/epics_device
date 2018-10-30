@@ -11,10 +11,19 @@
 #include <db_access.h>
 #include <asTrapWrite.h>
 #include <asDbLib.h>
+#include <epicsVersion.h>
 
 #include "error.h"
 
 #include "pvlogging.h"
+
+
+/* The interface to the caput event callback has changed as of EPICS 3.15, and
+ * we need to compile as appropriate. */
+#define BASE_3_15 (EPICS_VERSION * 100 + EPICS_REVISION >= 315)
+#if BASE_3_15
+#include <dbChannel.h>
+#endif
 
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
@@ -75,7 +84,13 @@ static void print_value(dbr_string_t *value, int length)
 
 static void epics_pv_put_hook(asTrapWriteMessage *pmessage, int after)
 {
-    dbAddr *dbaddr = (dbAddr *) pmessage->serverSpecific;
+#if BASE_3_15
+    struct dbChannel *pchan = pmessage->serverSpecific;
+    dbAddr *dbaddr = &pchan->addr;
+#else
+    dbAddr *dbaddr = pmessage->serverSpecific;
+#endif
+
     int length = (int) dbaddr->no_elements;
     dbr_string_t *value = calloc((size_t) length, sizeof(dbr_string_t));
     format_field(dbaddr, value);
