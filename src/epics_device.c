@@ -9,6 +9,7 @@
 #include <stdbool.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include <stdarg.h>
 #include <string.h>
 #include <pthread.h>
 
@@ -184,6 +185,16 @@ static const char *get_type_name(enum record_type record_type)
 static void fail_on_error(error__t error)
 {
     ASSERT_OK(!error_report(error));
+}
+
+
+bool format_epics_string(EPICS_STRING *s, const char *format, ...)
+{
+    va_list args;
+    va_start(args, format);
+    int length = vsnprintf(s->s, sizeof(s->s), format, args);
+    va_end(args);
+    return (size_t) length < sizeof(s->s);
 }
 
 

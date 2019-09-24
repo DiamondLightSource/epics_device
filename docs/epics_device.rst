@@ -152,7 +152,16 @@ Common Datatypes
 
     used for EPICS strings.  This form of declaration allows strings to be
     passed by value and thus supports a more uniform interface to the EPICS
-    Driver software.
+    Driver software.  The helper function :func:`format_epics_string` should be
+    used to modify values of this type.
+
+..  function::
+    bool format_epics_string(EPICS_STRING *s, const char *format, ...)
+
+    This helper function should be used for writing to a :type:`EPICS_STRING`.
+    This function wraps :func:`snprintf` to ensure that the string buffer does
+    not overflow.  ``false`` is returned if the formatted string is too long and
+    has been truncated to fit.
 
 ..  type:: struct epics_record
 

@@ -322,6 +322,12 @@ enum epics_alarm_severity {
 };
 
 
+/* Helper function for formatting an EPICS string.  Returns false if the string
+ * was truncated. */
+bool format_epics_string(EPICS_STRING *s, const char *format, ...)
+    __attribute__((format(printf, 2, 3)));
+
+
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 /* Core record publishing interface. */
 
