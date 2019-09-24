@@ -92,11 +92,13 @@ static struct hash_table_ops ptr_ops = {
 struct hash_table *hash_table_create_generic(const struct hash_table_ops *ops)
 {
     struct hash_table *table = malloc(sizeof(struct hash_table));
-    table->key_ops = ops;
-    table->entries = 0;
-    table->deleted = 0;
-    table->size_mask = INITIAL_SIZE - 1;
-    table->table = calloc(INITIAL_SIZE, sizeof(struct table_entry));
+    *table = (struct hash_table) {
+        .key_ops = ops,
+        .entries = 0,
+        .deleted = 0,
+        .size_mask = INITIAL_SIZE - 1,
+        .table = calloc(INITIAL_SIZE, sizeof(struct table_entry)),
+    };
     return table;
 }
 
