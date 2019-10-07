@@ -10,7 +10,9 @@
 
 STATIC_BUILD = YES
 
-CROSS_COMPILER_TARGET_ARCHS = linux-arm_el
+CROSS_COMPILER_TARGET_ARCHS =
+CROSS_COMPILER_TARGET_ARCHS += linux-arm_el
+CROSS_COMPILER_TARGET_ARCHS += linux-arm_elhf
 
 # This can either be an explicit path to the directory containing the
 # epicsdbbuilder module or a version number understood by pkg_resources.require
