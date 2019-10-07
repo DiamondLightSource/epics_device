@@ -632,6 +632,10 @@ error__t load_persistent_state(
  * wake up the responsible thread and then wait for it to complete. */
 void terminate_persistent_state(void)
 {
+    /* If no state filename given then do nothing. */
+    if (!state_filename)
+        return;
+
     LOCK();
     thread_running = false;
     pthread_cond_signal(&psignal);
