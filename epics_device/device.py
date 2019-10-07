@@ -63,6 +63,23 @@ pop_name_prefix    = EpicsDevice.pop_name_prefix
 set_name_separator = EpicsDevice.set_name_separator
 
 
+# Context manager for name prefix, allows us to write
+#
+#   with name_prefix(prefix):
+#       generate pvs
+#
+# to generate PVs named prefix:name
+class name_prefix:
+    def __init__(self, prefix):
+        self.prefix = prefix
+
+    def __enter__(self):
+        push_name_prefix(self.prefix)
+
+    def __exit__(self, *exception):
+        pop_name_prefix()
+
+
 # ----------------------------------------------------------------------------
 #           Record Generation Support
 # ----------------------------------------------------------------------------
@@ -183,4 +200,4 @@ __all__ = [
     'mbbIn',    'mbbOut',   'stringIn', 'stringOut',
     'Waveform', 'WaveformOut',
     'EpicsDevice', 'set_MDEL_default', 'set_out_name',
-    'push_name_prefix', 'pop_name_prefix']
+    'push_name_prefix', 'pop_name_prefix', 'name_prefix']

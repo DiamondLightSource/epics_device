@@ -88,6 +88,15 @@ be modified in two ways:
     By default component of the prefix and the record name are separated by ':',
     but this function can be used to change the separator.
 
+..  class:: name_prefix(prefix)
+
+    This is a context manager for a name prefix, wrapping
+    :func:`push_name_prefix` and :func:`pop_name_prefix` into a single action.
+    This can be used thus::
+
+        with name_prefix('PREFIX'):
+            aIn('AIN')
+
 
 In Records
 ~~~~~~~~~~
