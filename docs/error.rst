@@ -197,12 +197,14 @@ managing error codes.
     As for :func:`error_report`, ``true`` is returned if `error` was an error,
     and ``false`` if it was ``ERROR_OK``.
 
-..  function:: void error_extend(error__t error, const char *format, ...)
+..  function:: error__t error_extend(error__t error, const char *format, ...)
 
-    The information associated with `error` is augmented with the message
-    defined by `format`.  The lifetime of `error` is unaffected.  Note that
-    `error` must *not* be ``ERROR_OK`` -- it is not possible to extend
-    ``ERROR_OK``.
+    If `error` is not ``ERROR_OK`` then the information associated with `error`
+    is augmented with the message defined by `format`.  The lifetime of `error`
+    is unaffected, and the original `error` is also returned.
+
+    If `error` is ``ERROR_OK`` the `format` is ignored and ``ERROR_OK`` is
+    returned.
 
 ..  function:: const char *error_format(error__t error)
 

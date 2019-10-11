@@ -70,9 +70,12 @@ error__t _error_create(char *extra, const char *format, ...)
 }
 
 
-void error_extend(error__t error, const char *format, ...)
+error__t error_extend(error__t error, const char *format, ...)
 {
-    ASSERT_OK(error);   // Cannot extend a success error code!
+    /* Treat error_extend() on ERROR_OK as a no-op. */
+    if (error == ERROR_OK)
+        return error;
+
     ASSERT_OK(error->count < MAX_ERROR_DEPTH);
 
     va_list args;
@@ -80,6 +83,7 @@ void error_extend(error__t error, const char *format, ...)
     ASSERT_IO(vasprintf(&error->messages[error->count], format, args));
     va_end(args);
     error->count += 1;
+    return error;
 }
 
 

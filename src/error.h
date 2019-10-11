@@ -89,9 +89,9 @@
  *      the returned string is the same as the lifetime of the error value.
  *
  *  error_extend(error, format, ...)
- *      A new error string is formatted and added to the given error code.
- *      Note that ERROR_OK cannot be be passed, and will in fact trigger a
- *      segmentation fault!
+ *      If error is not ERROR_OK then a new error string is formatted and added
+ *      to the given error code.  If error is ERROR_OK this is a no-op, the
+ *      formatting arguments are ignored.
  */
 
 
@@ -114,22 +114,16 @@ typedef struct error__t *error__t;  // Alas error_t is already spoken for!
 bool error_report(error__t error);
 
 /* A helper macro to extend the reported error with context. */
-#define _id_ERROR_REPORT(error, expr, format...) \
-    ( { \
-        error__t error = (expr); \
-        if (error) \
-            error_extend(error, format); \
-        error_report(error); \
-    } )
-#define ERROR_REPORT(args...)  _id_ERROR_REPORT(UNIQUE_ID(), args)
+#define ERROR_REPORT(expr, format...) \
+    error_report(error_extend((expr), format))
 
 /* This function silently discards the error code. */
 bool error_discard(error__t error);
 
 
 /* This function extends the information associated with the given error with
- * the new message. */
-void error_extend(error__t error, const char *format, ...)
+ * the new message.  The original error is returned for convenience. */
+error__t error_extend(error__t error, const char *format, ...)
     __attribute__((format(printf, 2, 3)));
 
 /* Converts an error code into a formatted string. */
@@ -231,7 +225,7 @@ void start_logging(const char *ident);
 
 /* For failing immediately.  Same as TEST_OK_(false, message...) */
 #define FAIL()                      TEST_OK(false)
-#define FAIL_(message...)           _error_create(NULL, message)
+#define FAIL_(message...)           _nonnull(_error_create(NULL, message))
 
 
 /* These two macros facilitate using the macros above by creating if
