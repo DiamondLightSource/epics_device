@@ -366,13 +366,19 @@ header file.
 ..  macro:: WITH_MUTEX(mutex)
 
     This macro wraps the statement or block of code that follows with calls to
-    ``pthread_mutex_lock(&mutex)`` and ``pthread_mutex_unlock(&mutex)``, and
-    each of these calls is checked for success (raising an assertion failure if
-    an error is detected).
+    ``pthread_mutex_lock(&mutex)`` and ``pthread_mutex_unlock(&mutex)``.  The
+    locking call is checked for success and an assertion failure is raised if
+    an error is detected.
 
 ..  macro:: WITH_MUTEX_UNCHECKED(mutex)
 
-    Similar to :macro:`WITH_MUTEX`, except that any errors are ignored.
+    Similar to :macro:`WITH_MUTEX`, except that lock errors are ignored.
+
+..  macro:: ERROR_WITH_MUTEX(mutex, error)
+
+    This wraps mutex locking around an error expression, and evaluates to the
+    result of evaluating `error` under the lock, which must be an expression of
+    type :type:`error__t`.
 
 
 Pitfalls

@@ -336,17 +336,27 @@ void start_logging(const char *ident);
     _id_WITH_ENTER_LEAVE(UNIQUE_ID(), enter, leave)
 
 
-/* Wrapper around mutex lock/unlock. */
+/* Wrapper around mutex lock/unlock.  The unlock call does not need to be
+ * checked as the only valid return code (EPERM) does not apply. */
 #define WITH_MUTEX(mutex) \
     _WITH_ENTER_LEAVE( \
         ASSERT_PTHREAD(pthread_mutex_lock(&mutex)), \
-        ASSERT_PTHREAD(pthread_mutex_unlock(&mutex)))
+        pthread_mutex_unlock(&mutex))
 
 /* Similar to WITH_MUTEX, but locking is not checked for success. */
 #define WITH_MUTEX_UNCHECKED(mutex) \
     _WITH_ENTER_LEAVE( \
         pthread_mutex_lock(&mutex), \
         pthread_mutex_unlock(&mutex))
+
+/* Wraps a mutex call around the calculation of error, returns the error code
+ * result. */
+#define ERROR_WITH_MUTEX(mutex, error) \
+    ( \
+        ASSERT_PTHREAD(pthread_mutex_lock(&mutex)), \
+        DO_FINALLY(error, \
+            pthread_mutex_unlock(&mutex)) \
+    )
 
 
 /* Debug utility for dumping binary data in ASCII format. */
