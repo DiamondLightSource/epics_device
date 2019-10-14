@@ -462,6 +462,23 @@ void _read_record_waveform(
         type, LOOKUP_RECORD(waveform, name), value, length)
 
 
+/* This executes a block of code with the given record name prefix and ensures
+ * that the prefix is safely popped when done. */
+#define WITH_NAME_PREFIX(prefix) \
+    _WITH_ENTER_LEAVE( \
+        push_record_name_prefix(prefix), \
+        pop_record_name_prefix())
+
+
+/* Wrapper for setting default mutex while publishing PVs. */
+#define WITH_DEFAULT_MUTEX(mutex) \
+    _id_WITH_DEFAULT_MUTEX(UNIQUE_ID(), mutex)
+#define _id_WITH_DEFAULT_MUTEX(old_mutex, mutex) \
+    _WITH_ENTER_LEAVE( \
+        pthread_mutex_t *old_mutex = set_default_epics_device_mutex(&mutex), \
+        set_default_epics_device_mutex(old_mutex))
+
+
 /******************************************************************************/
 /* Detailed macro based definitions.
  *

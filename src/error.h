@@ -325,5 +325,16 @@ void start_logging(const char *ident);
 #define container_of(args...)   _id_container_of(UNIQUE_ID(), args)
 
 
+/* Tricksy code to wrap enter and leave functions around a block of code.  The
+ * use of double for loops is so that the enter statement can contain a variable
+ * declaration, which is then available to the leave statement and the body of
+ * the block. */
+#define _id_WITH_ENTER_LEAVE(loop, enter, leave) \
+    for (bool loop = true; loop; ) \
+        for (enter; loop; loop = false, leave)
+#define _WITH_ENTER_LEAVE(enter, leave) \
+    _id_WITH_ENTER_LEAVE(UNIQUE_ID(), enter, leave)
+
+
 /* Debug utility for dumping binary data in ASCII format. */
 void dump_binary(FILE *out, const void *buffer, size_t length);

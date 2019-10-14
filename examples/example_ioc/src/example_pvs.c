@@ -112,10 +112,11 @@ static void publish_group(const char *prefix)
 {
     int *target = calloc(1, sizeof(int));
 
-    push_record_name_prefix(prefix);
-    PUBLISH_READ_VAR(longin, "READ", *target);
-    PUBLISH_WRITE_VAR(longout, "WRITE", *target);
-    pop_record_name_prefix();
+    WITH_NAME_PREFIX(prefix)
+    {
+        PUBLISH_READ_VAR(longin, "READ", *target);
+        PUBLISH_WRITE_VAR(longout, "WRITE", *target);
+    }
 }
 
 

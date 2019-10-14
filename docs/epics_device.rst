@@ -71,6 +71,21 @@ One function is provided for initialisation.
     or if this is not set then the default specified by this function is used.
     The previously set default is returned.
 
+..  macro:: WITH_DEFAULT_MUTEX(mutex)
+
+    This macro can be used instead of calling
+    :func:`set_default_epics_device_mutex` directly.  Pass the mutex to be used
+    as the `mutex` argument and follow this macro with a block of publishing
+    code, for instance::
+
+        WITH_DEFAULT_MUTEX(mutex)
+        {
+            PUBLISH(ao, 'AOUT', write)
+        }
+
+    This is equivalent to setting ``.mutex=mutex`` in every ``PUBLISH`` call,
+    and the original mutex is restored on exit from the associated block.
+
 
 PUBLISH Overview
 ----------------
@@ -624,6 +639,18 @@ records.
     Note that when :func:`set_record_name_separator` is used to change the
     record name separator, the change only affects subsequent calls to
     :func:`push_record_name_prefix`, any existing prefix is unchanged.
+
+..  macro:: WITH_NAME_PREFIX(prefix)
+
+    This macro is designed to be used instead of :func:`push_record_name_prefix`
+    and :func:`pop_record_name_prefix`.  Specify the record name prefix as the
+    only argument, and follow with a block of record publishing code, for
+    example::
+
+        WITH_NAME_PREFIX("prefix")
+        {
+            PUBLISH(ai, "AIN", read_ain);
+        }
 
 ..  type:: enum epics_alarm_severity
 

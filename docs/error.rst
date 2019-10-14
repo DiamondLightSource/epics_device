@@ -169,6 +169,23 @@ The following macros are used as helpers.
     The only difference from :macro:`TRY_CATCH` is that the `finally` code is
     unconditionally executed by :macro:`DO_FINALLY`.
 
+For the three multi-part macros ``IF_ELSE``, ``TRY_CATCH`` and ``DO_FINALLY``,
+the only separator between the key parts is a single comma character, so layout
+and an extra comment should be used to structure these, as shown below::
+
+    IF_ELSE(test,
+        iftrue,
+    //else
+        iffalse)  ?:
+    TRY_CATCH(
+        action,
+    //catch
+        on_fail)  ?:
+    DO_FINALLY(
+        action,
+    //finally
+        finally);
+
 
 Error Reporting and Management
 ------------------------------
@@ -311,7 +328,40 @@ header file.
 
 ..  macro:: container_of(ptr, type, member)
 
-    Casts a member of a structure out to the containing structure.
+    Casts a member of a structure out to the containing structure.  For example,
+    given `py` constructed thus::
+
+        struct xy { int x, y; } xy;
+        int *py = &xy.y;
+
+    a pointer to `xy` can be reconstructed as::
+
+        struct xy *pxy = container_of(py, struct xy, y);
+
+..  macro:: _WITH_ENTER_LEAVE(enter, leave)
+
+    This macro is used to construct helper macros for wrapping enter and exit
+    code around a block.  Instances of this macro must be followed by a single
+    statement or a block of code in braces, and the `enter` and `leave` clauses
+    are used to bracket the code.  In other words, the following use of this
+    macro::
+
+        _WITH_ENTER_LEAVE(enter, leave)
+        {
+            statements;
+        }
+
+    is exactly equivalent to::
+
+        {
+            enter;
+            statements;
+            leave;
+        }
+
+    Note that the `enter` clause may include the declaration of a local
+    variable, the scope of which includes the statements following and the
+    `leave` clause.
 
 
 Pitfalls
