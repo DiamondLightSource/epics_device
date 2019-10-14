@@ -32,9 +32,8 @@ static pthread_mutex_t count_mutex = PTHREAD_MUTEX_INITIALIZER;
 
 static void update_error_count(int step)
 {
-    pthread_mutex_lock(&count_mutex);
-    error_count += step;
-    pthread_mutex_unlock(&count_mutex);
+    WITH_MUTEX(count_mutex)
+        error_count += step;
 }
 
 
@@ -153,15 +152,19 @@ void start_logging(const char *ident)
 
 void vlog_message(int priority, const char *format, va_list args)
 {
-    pthread_mutex_lock(&log_mutex);
-    if (daemon_mode)
-        vsyslog(priority, format, args);
-    else
+    /* Note that we CANNOT safely use WITH_MUTEX here for one simple reason: if
+     * the ASSERT_PTHREAD fails then we can be trying to handle an assert fail
+     * inside an assert fail handler; this will not end well. */
+    WITH_MUTEX_UNCHECKED(log_mutex)
     {
-        vfprintf(stderr, format, args);
-        fprintf(stderr, "\n");
+        if (daemon_mode)
+            vsyslog(priority, format, args);
+        else
+        {
+            vfprintf(stderr, format, args);
+            fprintf(stderr, "\n");
+        }
     }
-    pthread_mutex_unlock(&log_mutex);
 }
 
 

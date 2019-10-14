@@ -204,9 +204,6 @@ static bool thread_running = true;
 /* Thread handle used for shutdown. */
 static pthread_t persistence_thread_id;
 
-#define LOCK()      pthread_mutex_lock(&mutex);
-#define UNLOCK()    pthread_mutex_unlock(&mutex);
-
 
 
 /* Creates new persistent variable. */
@@ -225,9 +222,8 @@ void create_persistent_waveform(
     persistence->max_length = max_length;
     persistence->length = 0;
 
-    LOCK();
-    hash_table_insert(variable_table, persistence->name, persistence);
-    UNLOCK();
+    WITH_MUTEX(mutex)
+        hash_table_insert(variable_table, persistence->name, persistence);
 }
 
 
@@ -245,16 +241,18 @@ static struct persistent_variable *lookup_persistence(const char *name)
 bool read_persistent_waveform(
     const char *name, void *variable, unsigned int *length)
 {
-    LOCK();
-    struct persistent_variable *persistence = lookup_persistence(name);
-    bool ok = persistence != NULL  &&  persistence->length > 0;
-    if (ok)
+    bool ok;
+    WITH_MUTEX(mutex)
     {
-        memcpy(variable, persistence->variable,
-            persistence->length * persistence->action->size);
-        *length = persistence->length;
+        struct persistent_variable *persistence = lookup_persistence(name);
+        ok = persistence != NULL  &&  persistence->length > 0;
+        if (ok)
+        {
+            memcpy(variable, persistence->variable,
+                persistence->length * persistence->action->size);
+            *length = persistence->length;
+        }
     }
-    UNLOCK();
     return ok;
 }
 
@@ -272,22 +270,23 @@ bool read_persistent_variable(const char *name, void *variable)
 void write_persistent_waveform(
     const char *name, const void *value, unsigned int length)
 {
-    LOCK();
-    struct persistent_variable *persistence = lookup_persistence(name);
-    if (persistence != NULL)
+    WITH_MUTEX(mutex)
     {
-        /* Don't force a write of the persistence file if nothing has actually
-         * changed. */
-        unsigned int size = length * persistence->action->size;
-        persistence_dirty =
-            persistence_dirty  ||
-            persistence->length != length  ||
-            memcmp(persistence->variable, value, size);
+        struct persistent_variable *persistence = lookup_persistence(name);
+        if (persistence != NULL)
+        {
+            /* Don't force a write of the persistence file if nothing has
+             * actually changed. */
+            unsigned int size = length * persistence->action->size;
+            persistence_dirty =
+                persistence_dirty  ||
+                persistence->length != length  ||
+                memcmp(persistence->variable, value, size);
 
-        persistence->length = length;
-        memcpy(persistence->variable, value, size);
+            persistence->length = length;
+            memcpy(persistence->variable, value, size);
+        }
     }
-    UNLOCK();
 }
 
 void write_persistent_variable(const char *name, const void *value)
@@ -589,14 +588,15 @@ static void pwait_timeout(int secs, long nsecs)
  * if necessary. */
 static void *persistence_thread(void *context)
 {
-    LOCK();
-    while (thread_running)
+    WITH_MUTEX(mutex)
     {
-        pwait_timeout(persistence_interval, 0);
-        error_report(update_persistent_state());
-        persistence_dirty = false;
+        while (thread_running)
+        {
+            pwait_timeout(persistence_interval, 0);
+            error_report(update_persistent_state());
+            persistence_dirty = false;
+        }
     }
-    UNLOCK();
     return NULL;
 }
 
@@ -616,9 +616,9 @@ error__t load_persistent_state(
     state_filename = strdup(file_name);
     persistence_interval = save_interval;
 
-    LOCK();
-    error__t error = parse_persistence_file(state_filename, check_parse);
-    UNLOCK();
+    error__t error;
+    WITH_MUTEX(mutex)
+        error = parse_persistence_file(state_filename, check_parse);
 
     return
         error  ?:
@@ -636,9 +636,10 @@ void terminate_persistent_state(void)
     if (!state_filename)
         return;
 
-    LOCK();
-    thread_running = false;
-    pthread_cond_signal(&psignal);
-    UNLOCK();
+    WITH_MUTEX(mutex)
+    {
+        thread_running = false;
+        pthread_cond_signal(&psignal);
+    }
     pthread_join(persistence_thread_id, NULL);
 }

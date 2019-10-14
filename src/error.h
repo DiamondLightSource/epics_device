@@ -183,11 +183,11 @@ void start_logging(const char *ident);
 /* An assert for tests that really really should not fail!  The program will
  * terminate immediately. */
 #define _id_ASSERT(result, COND, EXTRA, expr)  \
-    do { \
+    ( { \
         typeof(expr) result = (expr); \
         if (unlikely(!COND(result))) \
             _error_panic(EXTRA(result), __FILE__, __LINE__); \
-    } while (0)
+    } )
 #define _ASSERT(args...)    _id_ASSERT(UNIQUE_ID(), args)
 
 
@@ -334,6 +334,19 @@ void start_logging(const char *ident);
         for (enter; loop; loop = false, leave)
 #define _WITH_ENTER_LEAVE(enter, leave) \
     _id_WITH_ENTER_LEAVE(UNIQUE_ID(), enter, leave)
+
+
+/* Wrapper around mutex lock/unlock. */
+#define WITH_MUTEX(mutex) \
+    _WITH_ENTER_LEAVE( \
+        ASSERT_PTHREAD(pthread_mutex_lock(&mutex)), \
+        ASSERT_PTHREAD(pthread_mutex_unlock(&mutex)))
+
+/* Similar to WITH_MUTEX, but locking is not checked for success. */
+#define WITH_MUTEX_UNCHECKED(mutex) \
+    _WITH_ENTER_LEAVE( \
+        pthread_mutex_lock(&mutex), \
+        pthread_mutex_unlock(&mutex))
 
 
 /* Debug utility for dumping binary data in ASCII format. */

@@ -363,6 +363,17 @@ header file.
     variable, the scope of which includes the statements following and the
     `leave` clause.
 
+..  macro:: WITH_MUTEX(mutex)
+
+    This macro wraps the statement or block of code that follows with calls to
+    ``pthread_mutex_lock(&mutex)`` and ``pthread_mutex_unlock(&mutex)``, and
+    each of these calls is checked for success (raising an assertion failure if
+    an error is detected).
+
+..  macro:: WITH_MUTEX_UNCHECKED(mutex)
+
+    Similar to :macro:`WITH_MUTEX`, except that any errors are ignored.
+
 
 Pitfalls
 --------

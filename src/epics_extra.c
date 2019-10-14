@@ -40,26 +40,25 @@ static bool epics_ready = false;
 static pthread_mutex_t epics_ready_mutex = PTHREAD_MUTEX_INITIALIZER;
 static struct epics_interlock *notify_list = NULL;
 
-#define LOCK_READY()    ASSERT_PTHREAD(pthread_mutex_lock(&epics_ready_mutex))
-#define UNLOCK_READY()  ASSERT_PTHREAD(pthread_mutex_unlock(&epics_ready_mutex))
-
 
 static void take_interlock(struct epics_interlock *interlock)
 {
-    ASSERT_PTHREAD(pthread_mutex_lock(&interlock->mutex));
-    while (interlock->busy)
-        ASSERT_PTHREAD(
-            pthread_cond_wait(&interlock->signal, &interlock->mutex));
-    interlock->busy = true;
-    ASSERT_PTHREAD(pthread_mutex_unlock(&interlock->mutex));
+    WITH_MUTEX(interlock->mutex)
+    {
+        while (interlock->busy)
+            ASSERT_PTHREAD(
+                pthread_cond_wait(&interlock->signal, &interlock->mutex));
+        interlock->busy = true;
+    }
 }
 
 static void release_interlock(struct epics_interlock *interlock)
 {
-    ASSERT_PTHREAD(pthread_mutex_lock(&interlock->mutex));
-    interlock->busy = false;
-    ASSERT_PTHREAD(pthread_cond_signal(&interlock->signal));
-    ASSERT_PTHREAD(pthread_mutex_unlock(&interlock->mutex));
+    WITH_MUTEX(interlock->mutex)
+    {
+        interlock->busy = false;
+        ASSERT_PTHREAD(pthread_cond_signal(&interlock->signal));
+    }
 }
 
 
@@ -116,10 +115,9 @@ struct epics_interlock *create_interlock(const char *base_name, bool set_time)
     sprintf(buffer, "%s:DONE", base_name);
     PUBLISH(bo, buffer, .write = interlock_done, .context = interlock);
 
-    LOCK_READY();
-    if (!epics_ready)
-        receive_epics_ready(interlock);
-    UNLOCK_READY();
+    WITH_MUTEX(epics_ready_mutex)
+        if (!epics_ready)
+            receive_epics_ready(interlock);
     return interlock;
 }
 
@@ -131,11 +129,13 @@ void wait_for_epics_start(void)
     struct epics_interlock interlock;
     init_interlock(&interlock);
 
-    LOCK_READY();
-    bool lock_needed = !epics_ready;
-    if (lock_needed)
-        receive_epics_ready(&interlock);
-    UNLOCK_READY();
+    bool lock_needed;
+    WITH_MUTEX(epics_ready_mutex)
+    {
+        lock_needed = !epics_ready;
+        if (lock_needed)
+            receive_epics_ready(&interlock);
+    }
 
     if (lock_needed)
         take_interlock(&interlock);
@@ -148,18 +148,20 @@ static void init_hook(initHookState state)
     /* Once EPICS initialisation completes signal all waiting interlocks. */
     if (state == initHookAtEnd)
     {
-        LOCK_READY();
-        epics_ready = true;
-        while (notify_list)
+        WITH_MUTEX(epics_ready_mutex)
         {
-            /* Because of the naughty implementation of wait_for_epics_start()
-             * it's possible that the current head will evaporate as soon as we
-             * touch it, so grab its next pointer first for safety. */
-            struct epics_interlock *next = notify_list->next;
-            release_interlock(notify_list);
-            notify_list = next;
+            epics_ready = true;
+            while (notify_list)
+            {
+                /* Because of the naughty implementation of
+                 * wait_for_epics_start() it's possible that the current head
+                 * will evaporate as soon as we touch it, so grab its next
+                 * pointer first for safety. */
+                struct epics_interlock *next = notify_list->next;
+                release_interlock(notify_list);
+                notify_list = next;
+            }
         }
-        UNLOCK_READY();
     }
 }
 
