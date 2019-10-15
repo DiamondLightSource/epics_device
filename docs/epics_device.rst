@@ -473,8 +473,9 @@ PUBLISH_WAVEFORM API
     This macro creates the software binding for waveform records with data of
     the specified type.  The process method will be called each time the record
     processes -- the process method can choose whether to implement reading or
-    writing as the primitive operation.  Again, a pointer to :type:`record_type`
-    is returned which can be used for triggering and access.
+    writing as the primitive operation.  Again, a pointer to
+    :type:`epics_record` is returned which can be used for triggering and
+    access.
 
     EPICS waveform record support manages a buffer of length `max_length`.  A
     pointer to this buffer is passed into the `process` and `init` functions

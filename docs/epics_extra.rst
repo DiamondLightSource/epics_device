@@ -83,7 +83,7 @@ function, see that link for an example.
 ..  function:: void interlock_wait(struct epics_interlock *interlock)
 
     This function blocks until either all EPICS initialisation is complete, as
-    reported by :func:`check_epics_read`, or until any previous record
+    reported by :c:func:`check_epics_ready`, or until any previous record
     processing has complete, as signalled by the ``:DONE`` record processing.
     This should be called before updating any data that will be read by the
     record processing change processed from the ``:TRIG`` record generated as

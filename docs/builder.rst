@@ -79,9 +79,9 @@ be modified in two ways:
     push_name_prefix(prefix)
     pop_name_prefix()
 
-    These two functions mirror the action of :func:`push_record_name_prefix` and
-    :func:`pop_record_name_prefix`, and affect both the record name and the
-    associated address.
+    These two functions mirror the action of :c:func:`push_record_name_prefix`
+    and :c:func:`pop_record_name_prefix`, and affect both the record name and
+    the associated address.
 
 ..  function:: set_name_separator(separator)
 
@@ -105,7 +105,7 @@ Input records are created by the following functions.  Processing must be
 arranged for each record.  The options are:
 
 * Setting ``SCAN`` to a delay interval and allowing EPICS to trigger processing.
-* Setting ``SCAN = 'I/O Intr'`` and calling :func:`trigger_record` from within
+* Setting ``SCAN = 'I/O Intr'`` and calling :c:func:`trigger_record` from within
   the driver.
 * Leaving ``SCAN`` as ``'Passive'`` and ensuring that the record is processed in
   response to ``FLNK`` from some other record.  In particular see
@@ -353,9 +353,12 @@ update on driver internal events.
 Functions from EPICS Db Builder
 -------------------------------
 
-The following functions are reexported from :mod:`epicsdbbuilder` and are useful
-for database building.  For fuller documentation see the documentation for that
-module, but a selection of useful functions is listed here for reference.
+..  py:module:: epicsdbbuilder
+
+The following functions are reexported from :mod:`epicsdbbuilder` and are
+useful for database building.  For fuller documentation see the documentation
+for that module, but a selection of useful functions is listed here for
+reference.
 
 ..  data:: records
 
