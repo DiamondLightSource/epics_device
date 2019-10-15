@@ -86,6 +86,10 @@ One function is provided for initialisation.
     This is equivalent to setting ``.mutex=mutex`` in every ``PUBLISH`` call,
     and the original mutex is restored on exit from the associated block.
 
+    ..  warning::
+
+        Do **not** exit the guarded block with ``break`` or ``return``.
+
 
 PUBLISH Overview
 ----------------
@@ -651,6 +655,10 @@ records.
         {
             PUBLISH(ai, "AIN", read_ain);
         }
+
+    ..  warning::
+
+        Do **not** exit the guarded block with ``break`` or ``return``.
 
 ..  type:: enum epics_alarm_severity
 

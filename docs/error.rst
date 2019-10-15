@@ -363,6 +363,13 @@ header file.
     variable, the scope of which includes the statements following and the
     `leave` clause.
 
+    ..  warning::
+
+        ``break`` and ``return`` must **not** be used to exit the statement
+        block guarded by :macro:`_WITH_ENTER_LEAVE` or any of its derivatives.
+        Using ``break`` will restart the block after reinvoking `enter`, and
+        using ``return`` will bypass `leave`.
+
 ..  macro:: WITH_MUTEX(mutex)
 
     This macro wraps the statement or block of code that follows with calls to
@@ -370,9 +377,17 @@ header file.
     locking call is checked for success and an assertion failure is raised if
     an error is detected.
 
+    ..  warning::
+
+        Do **not** exit the guarded block with ``break`` or ``return``.
+
 ..  macro:: WITH_MUTEX_UNCHECKED(mutex)
 
     Similar to :macro:`WITH_MUTEX`, except that lock errors are ignored.
+
+    ..  warning::
+
+        Do **not** exit the guarded block with ``break`` or ``return``.
 
 ..  macro:: ERROR_WITH_MUTEX(mutex, error)
 
