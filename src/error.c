@@ -23,20 +23,6 @@
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 /* Core error reporting mechanism. */
 
-/* For debug, used to check if we've leaked any error codes. */
-static int error_count = 0;
-/* Mutex for guarding error_count.  Ideally we should be using
- * __sync_add_and_fetch, or even more up to date, __atomic_add_fetch, but the
- * first fails on ARMv5 and the second isn't in any of our compilers! */
-static pthread_mutex_t count_mutex = PTHREAD_MUTEX_INITIALIZER;
-
-static void update_error_count(int step)
-{
-    WITH_MUTEX(count_mutex)
-        error_count += step;
-}
-
-
 /* This encapsulates an error message. */
 struct error__t {
     /* An error message consists of a list of error strings. */
@@ -55,8 +41,6 @@ error__t _error_create(char *extra, const char *format, ...)
     char *message;
     ASSERT_IO(vasprintf(&message, format, args));
     va_end(args);
-
-    update_error_count(1);
 
     struct error__t *error = malloc(sizeof(struct error__t));
     if (extra)
@@ -94,7 +78,6 @@ bool error_discard(error__t error)
             free(error->messages[i]);
         free(error->formatted);
         free(error);
-        update_error_count(-1);
         return true;
     }
     else
