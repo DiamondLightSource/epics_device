@@ -1,7 +1,7 @@
 # Common definitions for all records
 
 from epicsdbbuilder import *
-from device import *
+from .device import *
 
 __all__ = [
     'Action', 'Trigger', 'ForwardLink', 'AggregateSeverity', 'concat']

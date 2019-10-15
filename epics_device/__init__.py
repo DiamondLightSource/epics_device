@@ -1,4 +1,4 @@
-import builder
+from . import builder
 
 import epicsdbbuilder
 __all__ = epicsdbbuilder.ExportModules(globals(),
