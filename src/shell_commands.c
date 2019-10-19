@@ -1,6 +1,7 @@
 /* This file exports a number of functions to the IOC shell. */
 
 #include <stdbool.h>
+#include <stdint.h>
 #include <unistd.h>
 #include <stdarg.h>
 #include <stdio.h>

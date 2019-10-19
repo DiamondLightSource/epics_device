@@ -286,10 +286,10 @@ enum record_type
  * record type. */
 #define TYPEOF(record)   TYPEOF_##record
 
-#define TYPEOF_longin    int
-#define TYPEOF_ulongin   unsigned int
-#define TYPEOF_longout   int
-#define TYPEOF_ulongout  unsigned int
+#define TYPEOF_longin    int32_t
+#define TYPEOF_ulongin   uint32_t
+#define TYPEOF_longout   int32_t
+#define TYPEOF_ulongout  uint32_t
 #define TYPEOF_ai        double
 #define TYPEOF_ao        double
 #define TYPEOF_bi        bool

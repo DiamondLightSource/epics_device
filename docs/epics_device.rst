@@ -218,8 +218,8 @@ section return values of type ``struct epics_record*``.
     ==================  ==================  ====================
     ai                  ao                  double
     bi                  bo                  bool
-    longin              longout             int
-    ulongin             ulongout            unsigned int
+    longin              longout             int32_t
+    ulongin             ulongout            uint32_t
     mbbi                mbbo                unsigned int
     longin              longout             :type:`EPICS_STRING`
     ==================  ==================  ====================
