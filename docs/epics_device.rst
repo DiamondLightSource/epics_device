@@ -693,6 +693,11 @@ records.
     If `epics_record` was published with `io_intr` set then calling this
     function will trigger record processing.
 
+..  function:: struct epics_record *get_current_epics_record(void)
+
+    During record processing this will return the record being processed.  At
+    other times ``NULL`` is returned.
+
 ..  macro::
     LOOKUP_RECORD(record, name)
 

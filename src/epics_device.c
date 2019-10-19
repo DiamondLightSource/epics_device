@@ -772,6 +772,21 @@ void _publish_waveform_action(void *context, void *array, unsigned int *length)
 /*                                                                           */
 /*****************************************************************************/
 
+static __thread struct epics_record *current_epics_record = NULL;
+
+/* Need to allow for possibility of recursion during record procession. */
+#define PUSH_CURRENT_RECORD(record) \
+    struct epics_record *_saved_record = current_epics_record; \
+    current_epics_record = record
+#define POP_CURRENT_RECORD(record) \
+    current_epics_record = _saved_record
+
+
+struct epics_record *get_current_epics_record(void)
+{
+    return current_epics_record;
+}
+
 
 /* Looks up the record and records it in dpvt if found.  Also take care to
  * ensure that only one EPICS record binds to any one instance. */
@@ -849,7 +864,9 @@ static bool process_in_record(dbCommon *pr, void *result)
         return false;
 
     if (base->mutex)  pthread_mutex_lock(base->mutex);
+    PUSH_CURRENT_RECORD(base);
     bool ok = base->in.read(base->context, result);
+    POP_CURRENT_RECORD();
     if (base->mutex)  pthread_mutex_unlock(base->mutex);
 
     recGblSetSevr(pr, READ_ALARM, base->severity);
@@ -906,9 +923,11 @@ static void post_init_process(dbCommon *pr)
 static bool init_out_record(dbCommon *pr, unsigned int value_size, void *result)
 {
     struct epics_record *base = pr->dpvt;
+    PUSH_CURRENT_RECORD(base);
     bool read_ok =
         (base->persist   &&  read_persistent_variable(base->key, result))  ||
         (base->out.init  &&  base->out.init(base->context, result));
+    POP_CURRENT_RECORD();
     if (read_ok)
         post_init_process(pr);
     else
@@ -932,7 +951,9 @@ static bool process_out_record(
     if (!base->out.disable_write)
     {
         if (base->mutex)  pthread_mutex_lock(base->mutex);
+        PUSH_CURRENT_RECORD(base);
         write_ok = base->out.write(base->context, result);
+        POP_CURRENT_RECORD();
         if (base->mutex)  pthread_mutex_unlock(base->mutex);
     }
 
@@ -1089,7 +1110,9 @@ static long process_waveform(waveformRecord *pr)
 
     unsigned int nord = pr->nord;
     if (base->mutex)  pthread_mutex_lock(base->mutex);
+    PUSH_CURRENT_RECORD(base);
     base->waveform.process(base->context, pr->bptr, &nord);
+    POP_CURRENT_RECORD();
     if (base->mutex)  pthread_mutex_unlock(base->mutex);
 
     pr->nord = nord;
