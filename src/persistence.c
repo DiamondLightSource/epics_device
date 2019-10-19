@@ -616,12 +616,9 @@ error__t load_persistent_state(
     state_filename = strdup(file_name);
     persistence_interval = save_interval;
 
-    error__t error;
-    WITH_MUTEX(mutex)
-        error = parse_persistence_file(state_filename, check_parse);
-
     return
-        error  ?:
+        ERROR_WITH_MUTEX(mutex,
+            parse_persistence_file(state_filename, check_parse))  ?:
         IF(persistence_thread_id == 0,
             TEST_PTHREAD(pthread_create(
                 &persistence_thread_id, NULL, persistence_thread, NULL)));
