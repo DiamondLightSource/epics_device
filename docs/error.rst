@@ -3,7 +3,7 @@ Error Handling Macros and Other Facilities
 
 The header file ``error.h`` is designed to support a particular style of error
 handling.  The general approach is that functions which can fail should return a
-special ``error__t`` return code, returning ``ERROR_OK`` if successful, and
+special :type:`error__t` return code, returning ``ERROR_OK`` if successful, and
 returning a code with contains a report of the failure reason if failed.  A
 sequence of such functions can then be combined with the ``?:`` operator so that
 the overall result is success only if every stage succeeds.  This can in some
@@ -26,11 +26,11 @@ requirements:
     b)  Explicitly reported using :func:`error_report` or a related function.
     c)  Explicitly discarded using :func:`error_discard`.
 
-    In particular, values of type ``error__t`` must not be silently dropped as
-    otherwise errors can go unreported and there will be a memory leak.
+    In particular, values of type :type:`error__t` must not be silently dropped
+    as otherwise errors can go unreported and there will be a memory leak.
 
 An example of this style of coding can be seen in the first half of the
-implementation of :func:`ioc_main` in ``examples/example_ioc/src/main.c``::
+implementation of :func:`!ioc_main` in ``examples/example_ioc/src/main.c``::
 
     static error__t ioc_main(void)
     {
@@ -50,9 +50,9 @@ implementation of :func:`ioc_main` in ``examples/example_ioc/src/main.c``::
     }
 
 The second half of this example uses the error handling macros.  Not all
-functions are of the form described above returning an ``error__t`` error code,
-so the macros in this file provide functions to convert functions of a more
-familiar form into the format described here.
+functions are of the form described above returning an :type:`error__t` error
+code, so the macros in this file provide functions to convert functions of a
+more familiar form into the format described here.
 
 For example, the macro :func:`TEST_IO` takes as argument an expression (which
 may be an assignment) which following the usual system library calling
@@ -71,7 +71,7 @@ behave thus:
 
 ``TEST_xx(expr)``
     If the test fails an error code representing a canned error message (defined
-    by the macro :macro:`ERROR_MESSAGE`) is returned, otherwise
+    by the macro :macro:`!ERROR_MESSAGE`) is returned, otherwise
     ``ERROR_OK`` is returned.
 
 ``TEST_xx_(expr, format...)``
@@ -121,6 +121,19 @@ The following groups of tests are defined:
     code which is compatible with :data:`errno` on failure.  Extra information
     from this error code is included in the returned result.
 
+All of the ``TEST_`` macros above return a value of the following type:
+
+..  type:: error__t
+
+    This type encapsulates an error message or success, represented by the value
+    ``ERROR_OK``.  Standard C error checking can be used to test for error or
+    success: testing ``ERROR_OK`` behaves as ``false``, any error code
+    representing failure tests as true.
+
+    As noted above, error handling functions are designed to be chained with the
+    ``?:`` syntax.  Note also that error values _must_ be handled with
+    :func:`error_report` or :func:`error_discard`.
+
 
 Auxilliary Error Handling Macros
 --------------------------------
@@ -156,9 +169,9 @@ The following macros are used as helpers.
 ..  macro:: TRY_CATCH(action, on_fail...)
 
     This macro provides a limited form of exception handling.  `action` must
-    return an ``error__t``, which is returned by this macro.  If the error code
-    is not ``ERROR_OK`` then the code `on_fail` is executed before returning.
-    Note that any value returned by `on_fail` is discarded.
+    return an :type:`error__t`, which is returned by this macro.  If the error
+    code is not ``ERROR_OK`` then the code `on_fail` is executed before
+    returning.  Note that any value returned by `on_fail` is discarded.
 
 ..  macro:: DO_FINALLY(action, finally...)
 
@@ -252,8 +265,8 @@ instead.
 
 ..  function:: void start_logging(const char *ident)
 
-    This invokes :func:`openlog` (3) and sends all future messages to the system
-    log with the log identifier `ident`.
+    This invokes :func:`!openlog` (3) and sends all future messages to the
+    system log with the log identifier `ident`.
 
 
 Miscellaneous Helpers
@@ -277,7 +290,7 @@ header file.
     `from_type` and that `to_type` and `value` have the same size.
 
     For example, this macro is used to remove the ``const`` attribute from a
-    hashtable key in ``hashtable.c`` thus (here :func:`release_key` takes a
+    hashtable key in ``hashtable.c`` thus (here :func:`!release_key` takes a
     ``void *`` argument)::
 
         static void release_key(struct hash_table *table, const void *key)
@@ -406,24 +419,24 @@ this by mistake.
 1.  Deliberately discarding the error code.
 
     Example where error code is discarded, here we want to convert an
-    ``error__t`` into a boolean indicating success::
+    :type:`error__t` into a boolean indicating success::
 
         error__t test_function(void) { ... }
 
-        bool drop_error(void) {
+        bool bad_drop_error(void) {
             return !test_function();
         }
 
     In this case the error code is silently dropped.  This should be rewritten
     in one of the following two forms::
 
-        bool drop_error(void) {
+        bool noisy_drop_error(void) {
             return !error_report(test_function());
         }
 
     if the error should be reported, or::
 
-        bool drop_error(void) {
+        bool quiet_drop_error(void) {
             return !error_discard(test_function());
         }
 

@@ -107,7 +107,7 @@ The fuller API including the more abstract layer adds the following.
 
     ..  type:: hash_t
 
-        This is an alias for :type:`unsigned long int`.  All hash functions use
+        This is an alias for :type:`!unsigned long int`.  All hash functions use
         this type.
 
     ..  type:: struct hash_table_ops

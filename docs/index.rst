@@ -14,6 +14,7 @@ Documentation for EPICS Device Support Module
     error
     hashtable
     example
+    external
 
 ..  Currently omitted from documentation
     ideas
