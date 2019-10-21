@@ -7,13 +7,9 @@ documented elsewhere.
 Standard C API
 --------------
 
-..  c:function::
-    int snprintf(char *str, size_t size, const char *format, ...)
-    int sprintf(char *str, const char *format, ...)
-    int printf(const char *format, ...)
+..  type:: bool
 
-    Standard functions for printing and formatting strings, available via
-    ``#include <stdio.h>``.
+    Standard boolean type, available via ``#include <stdbool.h>``.
 
 ..  type:: pthread_mutex_t
 
@@ -30,6 +26,14 @@ Standard C API
     Type used to manage variable arguments, available via ``#include
     <stdarg.h>``.
 
+..  c:function::
+    int snprintf(char *str, size_t size, const char *format, ...)
+    int sprintf(char *str, const char *format, ...)
+    int printf(const char *format, ...)
+
+    Standard functions for printing and formatting strings, available via
+    ``#include <stdio.h>``.
+
 ..  var:: int errno
 
     Global (thread local) variable set by IO calls to report error status,
@@ -43,10 +47,11 @@ EPICS API
     EPICS function used to start the IOC.  This must be called to start the IOC
     after publishing all PVs and loading all EPICS databases.
 
-..  c:function:: iocsh()
+..  c:function:: int iocsh(const char *script)
 
     Interactive IOC shell.  This can optionally be called after :func:`iocInit`
-    to provide an interactive shell for the IOC.
+    with a startup script as the `script` argument, or with ``NULL`` to provide
+    an interactive shell for the IOC.  Returns -1 on error, 0 on success.
 
 ..  c:macro:: initHookAtEnd
 

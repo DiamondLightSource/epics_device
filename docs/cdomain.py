@@ -21,8 +21,7 @@ def setup(app):
     del app.registry.domains[CDomain.name]
     app.add_domain(CDomain)
 
-    Base_CObject.stopwords.update(set((
-        'enum', 'bool', 'uintptr_t', 'va_list')))
+    Base_CObject.stopwords.update(set(('enum', 'uintptr_t')))
 
     return dict(
         parallel_read_safe = True,
