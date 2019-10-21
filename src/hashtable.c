@@ -1,6 +1,7 @@
 /* Hash table implementation. */
 
 #include <stdbool.h>
+#include <stdint.h>
 #include <stdio.h>
 #include <stddef.h>
 #include <stdlib.h>
@@ -58,7 +59,7 @@ static bool compare_string(const void *key1, const void *key2)
 
 static hash_t hash_ptr(const void *key)
 {
-    return (hash_t) key;
+    return (hash_t) (uintptr_t) key;
 }
 
 static bool compare_ptr(const void *key1, const void *key2)

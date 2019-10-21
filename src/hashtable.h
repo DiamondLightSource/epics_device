@@ -56,7 +56,7 @@ void hash_table_validate(struct hash_table *table);
 /* Optional generic hash table interface. */
 
 /* Hashes are long integers, 64-bits on the right architecture. */
-typedef long unsigned int hash_t;
+typedef uint64_t hash_t;
 
 
 /* Abstract key management interface so hash table can support key types other
