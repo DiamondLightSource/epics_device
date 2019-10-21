@@ -19,6 +19,7 @@ import sys, os
 #sys.path.append(os.path.abspath('.'))
 
 sys.path.append(os.path.abspath(os.environ['TOP']))
+sys.path.append(os.path.abspath('.'))
 
 import epics_device
 import epicsdbbuilder
@@ -32,6 +33,7 @@ import epicsdbbuilder
 # coming with Sphinx (named 'sphinx.ext.*') or your custom ones.
 extensions = [
     'sphinx.ext.viewcode',      # Adds links to source code
+    'cdomain',                  # Override sphinx C domain implementation
 ]
 
 viewcode_import = True
