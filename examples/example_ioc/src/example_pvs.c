@@ -1,4 +1,5 @@
 #include <stdbool.h>
+#include <stdint.h>
 #include <unistd.h>
 #include <stddef.h>
 #include <stdarg.h>
@@ -133,15 +134,15 @@ error__t initialise_example_pvs(void)
     PUBLISH_WF_READ_VAR(double, "WF", WF_LENGTH, waveform);
     PUBLISH_READ_VAR(ai, "SUM", sum);
 
-    PUBLISH_ACTION("WRITE", write_persistent_state);
+    interlock = create_interlock("TRIG", false);
+    PUBLISH_WF_READ_VAR(int, "TRIGWF", WF_LENGTH, trigger_waveform);
+    PUBLISH_READ_VAR(longin, "COUNT", trigger_count);
+    PUBLISH_ACTION("RESET", reset_trigger_count);
 
     PUBLISH_WRITE_VAR_P(ao, "INTERVAL", event_interval);
     PUBLISH_WRITE_VAR_P(ao, "SCALING", scaling);
 
-    interlock = create_interlock("TRIG", false);
-    PUBLISH_READ_VAR(longin, "COUNT", trigger_count);
-    PUBLISH_WF_READ_VAR(int, "TRIGWF", WF_LENGTH, trigger_waveform);
-    PUBLISH_ACTION("RESET", reset_trigger_count);
+    PUBLISH_ACTION("WRITE", write_persistent_state);
 
     publish_group("A");
     publish_group("B");
