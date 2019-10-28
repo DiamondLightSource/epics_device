@@ -1,13 +1,13 @@
 # Derived from cdomain.py in https://github.com/return42/linuxdoc , but modified
 # to treat macros with more care.
 
+import re
 from docutils import nodes
 from docutils.parsers.rst import directives
 
 import sphinx
 from sphinx import addnodes
 from sphinx.locale import _
-from sphinx.domains.c import c_funcptr_sig_re, c_sig_re
 from sphinx.domains.c import CObject as Base_CObject
 from sphinx.domains.c import CDomain as Base_CDomain
 
@@ -28,6 +28,32 @@ def setup(app):
         parallel_write_safe = True
     )
 
+# This function parses the following syntax:
+#
+#   [ result ] name [ "(" args ")" ]
+#
+# where name is a word matching the regular expression r'\w+' and the brackets
+# in args must be matched.  The requirement to recognise matching brackets makes
+# this challenging.
+def split_signature(sig):
+    # First count off the matching brackets
+    if sig[-1] == ')':
+        ix = len(sig) - 1
+        depth = 1
+        while depth > 0 and ix > 0:
+            ix -= 1
+            ch = sig[ix]
+            if ch == ')':
+                depth += 1
+            elif ch == '(':
+                depth -= 1
+        args = sig[ix+1:-1]
+        sig = sig[:ix]
+    else:
+        args = None
+    result, name = re.match(r'^(.*?)?(\w+)$', sig).groups()
+    return result, name, args
+
 
 class CObject(Base_CObject):
 
@@ -40,19 +66,13 @@ class CObject(Base_CObject):
 
     # Reduced processing for macros.  A macro is allowed to have arguments and a
     # return type, but we don't try to parse the arguments fully.
-    def handle_func_like_macro(self, sig, signode):
-        m = c_funcptr_sig_re.match(sig)
-        if m is None:
-            m = c_sig_re.match(sig)
-            if m is None:
-                raise ValueError('no match')
-
-        rettype, fullname, arglist, _const = m.groups()
+    def handle_macro_signature(self, sig, signode):
+        rettype, fullname, arglist = split_signature(sig)
 
         if rettype:
             signode += addnodes.desc_type(rettype, rettype)
 
-        # This is a function-like macro, it's arguments are typeless!
+        # This is a function-like macro, its arguments are typeless!
         signode += addnodes.desc_name(fullname, fullname)
 
         if arglist:
@@ -76,7 +96,7 @@ class CObject(Base_CObject):
         """Transform a C signature into RST nodes."""
 
         if self.objtype == 'macro':
-            fullname = self.handle_func_like_macro(sig, signode)
+            fullname = self.handle_macro_signature(sig, signode)
         else:
             fullname = super(CObject, self).handle_signature(sig, signode)
 
