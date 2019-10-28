@@ -86,8 +86,8 @@ behave thus:
 The following groups of tests are defined:
 
 ..  macro::
-    TEST_IO(expr)
-    TEST_IO_(expr, format...)
+    error__t TEST_IO(expr)
+    error__t TEST_IO_(expr, format...)
     ASSERT_IO(expr)
 
     For these macros an error is reported when `expr` evaluates to -1, in which
@@ -95,16 +95,16 @@ The following groups of tests are defined:
     and it is reported as part of the error message.
 
 ..  macro::
-    TEST_OK(expr)
-    TEST_OK_(expr, format...)
+    error__t TEST_OK(expr)
+    error__t TEST_OK_(expr, format...)
     ASSERT_OK(expr)
 
     These macros all treat `expr` as a boolean, reporting an error if the result
     is ``false``.  No extra error information is included in the error message.
 
 ..  macro::
-    TEST_OK_IO(expr)
-    TEST_OK_IO_(expr, format...)
+    error__t TEST_OK_IO(expr)
+    error__t TEST_OK_IO_(expr, format...)
     ASSERT_OK_IO(expr)
 
     These all report an error if `expr` evaluates to ``false``, and it is
@@ -112,8 +112,8 @@ The following groups of tests are defined:
     report extra error information.
 
 ..  macro::
-    TEST_PTHREAD(expr)
-    TEST_PTHREAD_(expr, format...)
+    error__t TEST_PTHREAD(expr)
+    error__t TEST_PTHREAD_(expr, format...)
     ASSERT_PTHREAD(expr)
 
     These macros are designed to be used with the ``<pthread.h>`` family of
@@ -146,34 +146,34 @@ The following macros are used as helpers.
     execution and does not return.
 
 ..  macro::
-    FAIL( )
-    FAIL_(message...)
+    error__t FAIL( )
+    error__t FAIL_(message...)
 
     Used to return a failure error code, functionally equivalent to
     ``TEST_OK(false)`` or ``TEST_OK_(false, message...)``.
 
-..  macro:: DO(action)
+..  macro:: error__t DO(action)
 
     Used to convert a function returning ``void``, or indeed any sequence of C
     statements, into a successful expression.  Useful for including an
     unconditionally successful call in a sequence of error tests.
 
 ..  macro::
-    IF(test, iftrue)
-    IF_ELSE(test, iftrue, iffalse)
+    error__t IF(test, iftrue)
+    error__t IF_ELSE(test, iftrue, iffalse)
 
     Conditional execution of tested functions.  In both cases `test` is a
     boolean test; if it evaluates to ``true`` then the `iftrue` expression is
     evaluated, otherwise `iffalse` (if specified).
 
-..  macro:: TRY_CATCH(action, on_fail...)
+..  macro:: error__t TRY_CATCH(action, on_fail...)
 
     This macro provides a limited form of exception handling.  `action` must
     return an :type:`error__t`, which is returned by this macro.  If the error
     code is not ``ERROR_OK`` then the code `on_fail` is executed before
     returning.  Note that any value returned by `on_fail` is discarded.
 
-..  macro:: DO_FINALLY(action, finally...)
+..  macro:: error__t DO_FINALLY(action, finally...)
 
     This macro unconditionally executes `finally` after `action` has been
     evaluated, and returns the error code from `action`.  Again, any value
@@ -309,7 +309,7 @@ header file.
     This is a short-cut wrapper for :macro:`CAST_FROM_TO` for use in the case
     when `from_type` is no more specific than ``typeof(value)``.
 
-..  macro:: ENSURE_TYPE(type, value)
+..  macro:: type ENSURE_TYPE(type, value)
 
     This is a weak cast from `value` to `type` which ensures that it is valid to
     assign `value` to this `type`.
@@ -402,7 +402,7 @@ header file.
 
         Do **not** exit the guarded block with ``break`` or ``return``.
 
-..  macro:: ERROR_WITH_MUTEX(mutex, error)
+..  macro:: error__t ERROR_WITH_MUTEX(mutex, error)
 
     This wraps mutex locking around an error expression, and evaluates to the
     result of evaluating `error` under the lock, which must be an expression of
