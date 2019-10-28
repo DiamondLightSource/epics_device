@@ -191,10 +191,10 @@ Common Datatypes
     ==================  =====================================================
     IN, WAVEFORM        :func:`trigger_record`, :func:`set_record_severity`,
                         :func:`set_record_timestamp`
-    OUT                 :func:`WRITE_OUT_RECORD`
-    WAVEFORM            :func:`WRITE_OUT_RECORD_WF`
-    IN, OUT             :func:`READ_RECORD_VALUE`
-    WAVEFORM            :func:`READ_RECORD_VALUE_WF`
+    OUT                 :macro:`WRITE_OUT_RECORD`
+    WAVEFORM            :macro:`WRITE_OUT_RECORD_WF`
+    IN, OUT             :macro:`READ_RECORD_VALUE`
+    WAVEFORM            :macro:`READ_RECORD_VALUE_WF`
     ==================  =====================================================
 
 
@@ -202,7 +202,7 @@ PUBLISH API
 -----------
 
 All the ``PUBLISH...()`` macros in this section and the `PUBLISH_WAVEFORM API`_
-section return values of type ``struct epics_record*``.
+section return values of type ``struct`` :type:`epics_record *`.
 
 ..  macro:: TYPEOF(record)
 
@@ -230,8 +230,10 @@ section return values of type ``struct epics_record*``.
         ``longout``, ``ulongout``, ``ao``, ``bo``, ``stringout``, ``mbbo``
 
 ..  macro::
-    PUBLISH(record, name, read, .context, .io_intr, .set_time, .mutex)
-    PUBLISH(record, name, write, .init, .context, .persist, .mutex)
+    struct epics_record *PUBLISH( \
+        record, name, read, .context, .io_intr, .set_time, .mutex)
+    struct epics_record *PUBLISH( \
+        record, name, write, .init, .context, .persist, .mutex)
 
     ===================================================================== ======
     \                                                                     IN/OUT
@@ -336,17 +338,17 @@ The following macros provide shortcuts when setting the `context` and `persist`
 attributes of a record definition:
 
 ..  macro::
-    PUBLISH_C(record, name, process, context, ...)
+    struct epics_record *PUBLISH_C(record, name, process, context, ...)
 
     This macro publishes a record with the ``.context`` field set to `context`.
 
 ..  macro::
-    PUBLISH_P(record, name, process, ...)
+    struct epics_record *PUBLISH_P(record, name, process, ...)
 
     This macro publishes a persistent record with ``.persist`` set to ``true``.
 
 ..  macro::
-    PUBLISH_C_P(record, name, process, context, ...)
+    struct epics_record *PUBLISH_C_P(record, name, process, context, ...)
 
     This macro combines the actions of :macro:`PUBLISH_C` and
     :macro:`PUBLISH_P`.
@@ -357,8 +359,8 @@ the descriptions for :func:`PUBLISH` above for descriptions of arguments not
 described below.
 
 ..  macro::
-    PUBLISH_READ_VAR(record, name, variable, ...)
-    PUBLISH_READ_VAR_I(record, name, variable, ...)
+    struct epics_record *PUBLISH_READ_VAR(record, name, variable, ...)
+    struct epics_record *PUBLISH_READ_VAR_I(record, name, variable, ...)
 
     ========================================================================== =
     record class `record`
@@ -371,8 +373,8 @@ described below.
     this macro.
 
 ..  macro::
-    PUBLISH_READER(record, name, reader, ...)
-    PUBLISH_READER_I(record, name, reader, ...)
+    struct epics_record *PUBLISH_READER(record, name, reader, ...)
+    struct epics_record *PUBLISH_READER_I(record, name, reader, ...)
 
     ========================================================================== =
     record class `record`
@@ -384,8 +386,8 @@ described below.
     value to be used to update the record.
 
 ..  macro::
-    PUBLISH_TRIGGER(name, ...)
-    PUBLISH_TRIGGER_T(name, ...)
+    struct epics_record *PUBLISH_TRIGGER(name, ...)
+    struct epics_record *PUBLISH_TRIGGER_T(name, ...)
 
     ========================================================================== =
     const char \*\ `name`
@@ -400,8 +402,8 @@ described below.
     by :func:`set_record_timestamp` before calling :func:`trigger_record`.
 
 ..  macro::
-    PUBLISH_WRITE_VAR(record, name, variable, ...)
-    PUBLISH_WRITE_VAR_P(record, name, variable, ...)
+    struct epics_record *PUBLISH_WRITE_VAR(record, name, variable, ...)
+    struct epics_record *PUBLISH_WRITE_VAR_P(record, name, variable, ...)
 
     ========================================================================== =
     record class `record`
@@ -414,8 +416,8 @@ described below.
     type ``TYPEOF(record)``.
 
 ..  macro::
-    PUBLISH_WRITER(record, name, writer, ...)
-    PUBLISH_WRITER_P(record, name, writer, ...)
+    struct epics_record *PUBLISH_WRITER(record, name, writer, ...)
+    struct epics_record *PUBLISH_WRITER_P(record, name, writer, ...)
 
     ========================================================================== =
     record class `record`
@@ -427,8 +429,8 @@ described below.
     value of the record.
 
 ..  macro::
-    PUBLISH_WRITER_B(record, name, writer, ...)
-    PUBLISH_WRITER_B_P(record, name, writer, ...)
+    struct epics_record *PUBLISH_WRITER_B(record, name, writer, ...)
+    struct epics_record *PUBLISH_WRITER_B_P(record, name, writer, ...)
 
     ========================================================================== =
     record class `record`
@@ -441,7 +443,7 @@ described below.
     returned and the write is unconditional.
 
 ..  macro::
-    PUBLISH_ACTION(name, action, ...)
+    struct epics_record *PUBLISH_ACTION(name, action, ...)
 
     ========================================================================== =
     const char \*\ `name`
@@ -454,7 +456,7 @@ described below.
 PUBLISH_WAVEFORM API
 --------------------
 
-..  macro:: PUBLISH_WAVEFORM( \
+..  macro:: struct epics_record *PUBLISH_WAVEFORM( \
         field_type, name, max_length, process, \
         .init, .context, .persist, .io_intr)
 
@@ -531,27 +533,32 @@ The following macros provide shortcuts when setting the `context` and `persist`
 attributes of a waveform definition:
 
 ..  macro::
-    PUBLISH_WAVEFORM_C(field_type, name, length, process, context, ...)
+    struct epics_record *PUBLISH_WAVEFORM_C( \
+        field_type, name, length, process, context, ...)
 
     This macro publishes a waveform record with the ``.context`` field set to
     `context`.
 
 ..  macro::
-    PUBLISH_WAVEFORM_P(field_type, name, length, process, ...)
+    struct epics_record *PUBLISH_WAVEFORM_P( \
+        field_type, name, length, process, ...)
 
     This macro publishes a persistent waveform record with ``.persist`` set to
     ``true``.
 
 ..  macro::
-    PUBLISH_WAVEFORM_C_P(field_type, name, length, process, context, ...)
+    struct epics_record *PUBLISH_WAVEFORM_C_P( \
+        field_type, name, length, process, context, ...)
 
     This macro combines the actions of :macro:`PUBLISH_WAVEFORM_C` and
     :macro:`PUBLISH_WAVEFORM_P`.
 
 
 ..  macro::
-    PUBLISH_WF_READ_VAR(field_type, name, max_length, waveform, ...)
-    PUBLISH_WF_READ_VAR_I(field_type, name, max_length, waveform, ...)
+    struct epics_record *PUBLISH_WF_READ_VAR( \
+        field_type, name, max_length, waveform, ...)
+    struct epics_record *PUBLISH_WF_READ_VAR_I( \
+        field_type, name, max_length, waveform, ...)
 
     ========================================================================== =
     type name `field_type`
@@ -564,8 +571,10 @@ attributes of a waveform definition:
     processes.  This is useful for publishing internally generated waveforms.
 
 ..  macro::
-    PUBLISH_WF_READ_VAR_LEN(field_type, name, max_length, length, waveform, ...)
-    PUBLISH_WF_READ_VAR_LEN_I(field_type, name, max_length, length, waveform, ...)
+    struct epics_record *PUBLISH_WF_READ_VAR_LEN( \
+        field_type, name, max_length, length, waveform, ...)
+    struct epics_record *PUBLISH_WF_READ_VAR_LEN_I( \
+        field_type, name, max_length, length, waveform, ...)
 
     ========================================================================== =
     type name `field_type`
@@ -580,8 +589,10 @@ attributes of a waveform definition:
     `length` will be read and used to update the length of the waveform.
 
 ..  macro::
-    PUBLISH_WF_WRITE_VAR(field_type, name, max_length, waveform, ...)
-    PUBLISH_WF_WRITE_VAR_P(field_type, name, max_length, waveform, ...)
+    struct epics_record *PUBLISH_WF_WRITE_VAR( \
+        field_type, name, max_length, waveform, ...)
+    struct epics_record *PUBLISH_WF_WRITE_VAR_P( \
+        field_type, name, max_length, waveform, ...)
 
     ========================================================================== =
     type name `field_type`
@@ -593,8 +604,10 @@ attributes of a waveform definition:
     `waveform` will updated from the record each time the record processes.
 
 ..  macro::
-    PUBLISH_WF_WRITE_VAR_LEN(field_type, name, max_length, length, waveform, ...)
-    PUBLISH_WF_WRITE_VAR_LEN_P(field_type, name, max_length, length, waveform, ...)
+    struct epics_record *PUBLISH_WF_WRITE_VAR_LEN( \
+        field_type, name, max_length, length, waveform, ...)
+    struct epics_record *PUBLISH_WF_WRITE_VAR_LEN_P( \
+        field_type, name, max_length, length, waveform, ...)
 
     ========================================================================== =
     type name `field_type`
@@ -608,9 +621,12 @@ attributes of a waveform definition:
     `length` will be updated with the new length of `waveform`.
 
 ..  macro::
-    PUBLISH_WF_ACTION(field_type, name, max_length, action, ...)
-    PUBLISH_WF_ACTION_I(field_type, name, max_length, action, ...)
-    PUBLISH_WF_ACTION_P(field_type, name, max_length, action, ...)
+    struct epics_record *PUBLISH_WF_ACTION( \
+        field_type, name, max_length, action, ...)
+    struct epics_record *PUBLISH_WF_ACTION_I( \
+        field_type, name, max_length, action, ...)
+    struct epics_record *PUBLISH_WF_ACTION_P( \
+        field_type, name, max_length, action, ...)
 
     ========================================================================== =
     type name `field_type`
@@ -699,12 +715,12 @@ records.
     other times ``NULL`` is returned.
 
 ..  macro::
-    LOOKUP_RECORD(record, name)
+    struct epics_record *LOOKUP_RECORD(record, name)
 
     ========================================================================== =
     record class `record`
     const char \*\ `name`
-    returns ``struct epics_record*``
+    returns ``struct`` :type:`epics_record*`
     ========================================================================== =
 
     If a record of the specified `record` class has been published with the
@@ -712,8 +728,8 @@ records.
     structure for the record, otherwise ``NULL`` is returned.
 
 ..  macro::
-    WRITE_OUT_RECORD(record, epics_record, value, process)
-    WRITE_NAMED_RECORD(record, name, value)
+    bool WRITE_OUT_RECORD(record, epics_record, value, process)
+    bool WRITE_NAMED_RECORD(record, name, value)
 
     ========================================================================== =
     record class `record`
@@ -734,8 +750,8 @@ records.
     epics_record*`` value.
 
 ..  macro::
-    WRITE_OUT_RECORD_WF(field_type, epics_record, value, length, process)
-    WRITE_NAMED_RECORD_WF(field_type, name, value, length)
+    bool WRITE_OUT_RECORD_WF(field_type, epics_record, value, length, process)
+    bool WRITE_NAMED_RECORD_WF(field_type, name, value, length)
 
     ========================================================================== =
     type name `field_type`
@@ -751,8 +767,8 @@ records.
     is processed or not as appropriate.
 
 ..  macro::
-    READ_RECORD_VALUE(record, epics_record)
-    READ_NAMED_RECORD(record, name)
+    TYPEOF(record) READ_RECORD_VALUE(record, epics_record)
+    TYPEOF(record) READ_NAMED_RECORD(record, name)
 
     ========================================================================== =
     record class `record`

@@ -160,8 +160,10 @@ The API consists of the following definitions.
     passed to any of the other functions documented in this section.
 
 ..  macro::
-    PUBLISH_IN_VALUE(record, name, .set_time, .merge_update)
-    PUBLISH_IN_VALUE_I(record, name, .set_time, .merge_update)
+    struct in_epics_record_##record *PUBLISH_IN_VALUE( \
+        record, name, .set_time, .merge_update)
+    struct in_epics_record_##record *PUBLISH_IN_VALUE_I( \
+        record, name, .set_time, .merge_update)
 
     ========================================================================== =
     record class `record`
@@ -218,7 +220,7 @@ The API consists of the following definitions.
     declared with `set_time` then `timestamp` must be specified.  Note that
     updating is always forced for this call.
 
-..  macro:: READ_IN_RECORD(record, in_record)
+..  macro:: TYPEOF(record) READ_IN_RECORD(record, in_record)
 
     ========================================================================== =
     record class `record`
