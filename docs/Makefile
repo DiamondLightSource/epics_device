@@ -5,7 +5,9 @@ export TOP
 include $(TOP)/configure/RELEASE
 export EPICS_BASE
 
-install:
+html: $(wildcard *.rst) $(wildcard *.py)
+
+install: html
 	sphinx-build -nE -b html . html
 
 clean:
