@@ -88,6 +88,9 @@ struct epics_record {
     void *context;                  // Context for all user callbacks
     pthread_mutex_t *mutex;         // Lock for record processing
 
+    /* This field is used for out and waveform records. */
+    bool disable_write;             // Used for write_out_record
+
     /* The following fields are record class specific. */
     union {
         // IN record support
@@ -101,7 +104,6 @@ struct epics_record {
             bool (*write)(void *context, void *value);
             bool (*init)(void *context, void *result);
             void *save_value;       // Used to restore after rejected write
-            bool disable_write;     // Used for write_out_record
         } out;
         // WAVEFORM record support
         struct {
@@ -299,7 +301,6 @@ static void initialise_out_fields(
     base->out.write = out_args->write;
     base->out.init = out_args->init;
     base->out.save_value = malloc(write_data_size(base->record_type));
-    base->out.disable_write = false;
     base->max_length = 1;
     base->context = out_args->context;
     base->mutex = out_args->mutex ?: default_mutex;
@@ -345,6 +346,7 @@ struct epics_record *publish_epics_record(
     base->ioscan_pending = false;
     base->persist = false;
     base->severity = (enum epics_alarm_severity) epicsSevNone;
+    base->disable_write = false;
 
     switch (record_type)
     {
@@ -572,9 +574,9 @@ static bool _write_out_record(
     /* Write the desired value under the database lock: we disable writing if
      * processing was not requested. */
     dbScanLock(dbaddr.precord);
-    record->out.disable_write = !process;
+    record->disable_write = !process;
     bool put_ok = dbPutField(&dbaddr, dbr_type, value, (long) length) == 0;
-    record->out.disable_write = false;
+    record->disable_write = false;
     dbScanUnlock(dbaddr.precord);
     return put_ok;
 }
@@ -948,8 +950,8 @@ static bool process_out_record(
     if (base == NULL)
         return false;
 
-    bool write_ok = base->out.disable_write;
-    if (!base->out.disable_write)
+    bool write_ok = base->disable_write;
+    if (!base->disable_write)
     {
         if (base->mutex)  pthread_mutex_lock(base->mutex);
         PUSH_CURRENT_RECORD(base);
@@ -1109,14 +1111,17 @@ static long process_waveform(waveformRecord *pr)
     if (base == NULL)
         return EPICS_ERROR;
 
-    unsigned int nord = pr->nord;
-    if (base->mutex)  pthread_mutex_lock(base->mutex);
-    PUSH_CURRENT_RECORD(base);
-    base->waveform.process(base->context, pr->bptr, &nord);
-    POP_CURRENT_RECORD();
-    if (base->mutex)  pthread_mutex_unlock(base->mutex);
+    if (!base->disable_write)
+    {
+        unsigned int nord = pr->nord;
+        if (base->mutex)  pthread_mutex_lock(base->mutex);
+        PUSH_CURRENT_RECORD(base);
+        base->waveform.process(base->context, pr->bptr, &nord);
+        POP_CURRENT_RECORD();
+        if (base->mutex)  pthread_mutex_unlock(base->mutex);
+        pr->nord = nord;
+    }
 
-    pr->nord = nord;
     if (base->persist)
         write_persistent_waveform(base->key, pr->bptr, pr->nord);
 
