@@ -1025,7 +1025,7 @@ DEFINE_IN_OUT(longin,   longout,   val,  EPICS_OK,   SIMPLE_ADAPTER, do_MLST)
 DEFINE_IN_OUT(ai,       ao,        val,  NO_CONVERT, SIMPLE_ADAPTER, do_MLST)
 DEFINE_IN_OUT(bi,       bo,        rval, EPICS_OK,   COPY_ADAPTER,   do_MLST)
 DEFINE_IN_OUT(stringin, stringout, val,  EPICS_OK,   STRING_ADAPTER, no_MLST)
-DEFINE_IN_OUT(mbbi,     mbbo,      rval, EPICS_OK,   SIMPLE_ADAPTER, do_MLST)
+DEFINE_IN_OUT(mbbi,     mbbo,      val,  NO_CONVERT, SIMPLE_ADAPTER, do_MLST)
 
 /* Also need dummy special_linconv routines for ai and ao. */
 static long linconv_ai(aiRecord *pr, int cmd) { return EPICS_OK; }

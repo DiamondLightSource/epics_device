@@ -152,28 +152,27 @@ mbb_prefixes = [
     'ZR', 'ON', 'TW', 'TH', 'FR', 'FV', 'SX', 'SV',     # 0-7
     'EI', 'NI', 'TE', 'EL', 'TV', 'TT', 'FT', 'FF']     # 8-15
 
-# Adds a list of (option, value [,severity]) tuples into field settings
+# Adds a list of (option [,severity]) tuples into field settings
 # suitable for mbbi and mbbo records.
-def process_mbb_values(fields, option_values):
-    def process_value(prefix, option, value, severity=None):
+def process_mbb_values(fields, options):
+    def process_value(prefix, value, option, severity=None):
         fields[prefix + 'ST'] = option
         fields[prefix + 'VL'] = value
         if severity:
             fields[prefix + 'SV'] = severity
 
-    for prefix, (default, option_value) in \
-            zip(mbb_prefixes, enumerate(option_values)):
-        if isinstance(option_value, tuple):
-            process_value(prefix, *option_value)
+    for prefix, (value, option) in zip(mbb_prefixes, enumerate(options)):
+        if isinstance(option, tuple):
+            process_value(prefix, value, *option)
         else:
-            process_value(prefix, option_value, default)
+            process_value(prefix, value, option)
 
-def mbbIn(name, *option_values, **fields):
-    process_mbb_values(fields, option_values)
+def mbbIn(name, *options, **fields):
+    process_mbb_values(fields, options)
     return EpicsDevice.mbbi(name, **fields)
 
-def mbbOut(name, *option_values, **fields):
-    process_mbb_values(fields, option_values)
+def mbbOut(name, *options, **fields):
+    process_mbb_values(fields, options)
     set_out_defaults(fields, name)
     return EpicsDevice.mbbo(OutName(name), **fields)
 

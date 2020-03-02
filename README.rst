@@ -32,3 +32,18 @@ The corresponding database can be declared (in Python) thus::
 With a little more code to tie things together this is a complete example.  For
 more details see the example IOCS in the ``examples/`` directory and the
 documentation in ``docs/``.
+
+
+Version 2.0
+-----------
+
+Version 2.0 introduces a major incompatibility: the ``mbbi`` and ``mbbo`` record
+support no longer uses ``RVAL`` but instead uses ``VAL`` with conversion
+disabled.  This means the following changes apply:
+
+* ``TYPEOF(mbbi)`` and ``TYPEOF(mbbo)`` have changed from ``unsigned int`` to
+  ``uint16_t``.  This means that all code declaring records of these types will
+  need to be changed accordingly.
+
+* The ``mbbIn`` and ``mbbOut`` functions no longer allow the field values to be
+  assigned: these are only meaningful for ``RVAL``, which is now ignored.

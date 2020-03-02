@@ -220,7 +220,7 @@ section return values of type ``struct`` :type:`epics_record *`.
     bi                  bo                  bool
     longin              longout             int32_t
     ulongin             ulongout            uint32_t
-    mbbi                mbbo                unsigned int
+    mbbi                mbbo                uint16_t
     longin              longout             :type:`EPICS_STRING`
     ==================  ==================  ====================
 

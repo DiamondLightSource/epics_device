@@ -296,8 +296,8 @@ enum record_type
 #define TYPEOF_bo        bool
 #define TYPEOF_stringin  EPICS_STRING
 #define TYPEOF_stringout EPICS_STRING
-#define TYPEOF_mbbi      unsigned int
-#define TYPEOF_mbbo      unsigned int
+#define TYPEOF_mbbi      uint16_t
+#define TYPEOF_mbbo      uint16_t
 
 
 /* Supported waveform types, matches possible values for waveform FTVL field. */
