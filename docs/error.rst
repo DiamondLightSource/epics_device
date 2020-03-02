@@ -131,7 +131,7 @@ All of the ``TEST_`` macros above return a value of the following type:
     representing failure tests as true.
 
     As noted above, error handling functions are designed to be chained with the
-    ``?:`` syntax.  Note also that error values _must_ be handled with
+    ``?:`` syntax.  Note also that error values **must** be handled with
     :func:`error_report` or :func:`error_discard`.
 
 
@@ -312,7 +312,9 @@ header file.
 ..  macro:: type ENSURE_TYPE(type, value)
 
     This is a weak cast from `value` to `type` which ensures that it is valid to
-    assign `value` to this `type`.
+    assign `value` to this `type`.  Note that this will not work if `type` is a
+    written out function type, in this case a typedef name would have to be
+    used.
 
 ..  macro:: IGNORE(expr)
 

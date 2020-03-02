@@ -227,10 +227,11 @@ void start_logging(const char *ident);
 #define FAIL()                      TEST_OK(false)
 #define FAIL_(message...)           _nonnull(_error_create(NULL, message))
 
+/* Action that unconditionally succeeds. */
+#define DO(action...)                   ({action; ERROR_OK;})
 
 /* These two macros facilitate using the macros above by creating if
  * expressions that are slightly more sensible looking than ?: in context. */
-#define DO(action...)                   ({action; ERROR_OK;})
 #define IF(test, iftrue)                ((test) ? (iftrue) : ERROR_OK)
 #define IF_ELSE(test, iftrue, iffalse)  ((test) ? (iftrue) : (iffalse))
 
