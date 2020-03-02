@@ -879,11 +879,11 @@ static bool process_in_record(dbCommon *pr, void *result)
     return ok;
 }
 
-#define DEFINE_PROCESS_IN(record, PROC_OK, VAL, ADAPTER) \
+#define DEFINE_PROCESS_IN(record, PROC_OK, ADAPTER) \
     static long read_##record(record##Record *pr) \
     { \
         bool ok = ADAPTER(process_in_record, \
-            TYPEOF(record), pr->VAL, (dbCommon *) pr); \
+            TYPEOF(record), pr->val, (dbCommon *) pr); \
         return ok ? PROC_OK : EPICS_ERROR; \
     }
 
@@ -897,9 +897,9 @@ static bool process_in_record(dbCommon *pr, void *result)
         return error_report(error) ? EPICS_ERROR : EPICS_OK; \
     }
 
-#define DEFINE_DEFAULT_IN(record, VAL, PROC_OK, ADAPTER) \
+#define DEFINE_DEFAULT_IN(record, PROC_OK, ADAPTER) \
     DEFINE_INIT_IN(record) \
-    DEFINE_PROCESS_IN(record, PROC_OK, VAL, ADAPTER)
+    DEFINE_PROCESS_IN(record, PROC_OK, ADAPTER)
 
 
 
@@ -978,16 +978,16 @@ static bool process_out_record(
 }
 
 
-#define DEFINE_PROCESS_OUT(record, VAL, ADAPTER) \
+#define DEFINE_PROCESS_OUT(record, ADAPTER) \
     static long write_##record(record##Record *pr) \
     { \
         bool ok = ADAPTER(process_out_record, \
-            TYPEOF(record), pr->VAL, \
+            TYPEOF(record), pr->val, \
             (dbCommon *) pr, sizeof(TYPEOF(record))); \
         return ok ? EPICS_OK : EPICS_ERROR; \
     }
 
-#define DEFINE_INIT_OUT(record, INIT_OK, VAL, ADAPTER, MLST) \
+#define DEFINE_INIT_OUT(record, INIT_OK, ADAPTER, MLST) \
     static long init_record_##record(record##Record *pr) \
     { \
         error__t error = init_record_common((dbCommon *) pr, \
@@ -995,9 +995,9 @@ static bool process_out_record(
         if (!error) \
         { \
             ADAPTER(init_out_record, \
-                TYPEOF(record), pr->VAL, \
+                TYPEOF(record), pr->val, \
                 (dbCommon *) pr, sizeof(TYPEOF(record))); \
-            MLST(pr->mlst = (typeof(pr->mlst)) pr->VAL); \
+            MLST(pr->mlst = (typeof(pr->mlst)) pr->val); \
         } \
         return error_report(error) ? EPICS_ERROR : INIT_OK; \
     }
@@ -1006,9 +1006,9 @@ static bool process_out_record(
 #define do_MLST(arg)    arg
 #define no_MLST(arg)
 
-#define DEFINE_DEFAULT_OUT(record, VAL, INIT_OK, ADAPTER, MLST) \
-    DEFINE_INIT_OUT(record, INIT_OK, VAL, ADAPTER, MLST) \
-    DEFINE_PROCESS_OUT(record, VAL, ADAPTER)
+#define DEFINE_DEFAULT_OUT(record, INIT_OK, ADAPTER, MLST) \
+    DEFINE_INIT_OUT(record, INIT_OK, ADAPTER, MLST) \
+    DEFINE_PROCESS_OUT(record, ADAPTER)
 
 
 
@@ -1016,16 +1016,16 @@ static bool process_out_record(
 /*                    IN/OUT Device Driver Implementations                   */
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#define DEFINE_IN_OUT(in, out, VAL, CONVERT, ADAPTER, MLST) \
-    DEFINE_DEFAULT_IN(in,   VAL, CONVERT,  ADAPTER) \
-    DEFINE_DEFAULT_OUT(out, VAL, CONVERT,  ADAPTER, MLST)
+#define DEFINE_IN_OUT(in, out, CONVERT, ADAPTER, MLST) \
+    DEFINE_DEFAULT_IN(in,   CONVERT,  ADAPTER) \
+    DEFINE_DEFAULT_OUT(out, CONVERT,  ADAPTER, MLST)
 
 /* Mostly we can use simple boilerplate for the process routines. */
-DEFINE_IN_OUT(longin,   longout,   val,  EPICS_OK,   SIMPLE_ADAPTER, do_MLST)
-DEFINE_IN_OUT(ai,       ao,        val,  NO_CONVERT, SIMPLE_ADAPTER, do_MLST)
-DEFINE_IN_OUT(bi,       bo,        val,  NO_CONVERT, COPY_ADAPTER,   do_MLST)
-DEFINE_IN_OUT(stringin, stringout, val,  EPICS_OK,   STRING_ADAPTER, no_MLST)
-DEFINE_IN_OUT(mbbi,     mbbo,      val,  NO_CONVERT, SIMPLE_ADAPTER, do_MLST)
+DEFINE_IN_OUT(longin,   longout,   EPICS_OK,   SIMPLE_ADAPTER, do_MLST)
+DEFINE_IN_OUT(ai,       ao,        NO_CONVERT, SIMPLE_ADAPTER, do_MLST)
+DEFINE_IN_OUT(bi,       bo,        NO_CONVERT, COPY_ADAPTER,   do_MLST)
+DEFINE_IN_OUT(stringin, stringout, EPICS_OK,   STRING_ADAPTER, no_MLST)
+DEFINE_IN_OUT(mbbi,     mbbo,      NO_CONVERT, SIMPLE_ADAPTER, do_MLST)
 
 /* Also need dummy special_linconv routines for ai and ao. */
 static long linconv_ai(aiRecord *pr, int cmd) { return EPICS_OK; }
