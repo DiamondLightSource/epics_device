@@ -47,3 +47,37 @@ disabled.  This means the following changes apply:
 
 * The ``mbbIn`` and ``mbbOut`` functions no longer allow the field values to be
   assigned: these are only meaningful for ``RVAL``, which is now ignored.
+
+
+INSTALLING
+==========
+
+The python library `epicsdbbuilder`_ is a prerequisite for building and using
+this library.
+
+This library should be installed as a standard EPICS support package.  This
+means that following two files in the ``configure`` directory must be edited:
+``configure/RELEASE`` and ``configure/CONFIG_SITE``.
+
+``configure/RELEASE``
+    Change the symbol ``EPICS_BASE`` to point to your local installation of
+    EPICS.
+
+``configure/CONFIG_SITE``
+    This file contains a number of symbols that will need to be customised.
+
+    ``CROSS_COMPILER_TARGET_ARCHS``
+        You almost certainly don't want these lines.  Delete them from your
+        version unless you know they're needed.
+
+    ``PYTHON``
+        This should probably be set to ``python``.
+
+    ``EPICSDBBUILDER``
+        This can be in one of two formats, either an explicit path to the
+        directory containing `epicsdbbuilder`_ or a version number understood by
+        ``pkg_resources.require``.  Note that if an explicit path is given it is
+        not necessary to install or setup ``epicsdbbuilder``, it can be used in
+        place.
+
+..  _epicsdbbuilder: https://github.com/Araneidae/epicsdbbuilder
