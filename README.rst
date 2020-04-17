@@ -52,9 +52,6 @@ disabled.  This means the following changes apply:
 INSTALLING
 ==========
 
-The python library `epicsdbbuilder`_ is a prerequisite for building and using
-this library.
-
 This library should be installed as a standard EPICS support package.  This
 means that following two files in the ``configure`` directory must be edited:
 ``configure/RELEASE`` and ``configure/CONFIG_SITE``.
@@ -74,7 +71,10 @@ means that following two files in the ``configure`` directory must be edited:
         This should probably be set to ``python``.
 
     ``EPICSDBBUILDER``
-        This can be in one of two formats, either an explicit path to the
+        The python library `epicsdbbuilder`_ is a prerequisite for building and
+        using this library.
+
+        This symbol can be in one of two formats, either an explicit path to the
         directory containing `epicsdbbuilder`_ or a version number understood by
         ``pkg_resources.require``.  Note that if an explicit path is given it is
         not necessary to install or setup ``epicsdbbuilder``, it can be used in
