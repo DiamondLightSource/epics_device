@@ -219,7 +219,7 @@ void _error_panic(char *extra, const char *filename, int line)
     char last_line[128];
     int char_count = snprintf(last_line, sizeof(last_line),
         "End of backtrace: %d lines written\n", count);
-    write(STDERR_FILENO, last_line, (size_t) char_count);
+    IGNORE(write(STDERR_FILENO, last_line, (size_t) char_count));
 
     _exit(255);
 }

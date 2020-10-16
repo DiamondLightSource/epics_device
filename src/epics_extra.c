@@ -309,12 +309,13 @@ void database_add_macro(const char *macro_name, const char *format, ...)
     if (database_macros)
     {
         char *macros = database_macros;
-        asprintf(&database_macros, "%s,%s=%s",
-            macros, macro_name, macro_string);
+        ASSERT_IO(asprintf(&database_macros, "%s,%s=%s",
+            macros, macro_name, macro_string));
         free(macros);
     }
     else
-        asprintf(&database_macros, "%s=%s", macro_name, macro_string);
+        ASSERT_IO(asprintf(&database_macros, "%s=%s",
+            macro_name, macro_string));
 }
 
 
