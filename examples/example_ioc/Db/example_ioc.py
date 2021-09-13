@@ -12,7 +12,6 @@ WF_LENGTH = 128
 
 # In this simple example setting FREQ_S causes WF and SUM to update.
 aOut('FREQ', PREC = 4,
-    PINI = 'YES',
     FLNK = create_fanout('WFFAN',
         Waveform('WF', WF_LENGTH, 'DOUBLE', DESC = 'Sine wave'),
         aIn('SUM', PREC = 3, DESC = 'Sum of sine wave')),

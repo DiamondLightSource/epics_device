@@ -1,4 +1,4 @@
-/* Record type definitions for the records used by TMBF. */
+/* Record type definitions for the records used by epics_device. */
 
 /* It seems mad that I have to declare the structures here.  Why on earth
  * aren't they declared somewhere in an EPICS header?!  Unfortunately it seems
