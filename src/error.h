@@ -95,8 +95,8 @@
  */
 
 
-/* Hint to compiler that x is likely to be 0. */
-#define unlikely(x)   __builtin_expect((x), 0)
+/* Hint to compiler that x is likely to be 0 or NULL. */
+#define unlikely(x)   __builtin_expect((!!x), 0)
 
 
 /* Error messages are encoded as an opaque type, with NULL used to represent no
@@ -115,16 +115,27 @@ bool error_report(error__t error);
 
 /* A helper macro to extend the reported error with context. */
 #define ERROR_REPORT(expr, format...) \
-    error_report(error_extend((expr), format))
+    error_report(error_extend(expr, format))
 
-/* This function silently discards the error code. */
+/* This function silently discards the error code, returns true if there was an
+ * error. */
 bool error_discard(error__t error);
 
 
 /* This function extends the information associated with the given error with
- * the new message.  The original error is returned for convenience. */
-error__t error_extend(error__t error, const char *format, ...)
+ * the new message. */
+void _error_extend(error__t error, const char *format, ...)
     __attribute__((format(printf, 2, 3)));
+
+/* Macro for using error_extend within a chain of errors. */
+#define _id_error_extend(error, expr, extend...) \
+    ({ \
+        error__t error = (expr); \
+        if (unlikely(error)) _error_extend(error, extend); \
+        error; \
+    })
+#define error_extend(args...) _id_error_extend(UNIQUE_ID(), args)
+
 
 /* Converts an error code into a formatted string. */
 const char *error_format(error__t error);
@@ -241,7 +252,7 @@ void start_logging(const char *ident);
 #define _id_TRY_CATCH(error, action, on_fail...) \
     ( { \
         error__t error = (action); \
-        if (error) { on_fail; } \
+        if (unlikely(error)) { on_fail; } \
         error; \
     } )
 #define TRY_CATCH(args...) _id_TRY_CATCH(UNIQUE_ID(), args)

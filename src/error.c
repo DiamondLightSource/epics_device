@@ -53,20 +53,19 @@ error__t _error_create(char *extra, const char *format, ...)
 }
 
 
-error__t error_extend(error__t error, const char *format, ...)
+void _error_extend(error__t error, const char *format, ...)
 {
     /* Treat error_extend() on ERROR_OK as a no-op. */
-    if (error == ERROR_OK)
-        return error;
+    if (error)
+    {
+        ASSERT_OK(error->count < MAX_ERROR_DEPTH);
 
-    ASSERT_OK(error->count < MAX_ERROR_DEPTH);
-
-    va_list args;
-    va_start(args, format);
-    ASSERT_IO(vasprintf(&error->messages[error->count], format, args));
-    va_end(args);
-    error->count += 1;
-    return error;
+        va_list args;
+        va_start(args, format);
+        ASSERT_IO(vasprintf(&error->messages[error->count], format, args));
+        va_end(args);
+        error->count += 1;
+    }
 }
 
 
