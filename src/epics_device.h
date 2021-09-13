@@ -241,6 +241,8 @@
  *          database when binding the record.
  */
 
+#include <stdbool.h>
+#include <stdint.h>
 #include <pthread.h>    // Needed for pthread_mutex_t declaration
 
 struct timespec;
