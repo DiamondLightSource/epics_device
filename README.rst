@@ -6,6 +6,13 @@ IOCs.  This framework is designed to be used in combination with the
 epicsdbbuilder library for building the database file, but can be used
 standalone.
 
+
+============== ==============================================================
+Source code    https://github.com/dls-controls/epics_device
+Documentation  https://dls-controls.github.io/epics_device
+============== ==============================================================
+
+
 Simple Example
 --------------
 
@@ -79,5 +86,7 @@ means that following two files in the ``configure`` directory must be edited:
         ``pkg_resources.require``.  Note that if an explicit path is given it is
         not necessary to install or setup ``epicsdbbuilder``, it can be used in
         place.
+
+See https://dls-controls.github.io/epics_device for more detailed documentation.
 
 ..  _epicsdbbuilder: https://github.com/Araneidae/epicsdbbuilder

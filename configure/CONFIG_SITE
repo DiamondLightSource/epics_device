@@ -16,8 +16,8 @@ CROSS_COMPILER_TARGET_ARCHS += linux-arm_elhf
 
 # This can either be an explicit path to the directory containing the
 # epicsdbbuilder module or a version number understood by pkg_resources.require
-EPICSDBBUILDER = 1.3
+EPICSDBBUILDER ?= 1.3
 
-PYTHON = dls-python
+PYTHON ?= dls-python
 
 # vim: set filetype=make:
