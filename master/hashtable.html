@@ -1,0 +1,281 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>8. Generic Hash Table &#8212; EPICS Device  documentation</title>
+    <link rel="stylesheet" href="_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="_static/language_data.js"></script>
+    
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="9. Code Examples" href="example.html" />
+    <link rel="prev" title="7. Error Handling Macros and Other Facilities" href="error.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="example.html" title="9. Code Examples"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="error.html" title="7. Error Handling Macros and Other Facilities"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">EPICS Device  documentation</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="generic-hash-table">
+<h1>8. Generic Hash Table<a class="headerlink" href="#generic-hash-table" title="Permalink to this headline">¶</a></h1>
+<p>This is a reasonably high performance hash table implementation.  The API is
+provided in two layers: one layer specialised for storing strings, and a more
+abstract layer where the management of keys is under user specified control.</p>
+<p>The functionality described here is defined in the header file <code class="docutils literal notranslate"><span class="pre">hashtable.h</span></code>.</p>
+<div class="section" id="high-level-api">
+<h2>8.1. High Level API<a class="headerlink" href="#high-level-api" title="Permalink to this headline">¶</a></h2>
+<p>The simple API consists of the following.</p>
+<dl class="type">
+<dt id="c.hash_table">
+struct <code class="descname">hash_table</code><a class="headerlink" href="#c.hash_table" title="Permalink to this definition">¶</a></dt>
+<dd><p>This is an opaque type representing a hash table.  A <a class="reference internal" href="#c.hash_table" title="hash_table"><code class="xref c c-type docutils literal notranslate"><span class="pre">hash_table</span></code></a> can
+be created by calling <a class="reference internal" href="#c.hash_table_create" title="hash_table_create"><code class="xref c c-func docutils literal notranslate"><span class="pre">hash_table_create()</span></code></a> or
+<a class="reference internal" href="#c.hash_table_create_generic" title="hash_table_create_generic"><code class="xref c c-func docutils literal notranslate"><span class="pre">hash_table_create_generic()</span></code></a>, and should be deleted, if required, by
+calling <a class="reference internal" href="#c.hash_table_destroy" title="hash_table_destroy"><code class="xref c c-func docutils literal notranslate"><span class="pre">hash_table_destroy()</span></code></a>.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="c.hash_table_create">
+struct <a class="reference internal" href="#c.hash_table" title="hash_table">hash_table</a> *<code class="descname">hash_table_create</code><span class="sig-paren">(</span><a class="reference internal" href="external.html#c.bool" title="bool">bool</a><em>&nbsp;copy_keys</em><span class="sig-paren">)</span><a class="headerlink" href="#c.hash_table_create" title="Permalink to this definition">¶</a></dt>
+<dd><p>This creates an empty hash table for storing string to <code class="xref c c-type docutils literal notranslate"><span class="pre">void</span> <span class="pre">*</span></code>
+mappings.  If <cite>copy_keys</cite> is <code class="docutils literal notranslate"><span class="pre">false</span></code> then keys must have lifetime at least
+equal to that of the associated value, otherwise every inserted key will be
+copied and the hash table will manage the lifetime of the copy.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="c.hash_table_destroy">
+void <code class="descname">hash_table_destroy</code><span class="sig-paren">(</span>struct <a class="reference internal" href="#c.hash_table" title="hash_table">hash_table</a><em>&nbsp;*table</em><span class="sig-paren">)</span><a class="headerlink" href="#c.hash_table_destroy" title="Permalink to this definition">¶</a></dt>
+<dd><p>Releases all resources associated with the hash table.  If keys are under
+hash table control they will be released.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="c.hash_table_insert">
+void *<code class="descname">hash_table_insert</code><span class="sig-paren">(</span>struct <a class="reference internal" href="#c.hash_table" title="hash_table">hash_table</a><em>&nbsp;*table</em>, const void<em>&nbsp;*key</em>, void<em>&nbsp;*value</em><span class="sig-paren">)</span><a class="headerlink" href="#c.hash_table_insert" title="Permalink to this definition">¶</a></dt>
+<dd><p>Inserts mapping from <cite>key</cite> to <cite>value</cite> in <cite>table</cite>.  If an existing value is
+replaced it is returned, otherwise <code class="docutils literal notranslate"><span class="pre">NULL</span></code> is returned.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="c.hash_table_lookup">
+void *<code class="descname">hash_table_lookup</code><span class="sig-paren">(</span>struct <a class="reference internal" href="#c.hash_table" title="hash_table">hash_table</a><em>&nbsp;*table</em>, const void<em>&nbsp;*key</em><span class="sig-paren">)</span><a class="headerlink" href="#c.hash_table_lookup" title="Permalink to this definition">¶</a></dt>
+<dt id="c.hash_table_lookup_bool">
+<a class="reference internal" href="external.html#c.bool" title="bool">bool</a> <code class="descname">hash_table_lookup_bool</code><span class="sig-paren">(</span>struct <a class="reference internal" href="#c.hash_table" title="hash_table">hash_table</a><em>&nbsp;*table</em>, const void<em>&nbsp;*key</em>, void<em>&nbsp;**value</em><span class="sig-paren">)</span><a class="headerlink" href="#c.hash_table_lookup_bool" title="Permalink to this definition">¶</a></dt>
+<dd><p>Looks up <cite>key</cite> in <cite>table</cite> and returns the value or <code class="docutils literal notranslate"><span class="pre">NULL</span></code> if not found.
+If it is possible for the associated value to be <code class="docutils literal notranslate"><span class="pre">NULL</span></code> then
+<a class="reference internal" href="#c.hash_table_lookup_bool" title="hash_table_lookup_bool"><code class="xref c c-func docutils literal notranslate"><span class="pre">hash_table_lookup_bool()</span></code></a> can be used to check whether the value is
+present; in this case the value is returned in <code class="docutils literal notranslate"><span class="pre">*value</span></code>.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="c.hash_table_delete">
+void *<code class="descname">hash_table_delete</code><span class="sig-paren">(</span>struct <a class="reference internal" href="#c.hash_table" title="hash_table">hash_table</a><em>&nbsp;*table</em>, const void<em>&nbsp;*key</em><span class="sig-paren">)</span><a class="headerlink" href="#c.hash_table_delete" title="Permalink to this definition">¶</a></dt>
+<dd><p>Deletes entry associated with <cite>key</cite> from <cite>table</cite>, returns the deleted entry
+if found, otherwise returns <code class="docutils literal notranslate"><span class="pre">NULL</span></code>.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="c.hash_table_count">
+size_t <code class="descname">hash_table_count</code><span class="sig-paren">(</span>struct <a class="reference internal" href="#c.hash_table" title="hash_table">hash_table</a><em>&nbsp;*table</em><span class="sig-paren">)</span><a class="headerlink" href="#c.hash_table_count" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the number of entris in <cite>table</cite>.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="c.hash_table_resize">
+void <code class="descname">hash_table_resize</code><span class="sig-paren">(</span>struct <a class="reference internal" href="#c.hash_table" title="hash_table">hash_table</a><em>&nbsp;*table</em>, size_t<em>&nbsp;min_size</em><span class="sig-paren">)</span><a class="headerlink" href="#c.hash_table_resize" title="Permalink to this definition">¶</a></dt>
+<dd><p>The hash table will automatically resize itself as necessary as entries are
+added, but it is not normally resized after entries are deleted, though this
+can happen as a consequence of subsequent entries.  This function will
+forcibly resize <cite>table</cite> to have at least <cite>min_size</cite> entries (plus room).</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="c.hash_table_walk">
+<a class="reference internal" href="external.html#c.bool" title="bool">bool</a> <code class="descname">hash_table_walk</code><span class="sig-paren">(</span>struct <a class="reference internal" href="#c.hash_table" title="hash_table">hash_table</a><em>&nbsp;*table</em>, int<em>&nbsp;*ix</em>, const void<em>&nbsp;**key</em>, void<em>&nbsp;**value</em><span class="sig-paren">)</span><a class="headerlink" href="#c.hash_table_walk" title="Permalink to this definition">¶</a></dt>
+<dd><p>This function is used to iterate through all of the entries in the table.
+Note that <cite>table</cite> must not be modified during the iteration, as otherwise
+entries may be skipped or repeated.  The following code will walk the given
+table calling the given function for each <cite>key</cite> &amp; <cite>value</cite> pair in turn:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">const</span> <span class="n">void</span> <span class="o">*</span><span class="n">key</span><span class="p">;</span>
+<span class="n">const</span> <span class="n">void</span> <span class="o">*</span><span class="n">value</span><span class="p">;</span>
+<span class="nb">int</span> <span class="n">ix</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+<span class="k">while</span> <span class="p">(</span><span class="n">hash_table_walk</span><span class="p">(</span><span class="n">table</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">ix</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">key</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">value</span><span class="p">))</span>
+    <span class="n">process_entry</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">value</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>Actually, it probably <em>is</em> safe to delete entries during a walk, but this is
+not guaranteed without close inspection of the code!</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="c.hash_table_validate">
+void <code class="descname">hash_table_validate</code><span class="sig-paren">(</span>struct <a class="reference internal" href="#c.hash_table" title="hash_table">hash_table</a><em>&nbsp;*table</em><span class="sig-paren">)</span><a class="headerlink" href="#c.hash_table_validate" title="Permalink to this definition">¶</a></dt>
+<dd><p>This performs a sanity check on the structure of <cite>table</cite> and raised an
+assertion failure if the check fails.</p>
+</dd></dl>
+
+</div>
+<div class="section" id="abstract-api">
+<h2>8.2. Abstract API<a class="headerlink" href="#abstract-api" title="Permalink to this headline">¶</a></h2>
+<p>The fuller API including the more abstract layer adds the following.</p>
+<dl class="function">
+<dt id="c.hash_table_create_ptrs">
+struct <a class="reference internal" href="#c.hash_table" title="hash_table">hash_table</a> *<code class="descname">hash_table_create_ptrs</code><span class="sig-paren">(</span>void<span class="sig-paren">)</span><a class="headerlink" href="#c.hash_table_create_ptrs" title="Permalink to this definition">¶</a></dt>
+<dd><p>Creates a hash table with pointers or integers (of <code class="xref c c-type docutils literal notranslate"><span class="pre">uintptr_t</span></code>
+compatible size) as keys.  In this case keys are never copied.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="c.hash_table_create_generic">
+struct <a class="reference internal" href="#c.hash_table" title="hash_table">hash_table</a> *<code class="descname">hash_table_create_generic</code><span class="sig-paren">(</span>const struct <a class="reference internal" href="#c.hash_table_ops" title="hash_table_ops">hash_table_ops</a><em>&nbsp;*ops</em><span class="sig-paren">)</span><a class="headerlink" href="#c.hash_table_create_generic" title="Permalink to this definition">¶</a></dt>
+<dd><p>This constructs an empty hash table using given <cite>ops</cite> structure to define
+the handling of keys.  The <cite>ops</cite> structure must have lifetime at least equal
+to that of the created table.</p>
+<dl class="type">
+<dt id="c.hash_t">
+<code class="descname">hash_t</code><a class="headerlink" href="#c.hash_t" title="Permalink to this definition">¶</a></dt>
+<dd><p>This is an alias for <code class="xref c c-type docutils literal notranslate"><span class="pre">unsigned</span> <span class="pre">long</span> <span class="pre">int</span></code>.  All hash functions use
+this type.</p>
+</dd></dl>
+
+<dl class="type">
+<dt id="c.hash_table_ops">
+struct <code class="descname">hash_table_ops</code><a class="headerlink" href="#c.hash_table_ops" title="Permalink to this definition">¶</a></dt>
+<dd><p>This structure contains the following fields defining the abstract
+interface to keys.</p>
+<dl class="member">
+<dt id="c.hash_table_ops.hash">
+<a class="reference internal" href="#c.hash_t" title="hash_t">hash_t</a> <code class="descname">(*hash)</code><span class="sig-paren">(</span>const void<em>&nbsp;*key</em><span class="sig-paren">)</span><a class="headerlink" href="#c.hash_table_ops.hash" title="Permalink to this definition">¶</a></dt>
+<dd><p>Computes the hash value from a key.</p>
+</dd></dl>
+
+<dl class="member">
+<dt id="c.hash_table_ops.compare">
+<a class="reference internal" href="external.html#c.bool" title="bool">bool</a> <code class="descname">(*compare)</code><span class="sig-paren">(</span>const void<em>&nbsp;*key1</em>, const void<em>&nbsp;*key2</em><span class="sig-paren">)</span><a class="headerlink" href="#c.hash_table_ops.compare" title="Permalink to this definition">¶</a></dt>
+<dd><p>Compares two keys, returns <code class="docutils literal notranslate"><span class="pre">true</span></code> if equal.</p>
+</dd></dl>
+
+<dl class="member">
+<dt id="c.hash_table_ops.copy_key">
+void *<code class="descname">(*copy_key)</code><span class="sig-paren">(</span>const void<em>&nbsp;*key</em><span class="sig-paren">)</span><a class="headerlink" href="#c.hash_table_ops.copy_key" title="Permalink to this definition">¶</a></dt>
+<dd><p>If NULL then key lifetime is under control of the user of the hash
+table, who must ensure that the key is valid for the entire time
+it is present in the table.  Otherwise this function is called when
+keys are added to the table.</p>
+</dd></dl>
+
+<dl class="member">
+<dt id="c.hash_table_ops.release_key">
+void <code class="descname">(*release_key)</code><span class="sig-paren">(</span>void<em>&nbsp;*key</em><span class="sig-paren">)</span><a class="headerlink" href="#c.hash_table_ops.release_key" title="Permalink to this definition">¶</a></dt>
+<dd><p>Also can be NULL if key lifetime is under user control, otherwise is
+called when keys are removed from the table.</p>
+</dd></dl>
+
+</dd></dl>
+
+<p>Note that value lifetime is not automatically managed through this
+interface, instead this can be done through the return values from
+<a class="reference internal" href="#c.hash_table_insert" title="hash_table_insert"><code class="xref c c-func docutils literal notranslate"><span class="pre">hash_table_insert()</span></code></a> and <a class="reference internal" href="#c.hash_table_delete" title="hash_table_delete"><code class="xref c c-func docutils literal notranslate"><span class="pre">hash_table_delete()</span></code></a>.</p>
+</dd></dl>
+
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">8. Generic Hash Table</a><ul>
+<li><a class="reference internal" href="#high-level-api">8.1. High Level API</a></li>
+<li><a class="reference internal" href="#abstract-api">8.2. Abstract API</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="error.html"
+                        title="previous chapter">7. Error Handling Macros and Other Facilities</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="example.html"
+                        title="next chapter">9. Code Examples</a></p>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/hashtable.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="example.html" title="9. Code Examples"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="error.html" title="7. Error Handling Macros and Other Facilities"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">EPICS Device  documentation</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2015, Michael Abbott.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.5.
+    </div>
+  </body>
+</html>

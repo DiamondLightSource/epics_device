@@ -1,0 +1,285 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>epics_device.device &#8212; EPICS Device  documentation</title>
+    <link rel="stylesheet" href="../../_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <script type="text/javascript" src="../../_static/language_data.js"></script>
+    
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">EPICS Device  documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../index.html" accesskey="U">Module code</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for epics_device.device</h1><div class="highlight"><pre>
+<span></span><span class="c1"># Support code for Python epics database generation.</span>
+
+<span class="kn">import</span> <span class="nn">sys</span>
+<span class="kn">import</span> <span class="nn">os</span>
+
+<span class="kn">import</span> <span class="nn">epicsdbbuilder</span>
+
+
+<span class="c1"># This class wraps the creation of records which talk directly to the EPICS</span>
+<span class="c1"># device driver.</span>
+<div class="viewcode-block" id="EpicsDevice"><a class="viewcode-back" href="../../builder.html#epics_device.EpicsDevice">[docs]</a><span class="k">class</span> <span class="nc">EpicsDevice</span><span class="p">:</span>
+    <span class="k">def</span> <span class="nf">makeRecord</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">builder</span><span class="p">):</span>
+        <span class="n">builder</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">epicsdbbuilder</span><span class="o">.</span><span class="n">records</span><span class="p">,</span> <span class="n">builder</span><span class="p">)</span>
+
+        <span class="k">def</span> <span class="nf">make</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">address</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">fields</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">address</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">address</span> <span class="o">=</span> <span class="n">name</span>
+            <span class="n">address</span> <span class="o">=</span> <span class="s1">&#39;@</span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span> \
+                <span class="bp">self</span><span class="o">.</span><span class="n">separator</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">address_prefix</span> <span class="o">+</span> <span class="p">[</span><span class="n">address</span><span class="p">])</span>
+
+            <span class="n">record</span> <span class="o">=</span> <span class="n">builder</span><span class="p">(</span><span class="n">name</span><span class="p">,</span>
+                <span class="n">address</span> <span class="o">=</span> <span class="n">address</span><span class="p">,</span>
+                <span class="n">DTYP</span> <span class="o">=</span> <span class="s1">&#39;epics_device&#39;</span><span class="p">,</span> <span class="o">**</span><span class="n">fields</span><span class="p">)</span>
+
+            <span class="c1"># Check for a description, make a report if none given.</span>
+            <span class="k">if</span> <span class="s1">&#39;DESC&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">fields</span><span class="p">:</span>
+                <span class="nb">print</span> <span class="o">&gt;&gt;</span><span class="n">sys</span><span class="o">.</span><span class="n">stderr</span><span class="p">,</span> <span class="s1">&#39;No description for&#39;</span><span class="p">,</span> \
+                    <span class="bp">self</span><span class="o">.</span><span class="n">separator</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">address_prefix</span> <span class="o">+</span> <span class="p">[</span><span class="n">name</span><span class="p">])</span>
+
+            <span class="k">return</span> <span class="n">record</span>
+
+        <span class="k">return</span> <span class="n">make</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">separator</span> <span class="o">=</span> <span class="s1">&#39;:&#39;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">address_prefix</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="p">[</span>
+                <span class="s1">&#39;longin&#39;</span><span class="p">,</span>    <span class="s1">&#39;longout&#39;</span><span class="p">,</span>
+                <span class="s1">&#39;ai&#39;</span><span class="p">,</span>        <span class="s1">&#39;ao&#39;</span><span class="p">,</span>
+                <span class="s1">&#39;bi&#39;</span><span class="p">,</span>        <span class="s1">&#39;bo&#39;</span><span class="p">,</span>
+                <span class="s1">&#39;stringin&#39;</span><span class="p">,</span>  <span class="s1">&#39;stringout&#39;</span><span class="p">,</span>
+                <span class="s1">&#39;mbbi&#39;</span><span class="p">,</span>      <span class="s1">&#39;mbbo&#39;</span><span class="p">,</span>
+                <span class="s1">&#39;waveform&#39;</span><span class="p">]:</span>
+            <span class="nb">setattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">makeRecord</span><span class="p">(</span><span class="n">name</span><span class="p">))</span>
+
+    <span class="k">def</span> <span class="nf">push_name_prefix</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">prefix</span><span class="p">):</span>
+        <span class="n">epicsdbbuilder</span><span class="o">.</span><span class="n">PushPrefix</span><span class="p">(</span><span class="n">prefix</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">address_prefix</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">prefix</span><span class="p">))</span>
+
+    <span class="k">def</span> <span class="nf">pop_name_prefix</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">address_prefix</span><span class="o">.</span><span class="n">pop</span><span class="p">()</span>
+        <span class="n">epicsdbbuilder</span><span class="o">.</span><span class="n">PopPrefix</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">set_name_separator</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">separator</span><span class="p">):</span>
+        <span class="n">epicsdbbuilder</span><span class="o">.</span><span class="n">SetSeparator</span><span class="p">(</span><span class="n">separator</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">separator</span> <span class="o">=</span> <span class="n">separator</span></div>
+
+
+<span class="n">EpicsDevice</span> <span class="o">=</span> <span class="n">EpicsDevice</span><span class="p">()</span>
+
+<span class="n">push_name_prefix</span>   <span class="o">=</span> <span class="n">EpicsDevice</span><span class="o">.</span><span class="n">push_name_prefix</span>
+<span class="n">pop_name_prefix</span>    <span class="o">=</span> <span class="n">EpicsDevice</span><span class="o">.</span><span class="n">pop_name_prefix</span>
+<span class="n">set_name_separator</span> <span class="o">=</span> <span class="n">EpicsDevice</span><span class="o">.</span><span class="n">set_name_separator</span>
+
+
+<span class="c1"># Context manager for name prefix, allows us to write</span>
+<span class="c1">#</span>
+<span class="c1">#   with name_prefix(prefix):</span>
+<span class="c1">#       generate pvs</span>
+<span class="c1">#</span>
+<span class="c1"># to generate PVs named prefix:name</span>
+<div class="viewcode-block" id="name_prefix"><a class="viewcode-back" href="../../builder.html#epics_device.name_prefix">[docs]</a><span class="k">class</span> <span class="nc">name_prefix</span><span class="p">:</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">prefix</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">prefix</span> <span class="o">=</span> <span class="n">prefix</span>
+
+    <span class="k">def</span> <span class="nf">__enter__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">push_name_prefix</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">prefix</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__exit__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">exception</span><span class="p">):</span>
+        <span class="n">pop_name_prefix</span><span class="p">()</span></div>
+
+
+<span class="c1"># ----------------------------------------------------------------------------</span>
+<span class="c1">#           Record Generation Support</span>
+<span class="c1"># ----------------------------------------------------------------------------</span>
+
+<span class="c1"># Functions for creating records</span>
+
+<span class="c1"># For some applications it&#39;s more convenient for MDEL to be configured so that</span>
+<span class="c1"># by default ai and longin records always generate updates; this can be</span>
+<span class="c1"># configured by setting this variable to -1</span>
+<span class="n">MDEL_default</span> <span class="o">=</span> <span class="kc">None</span>
+<div class="viewcode-block" id="set_MDEL_default"><a class="viewcode-back" href="../../builder.html#epics_device.set_MDEL_default">[docs]</a><span class="k">def</span> <span class="nf">set_MDEL_default</span><span class="p">(</span><span class="n">default</span><span class="p">):</span>
+    <span class="k">global</span> <span class="n">MDEL_default</span>
+    <span class="n">MDEL_default</span> <span class="o">=</span> <span class="n">default</span></div>
+
+<span class="c1"># In some applications it&#39;s useful to have the ability to modify the name of</span>
+<span class="c1"># output records.  This hook implements this behaviour.</span>
+<span class="k">def</span> <span class="nf">OutName</span><span class="p">(</span><span class="n">name</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">name</span>
+<div class="viewcode-block" id="set_out_name"><a class="viewcode-back" href="../../builder.html#epics_device.set_out_name">[docs]</a><span class="k">def</span> <span class="nf">set_out_name</span><span class="p">(</span><span class="n">function</span><span class="p">):</span>
+    <span class="k">global</span> <span class="n">OutName</span>
+    <span class="n">OutName</span> <span class="o">=</span> <span class="n">function</span></div>
+
+
+<span class="c1"># Helper for output records: turns out we want quite a uniform set of defaults.</span>
+<span class="k">def</span> <span class="nf">set_out_defaults</span><span class="p">(</span><span class="n">fields</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>
+    <span class="n">fields</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="s1">&#39;address&#39;</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span>
+    <span class="n">fields</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="s1">&#39;OMSL&#39;</span><span class="p">,</span> <span class="s1">&#39;supervisory&#39;</span><span class="p">)</span>
+    <span class="n">fields</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="s1">&#39;PINI&#39;</span><span class="p">,</span> <span class="s1">&#39;YES&#39;</span><span class="p">)</span>
+
+<span class="c1"># For longout and ao we want DRV{L,H} to match {L,H}OPR by default.  Also puts</span>
+<span class="c1"># all settings into fields for convenience.</span>
+<span class="k">def</span> <span class="nf">set_scalar_out_defaults</span><span class="p">(</span><span class="n">fields</span><span class="p">,</span> <span class="n">DRVL</span><span class="p">,</span> <span class="n">DRVH</span><span class="p">):</span>
+    <span class="n">fields</span><span class="p">[</span><span class="s1">&#39;DRVL&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">DRVL</span>
+    <span class="n">fields</span><span class="p">[</span><span class="s1">&#39;DRVH&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">DRVH</span>
+    <span class="n">fields</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="s1">&#39;LOPR&#39;</span><span class="p">,</span> <span class="n">DRVL</span><span class="p">)</span>
+    <span class="n">fields</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="s1">&#39;HOPR&#39;</span><span class="p">,</span> <span class="n">DRVH</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="aIn"><a class="viewcode-back" href="../../builder.html#epics_device.aIn">[docs]</a><span class="k">def</span> <span class="nf">aIn</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">LOPR</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">HOPR</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">EGU</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">PREC</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">fields</span><span class="p">):</span>
+    <span class="n">fields</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="s1">&#39;MDEL&#39;</span><span class="p">,</span> <span class="n">MDEL_default</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">EpicsDevice</span><span class="o">.</span><span class="n">ai</span><span class="p">(</span><span class="n">name</span><span class="p">,</span>
+        <span class="n">LOPR</span> <span class="o">=</span> <span class="n">LOPR</span><span class="p">,</span> <span class="n">HOPR</span> <span class="o">=</span> <span class="n">HOPR</span><span class="p">,</span> <span class="n">EGU</span> <span class="o">=</span> <span class="n">EGU</span><span class="p">,</span> <span class="n">PREC</span> <span class="o">=</span> <span class="n">PREC</span><span class="p">,</span> <span class="o">**</span><span class="n">fields</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="aOut"><a class="viewcode-back" href="../../builder.html#epics_device.aOut">[docs]</a><span class="k">def</span> <span class="nf">aOut</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">DRVL</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">DRVH</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">EGU</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">PREC</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">fields</span><span class="p">):</span>
+    <span class="n">set_out_defaults</span><span class="p">(</span><span class="n">fields</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span>
+    <span class="n">set_scalar_out_defaults</span><span class="p">(</span><span class="n">fields</span><span class="p">,</span> <span class="n">DRVL</span><span class="p">,</span> <span class="n">DRVH</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">EpicsDevice</span><span class="o">.</span><span class="n">ao</span><span class="p">(</span><span class="n">OutName</span><span class="p">(</span><span class="n">name</span><span class="p">),</span> <span class="n">EGU</span> <span class="o">=</span> <span class="n">EGU</span><span class="p">,</span> <span class="n">PREC</span> <span class="o">=</span> <span class="n">PREC</span><span class="p">,</span> <span class="o">**</span><span class="n">fields</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="longIn"><a class="viewcode-back" href="../../builder.html#epics_device.longIn">[docs]</a><span class="k">def</span> <span class="nf">longIn</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">LOPR</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">HOPR</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">EGU</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">fields</span><span class="p">):</span>
+    <span class="n">fields</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="s1">&#39;MDEL&#39;</span><span class="p">,</span> <span class="n">MDEL_default</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">EpicsDevice</span><span class="o">.</span><span class="n">longin</span><span class="p">(</span><span class="n">name</span><span class="p">,</span>
+        <span class="n">LOPR</span> <span class="o">=</span> <span class="n">LOPR</span><span class="p">,</span> <span class="n">HOPR</span> <span class="o">=</span> <span class="n">HOPR</span><span class="p">,</span> <span class="n">EGU</span> <span class="o">=</span> <span class="n">EGU</span><span class="p">,</span> <span class="o">**</span><span class="n">fields</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="longOut"><a class="viewcode-back" href="../../builder.html#epics_device.longOut">[docs]</a><span class="k">def</span> <span class="nf">longOut</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">DRVL</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">DRVH</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">EGU</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">fields</span><span class="p">):</span>
+    <span class="n">set_out_defaults</span><span class="p">(</span><span class="n">fields</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span>
+    <span class="n">set_scalar_out_defaults</span><span class="p">(</span><span class="n">fields</span><span class="p">,</span> <span class="n">DRVL</span><span class="p">,</span> <span class="n">DRVH</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">EpicsDevice</span><span class="o">.</span><span class="n">longout</span><span class="p">(</span><span class="n">OutName</span><span class="p">(</span><span class="n">name</span><span class="p">),</span> <span class="n">EGU</span> <span class="o">=</span> <span class="n">EGU</span><span class="p">,</span> <span class="o">**</span><span class="n">fields</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="boolIn"><a class="viewcode-back" href="../../builder.html#epics_device.boolIn">[docs]</a><span class="k">def</span> <span class="nf">boolIn</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">ZNAM</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">ONAM</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">fields</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">EpicsDevice</span><span class="o">.</span><span class="n">bi</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">ZNAM</span> <span class="o">=</span> <span class="n">ZNAM</span><span class="p">,</span> <span class="n">ONAM</span> <span class="o">=</span> <span class="n">ONAM</span><span class="p">,</span> <span class="o">**</span><span class="n">fields</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="boolOut"><a class="viewcode-back" href="../../builder.html#epics_device.boolOut">[docs]</a><span class="k">def</span> <span class="nf">boolOut</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">ZNAM</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">ONAM</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">fields</span><span class="p">):</span>
+    <span class="n">set_out_defaults</span><span class="p">(</span><span class="n">fields</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">EpicsDevice</span><span class="o">.</span><span class="n">bo</span><span class="p">(</span><span class="n">OutName</span><span class="p">(</span><span class="n">name</span><span class="p">),</span> <span class="n">ZNAM</span> <span class="o">=</span> <span class="n">ZNAM</span><span class="p">,</span> <span class="n">ONAM</span> <span class="o">=</span> <span class="n">ONAM</span><span class="p">,</span> <span class="o">**</span><span class="n">fields</span><span class="p">)</span></div>
+
+
+<span class="c1"># Field name prefixes for mbbi/mbbo records.</span>
+<span class="n">mbb_prefixes</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="s1">&#39;ZR&#39;</span><span class="p">,</span> <span class="s1">&#39;ON&#39;</span><span class="p">,</span> <span class="s1">&#39;TW&#39;</span><span class="p">,</span> <span class="s1">&#39;TH&#39;</span><span class="p">,</span> <span class="s1">&#39;FR&#39;</span><span class="p">,</span> <span class="s1">&#39;FV&#39;</span><span class="p">,</span> <span class="s1">&#39;SX&#39;</span><span class="p">,</span> <span class="s1">&#39;SV&#39;</span><span class="p">,</span>     <span class="c1"># 0-7</span>
+    <span class="s1">&#39;EI&#39;</span><span class="p">,</span> <span class="s1">&#39;NI&#39;</span><span class="p">,</span> <span class="s1">&#39;TE&#39;</span><span class="p">,</span> <span class="s1">&#39;EL&#39;</span><span class="p">,</span> <span class="s1">&#39;TV&#39;</span><span class="p">,</span> <span class="s1">&#39;TT&#39;</span><span class="p">,</span> <span class="s1">&#39;FT&#39;</span><span class="p">,</span> <span class="s1">&#39;FF&#39;</span><span class="p">]</span>     <span class="c1"># 8-15</span>
+
+<span class="c1"># Adds a list of (option [,severity]) tuples into field settings</span>
+<span class="c1"># suitable for mbbi and mbbo records.</span>
+<span class="k">def</span> <span class="nf">process_mbb_values</span><span class="p">(</span><span class="n">fields</span><span class="p">,</span> <span class="n">options</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">process_value</span><span class="p">(</span><span class="n">prefix</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span> <span class="n">option</span><span class="p">,</span> <span class="n">severity</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="n">fields</span><span class="p">[</span><span class="n">prefix</span> <span class="o">+</span> <span class="s1">&#39;ST&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">option</span>
+        <span class="n">fields</span><span class="p">[</span><span class="n">prefix</span> <span class="o">+</span> <span class="s1">&#39;VL&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span>
+        <span class="k">if</span> <span class="n">severity</span><span class="p">:</span>
+            <span class="n">fields</span><span class="p">[</span><span class="n">prefix</span> <span class="o">+</span> <span class="s1">&#39;SV&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">severity</span>
+
+    <span class="k">for</span> <span class="n">prefix</span><span class="p">,</span> <span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">option</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">mbb_prefixes</span><span class="p">,</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">options</span><span class="p">)):</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">option</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">):</span>
+            <span class="n">process_value</span><span class="p">(</span><span class="n">prefix</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span> <span class="o">*</span><span class="n">option</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">process_value</span><span class="p">(</span><span class="n">prefix</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span> <span class="n">option</span><span class="p">)</span>
+
+<div class="viewcode-block" id="mbbIn"><a class="viewcode-back" href="../../builder.html#epics_device.mbbIn">[docs]</a><span class="k">def</span> <span class="nf">mbbIn</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="o">*</span><span class="n">options</span><span class="p">,</span> <span class="o">**</span><span class="n">fields</span><span class="p">):</span>
+    <span class="n">process_mbb_values</span><span class="p">(</span><span class="n">fields</span><span class="p">,</span> <span class="n">options</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">EpicsDevice</span><span class="o">.</span><span class="n">mbbi</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="o">**</span><span class="n">fields</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="mbbOut"><a class="viewcode-back" href="../../builder.html#epics_device.mbbOut">[docs]</a><span class="k">def</span> <span class="nf">mbbOut</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="o">*</span><span class="n">options</span><span class="p">,</span> <span class="o">**</span><span class="n">fields</span><span class="p">):</span>
+    <span class="n">process_mbb_values</span><span class="p">(</span><span class="n">fields</span><span class="p">,</span> <span class="n">options</span><span class="p">)</span>
+    <span class="n">set_out_defaults</span><span class="p">(</span><span class="n">fields</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">EpicsDevice</span><span class="o">.</span><span class="n">mbbo</span><span class="p">(</span><span class="n">OutName</span><span class="p">(</span><span class="n">name</span><span class="p">),</span> <span class="o">**</span><span class="n">fields</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="stringIn"><a class="viewcode-back" href="../../builder.html#epics_device.stringIn">[docs]</a><span class="k">def</span> <span class="nf">stringIn</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="o">**</span><span class="n">fields</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">EpicsDevice</span><span class="o">.</span><span class="n">stringin</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="o">**</span><span class="n">fields</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="stringOut"><a class="viewcode-back" href="../../builder.html#epics_device.stringOut">[docs]</a><span class="k">def</span> <span class="nf">stringOut</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="o">**</span><span class="n">fields</span><span class="p">):</span>
+    <span class="n">set_out_defaults</span><span class="p">(</span><span class="n">fields</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">EpicsDevice</span><span class="o">.</span><span class="n">stringout</span><span class="p">(</span><span class="n">OutName</span><span class="p">(</span><span class="n">name</span><span class="p">),</span> <span class="o">**</span><span class="n">fields</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Waveform"><a class="viewcode-back" href="../../builder.html#epics_device.Waveform">[docs]</a><span class="k">def</span> <span class="nf">Waveform</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">length</span><span class="p">,</span> <span class="n">FTVL</span><span class="o">=</span><span class="s1">&#39;LONG&#39;</span><span class="p">,</span> <span class="o">**</span><span class="n">fields</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">EpicsDevice</span><span class="o">.</span><span class="n">waveform</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">NELM</span> <span class="o">=</span> <span class="n">length</span><span class="p">,</span> <span class="n">FTVL</span> <span class="o">=</span> <span class="n">FTVL</span><span class="p">,</span> <span class="o">**</span><span class="n">fields</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="WaveformOut"><a class="viewcode-back" href="../../builder.html#epics_device.WaveformOut">[docs]</a><span class="k">def</span> <span class="nf">WaveformOut</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">fields</span><span class="p">):</span>
+    <span class="n">fields</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="s1">&#39;PINI&#39;</span><span class="p">,</span> <span class="s1">&#39;YES&#39;</span><span class="p">)</span>
+    <span class="n">fields</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="s1">&#39;address&#39;</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">Waveform</span><span class="p">(</span><span class="n">OutName</span><span class="p">(</span><span class="n">name</span><span class="p">),</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">fields</span><span class="p">)</span></div>
+
+
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="s1">&#39;aIn&#39;</span><span class="p">,</span>      <span class="s1">&#39;aOut&#39;</span><span class="p">,</span>     <span class="s1">&#39;boolIn&#39;</span><span class="p">,</span>   <span class="s1">&#39;boolOut&#39;</span><span class="p">,</span>  <span class="s1">&#39;longIn&#39;</span><span class="p">,</span>   <span class="s1">&#39;longOut&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;mbbIn&#39;</span><span class="p">,</span>    <span class="s1">&#39;mbbOut&#39;</span><span class="p">,</span>   <span class="s1">&#39;stringIn&#39;</span><span class="p">,</span> <span class="s1">&#39;stringOut&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;Waveform&#39;</span><span class="p">,</span> <span class="s1">&#39;WaveformOut&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;EpicsDevice&#39;</span><span class="p">,</span> <span class="s1">&#39;set_MDEL_default&#39;</span><span class="p">,</span> <span class="s1">&#39;set_out_name&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;push_name_prefix&#39;</span><span class="p">,</span> <span class="s1">&#39;pop_name_prefix&#39;</span><span class="p">,</span> <span class="s1">&#39;name_prefix&#39;</span><span class="p">]</span>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">EPICS Device  documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../index.html" >Module code</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2015, Michael Abbott.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.5.
+    </div>
+  </body>
+</html>
