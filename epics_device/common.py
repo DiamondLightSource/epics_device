@@ -26,7 +26,7 @@ def Trigger(prefix, *pvs, **kargs):
     if kargs.pop('set_time', False):
         trigger.TSE = -2
 
-    assert kargs == {}, 'Unexpected keyword args: %s' % kargs.keys()
+    assert kargs == {}, 'Unexpected keyword args: %s' % list(kargs.keys())
     return trigger
 
 

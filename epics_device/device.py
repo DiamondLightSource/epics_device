@@ -1,5 +1,7 @@
 # Support code for Python epics database generation.
 
+from __future__ import print_function
+
 import sys
 import os
 
@@ -24,8 +26,8 @@ class EpicsDevice:
 
             # Check for a description, make a report if none given.
             if 'DESC' not in fields:
-                print >>sys.stderr, 'No description for', \
-                    self.separator.join(self.address_prefix + [name])
+                print('No description for', \
+                    self.separator.join(self.address_prefix + [name]), file=sys.stderr)
 
             return record
 
