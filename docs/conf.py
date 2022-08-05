@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 #
-# Cothread documentation build configuration file, created by
+# Epics Device documentation build configuration file.
+# Originally taken from Cothread configuration file, which was created by
 # sphinx-quickstart on Fri May 14 13:06:33 2010.
 #
 # This file is execfile()d with the current directory set to its containing dir.
@@ -36,7 +37,7 @@ extensions = [
     'cdomain',                  # Override sphinx C domain implementation
 ]
 
-viewcode_import = True
+viewcode_follow_imported_members = True
 
 
 # Add any paths that contain templates here, relative to this directory.
