@@ -16,6 +16,7 @@ env:
   EPICS_BASE_VER: R3.14.12.7
   EPICS_BASE_DIR: epics_base
   EPCISDBBUILER_VERSION: 1.5
+  SPHINXBUILD_LOCATION: ~/.local/bin/
 
 jobs:
   build:
@@ -32,8 +33,7 @@ jobs:
 
       - name: Install Packages
         run: |
-          sudo apt-get install python3-sphinx
-          pip install epicsdbbuilder==${EPCISDBBUILER_VERSION}
+          pip install epicsdbbuilder==${EPCISDBBUILER_VERSION} sphinx==2.3.1
 
       - name: Cache EPICS Base
         uses: actions/cache@v2
@@ -50,19 +50,19 @@ jobs:
           mv epics-base-${EPICS_BASE_VER} ${EPICS_BASE_DIR}
           make -sj -C ${EPICS_BASE_DIR}/
 
-      - name: Set environment for future steps
+      - name: Set environment for future steps (Overrides variables in config/CONFIG_SITE)
         # Override EPICS_BASE defined in config/RELEASE
         # Override PYTHON defined in config/CONFIG_SITE
         # Override EPICSDBBUILDER defined in config/CONFIG_SITE
         run: |
           echo "EPICS_BASE=`pwd`/${EPICS_BASE_DIR}" >> $GITHUB_ENV
           echo "PYTHON=python" >> $GITHUB_ENV 
-          echo "EPICSDBBUILDER=${EPCISDBBUILER_VERSION}" >> $GITHUB_ENV 
+          echo "EPICSDBBUILDER=${EPCISDBBUILER_VERSION}" >> $GITHUB_ENV
+          echo "SPHINXBUILD=${SPHINXBUILD_LOCATION}/sphinx-build" >> $GITHUB_ENV
 
       - name: Build Docs
         run: |
           make
-          cd docs && make install
 
       - name: Move to versioned directory
         # e.g. master or 0.1.2
@@ -73,7 +73,7 @@ jobs:
         if: "${{ github.repository_owner == 'dls-controls' && (github.ref == 'refs/heads/master' || startsWith(github.ref, 'refs/tags')) }}"
         # We pin to the SHA, not the tag, for security reasons.
         # https://docs.github.com/en/actions/learn-github-actions/security-hardening-for-github-actions#using-third-party-actions
-        uses: peaceiris/actions-gh-pages@bbdfb200618d235585ad98e965f4aafc39b4c501  # v3.7.3
+        uses: peaceiris/actions-gh-pages@bbdfb200618d235585ad98e965f4aafc39b4c501 # v3.7.3
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: .github/pages
