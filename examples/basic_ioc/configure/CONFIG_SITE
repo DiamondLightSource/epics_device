@@ -13,4 +13,4 @@ STATIC_BUILD = YES
 CROSS_COMPILER_TARGET_ARCHS =
 
 # Identify which python interpreter to use.
-PYTHON = dls-python
+PYTHON ?= python3

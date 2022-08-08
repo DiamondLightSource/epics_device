@@ -1,4 +1,4 @@
-name: Docs CI
+name: Build and Docs CI
 
 on:
   push:
@@ -20,7 +20,7 @@ env:
 
 jobs:
   build:
-    name: "Docs CI"
+    name: "Build and Docs CI"
     runs-on: ubuntu-latest
 
     steps:
@@ -32,6 +32,8 @@ jobs:
           submodules: true
 
       - name: Install Packages
+        # Pin Sphinx version to one that supports Python3, but does not feature an API
+        # change that would break our custom cdomain.py extension
         run: |
           pip install epicsdbbuilder==${EPCISDBBUILER_VERSION} sphinx==2.3.1
 
@@ -51,20 +53,27 @@ jobs:
           make -sj -C ${EPICS_BASE_DIR}/
 
       - name: Set environment for future steps (Overrides variables in config/CONFIG_SITE)
-        # Override EPICS_BASE defined in config/RELEASE
-        # Override PYTHON defined in config/CONFIG_SITE
-        # Override EPICSDBBUILDER defined in config/CONFIG_SITE
+        # Override various environment variables defined in CONFIG_SITE with values that
+        # work on CI. Delete the compiler targets as they don't actually build, they just
+        # silently pass despite doing nothing. Leaving them in place confuses the example
+        # IOC builds.
         run: |
           echo "EPICS_BASE=`pwd`/${EPICS_BASE_DIR}" >> $GITHUB_ENV
           echo "PYTHON=python" >> $GITHUB_ENV 
           echo "EPICSDBBUILDER=${EPCISDBBUILER_VERSION}" >> $GITHUB_ENV
           echo "SPHINXBUILD=${SPHINXBUILD_LOCATION}/sphinx-build" >> $GITHUB_ENV
+          sed -i '/CROSS_COMPILER_TARGET_ARCHS/d' configure/CONFIG_SITE
 
-      - name: Build Docs
+      - name: Build (including docs)
         run: |
           make
 
-      - name: Move to versioned directory
+      - name: Build Examples
+        run: |
+          make -C examples/example_ioc/
+          make -C examples/basic_ioc/
+
+      - name: Move Docs to versioned directory
         # e.g. master or 0.1.2
         run: mv docs/html ".github/pages/${GITHUB_REF##*/}"
 
