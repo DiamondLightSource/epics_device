@@ -1,0 +1,631 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
+
+    <title>7. Error Handling Macros and Other Facilities &#8212; EPICS Device  documentation</title>
+    <link rel="stylesheet" href="_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="_static/language_data.js"></script>
+    
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="8. Generic Hash Table" href="hashtable.html" />
+    <link rel="prev" title="6. Support for PV Logging" href="pvlogging.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="hashtable.html" title="8. Generic Hash Table"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="pvlogging.html" title="6. Support for PV Logging"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">EPICS Device  documentation</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <section id="error-handling-macros-and-other-facilities">
+<h1><span class="section-number">7. </span>Error Handling Macros and Other Facilities<a class="headerlink" href="#error-handling-macros-and-other-facilities" title="Permalink to this headline">¶</a></h1>
+<p>The header file <code class="docutils literal notranslate"><span class="pre">error.h</span></code> is designed to support a particular style of error
+handling.  The general approach is that functions which can fail should return a
+special <a class="reference internal" href="#c.error__t" title="error__t"><code class="xref c c-type docutils literal notranslate"><span class="pre">error__t</span></code></a> return code, returning <code class="docutils literal notranslate"><span class="pre">ERROR_OK</span></code> if successful, and
+returning a code with contains a report of the failure reason if failed.  A
+sequence of such functions can then be combined with the <code class="docutils literal notranslate"><span class="pre">?:</span></code> operator so that
+the overall result is success only if every stage succeeds.  This can in some
+sense be thought of as a more controlled variant of exception handling, or on
+the other hand as combining success through the <code class="docutils literal notranslate"><span class="pre">Maybe</span></code> monad.</p>
+<p>Functions can be cascaded in this style if they conform to the following
+requirements:</p>
+<ol class="arabic">
+<li><p><code class="docutils literal notranslate"><span class="pre">ERROR_OK</span></code> is returned only on successful completion, otherwise all
+further processing can be aborted.  Note that <code class="docutils literal notranslate"><span class="pre">ERROR_OK</span></code> tests as
+<code class="docutils literal notranslate"><span class="pre">false</span></code> when treated as a boolean.</p></li>
+<li><p>When any other error code is returned (testing <code class="docutils literal notranslate"><span class="pre">true</span></code> when treated as a
+boolean) the error code can be handed up, or reported there and then.</p></li>
+<li><p>Every error code must be subject to one of the following fates:</p>
+<ol class="loweralpha simple">
+<li><p>Passed up to the caller for further processing.</p></li>
+<li><p>Explicitly reported using <a class="reference internal" href="#c.error_report" title="error_report"><code class="xref c c-func docutils literal notranslate"><span class="pre">error_report()</span></code></a> or a related function.</p></li>
+<li><p>Explicitly discarded using <a class="reference internal" href="#c.error_discard" title="error_discard"><code class="xref c c-func docutils literal notranslate"><span class="pre">error_discard()</span></code></a>.</p></li>
+</ol>
+<p>In particular, values of type <a class="reference internal" href="#c.error__t" title="error__t"><code class="xref c c-type docutils literal notranslate"><span class="pre">error__t</span></code></a> must not be silently dropped
+as otherwise errors can go unreported and there will be a memory leak.</p>
+</li>
+</ol>
+<p>An example of this style of coding can be seen in the first half of the
+implementation of <code class="xref c c-func docutils literal notranslate"><span class="pre">ioc_main()</span></code> in <code class="docutils literal notranslate"><span class="pre">examples/example_ioc/src/main.c</span></code>:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>static error__t ioc_main(void)
+{
+    return
+        initialise_epics_device()  ?:
+
+        initialise_example_pvs()  ?:
+        start_caRepeater()  ?:
+        hook_pv_logging(&quot;db/access.acf&quot;, 10)  ?:
+        load_persistent_state(
+            persistence_file, persistence_interval, false)  ?:
+
+        TEST_IO(dbLoadDatabase(&quot;dbd/example_ioc.dbd&quot;, NULL, NULL))  ?:
+        TEST_IO(example_ioc_registerRecordDeviceDriver(pdbbase))  ?:
+        load_database(&quot;db/example_ioc.db&quot;)  ?:
+        TEST_OK(iocInit() == 0);
+}
+</pre></div>
+</div>
+<p>The second half of this example uses the error handling macros.  Not all
+functions are of the form described above returning an <a class="reference internal" href="#c.error__t" title="error__t"><code class="xref c c-type docutils literal notranslate"><span class="pre">error__t</span></code></a> error
+code, so the macros in this file provide functions to convert functions of a
+more familiar form into the format described here.</p>
+<p>For example, the macro <a class="reference internal" href="#c.TEST_IO" title="TEST_IO"><code class="xref c c-func docutils literal notranslate"><span class="pre">TEST_IO()</span></code></a> takes as argument an expression (which
+may be an assignment) which following the usual system library calling
+convention, that is, which returns -1 on failure and sets <a class="reference internal" href="external.html#c.errno" title="errno"><code class="xref c c-data docutils literal notranslate"><span class="pre">errno</span></code></a>,
+otherwise returns some other value.  The <a class="reference internal" href="#c.TEST_IO" title="TEST_IO"><code class="xref c c-func docutils literal notranslate"><span class="pre">TEST_IO()</span></code></a> macro ensures that the
+return code is tested and an error message is generated if necessary.</p>
+<section id="core-handling-macros">
+<h2><span class="section-number">7.1. </span>Core Handling Macros<a class="headerlink" href="#core-handling-macros" title="Permalink to this headline">¶</a></h2>
+<p>The error handling macros defined here are of a uniform style.  For each class
+of test three macros are defined, for example for <code class="docutils literal notranslate"><span class="pre">IO</span></code> we have the following:
+<a class="reference internal" href="#c.TEST_IO" title="TEST_IO"><code class="xref c c-func docutils literal notranslate"><span class="pre">TEST_IO()</span></code></a>, <a class="reference internal" href="#c.TEST_IO_" title="TEST_IO_"><code class="xref c c-func docutils literal notranslate"><span class="pre">TEST_IO_()</span></code></a>, <a class="reference internal" href="#c.ASSERT_IO" title="ASSERT_IO"><code class="xref c c-func docutils literal notranslate"><span class="pre">ASSERT_IO()</span></code></a>.  These three patterns
+behave thus:</p>
+<dl class="simple">
+<dt><code class="docutils literal notranslate"><span class="pre">TEST_xx(expr)</span></code></dt><dd><p>If the test fails an error code representing a canned error message (defined
+by the macro <code class="xref c c-macro docutils literal notranslate"><span class="pre">ERROR_MESSAGE</span></code>) is returned, otherwise
+<code class="docutils literal notranslate"><span class="pre">ERROR_OK</span></code> is returned.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">TEST_xx_(expr,</span> <span class="pre">format...)</span></code></dt><dd><p>If the test fails then an error code representing the given error message
+(with <a class="reference internal" href="external.html#c.sprintf" title="sprintf"><code class="xref c c-func docutils literal notranslate"><span class="pre">sprintf()</span></code></a> formatting) is returned, otherwise <code class="docutils literal notranslate"><span class="pre">ERROR_OK</span></code>.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">ASSERT_xx(expr)</span></code></dt><dd><p>If the test fails then an error report is printing showing the calling file
+name and line number, a traceback is printed if possible, and program
+execution is terminated.  Execution does not continue from this point.</p>
+</dd>
+</dl>
+<p>The following groups of tests are defined:</p>
+<dl class="macro">
+<dt id="c.TEST_IO">
+error__t <code class="sig-name descname">TEST_IO</code><span class="sig-paren">(</span><em>expr</em><span class="sig-paren">)</span><a class="headerlink" href="#c.TEST_IO" title="Permalink to this definition">¶</a></dt>
+<dt id="c.TEST_IO_">
+error__t <code class="sig-name descname">TEST_IO_</code><span class="sig-paren">(</span><em>expr</em>, <em>format…</em><span class="sig-paren">)</span><a class="headerlink" href="#c.TEST_IO_" title="Permalink to this definition">¶</a></dt>
+<dt id="c.ASSERT_IO">
+<code class="sig-name descname">ASSERT_IO</code><span class="sig-paren">(</span><em>expr</em><span class="sig-paren">)</span><a class="headerlink" href="#c.ASSERT_IO" title="Permalink to this definition">¶</a></dt>
+<dd><p>For these macros an error is reported when <cite>expr</cite> evaluates to -1, in which
+case it is assumed that <a class="reference internal" href="external.html#c.errno" title="errno"><code class="xref c c-data docutils literal notranslate"><span class="pre">errno</span></code></a> has been set to a relevant error code,
+and it is reported as part of the error message.</p>
+</dd></dl>
+
+<dl class="macro">
+<dt id="c.TEST_OK">
+error__t <code class="sig-name descname">TEST_OK</code><span class="sig-paren">(</span><em>expr</em><span class="sig-paren">)</span><a class="headerlink" href="#c.TEST_OK" title="Permalink to this definition">¶</a></dt>
+<dt id="c.TEST_OK_">
+error__t <code class="sig-name descname">TEST_OK_</code><span class="sig-paren">(</span><em>expr</em>, <em>format…</em><span class="sig-paren">)</span><a class="headerlink" href="#c.TEST_OK_" title="Permalink to this definition">¶</a></dt>
+<dt id="c.ASSERT_OK">
+<code class="sig-name descname">ASSERT_OK</code><span class="sig-paren">(</span><em>expr</em><span class="sig-paren">)</span><a class="headerlink" href="#c.ASSERT_OK" title="Permalink to this definition">¶</a></dt>
+<dd><p>These macros all treat <cite>expr</cite> as a boolean, reporting an error if the result
+is <code class="docutils literal notranslate"><span class="pre">false</span></code>.  No extra error information is included in the error message.</p>
+</dd></dl>
+
+<dl class="macro">
+<dt id="c.TEST_OK_IO">
+error__t <code class="sig-name descname">TEST_OK_IO</code><span class="sig-paren">(</span><em>expr</em><span class="sig-paren">)</span><a class="headerlink" href="#c.TEST_OK_IO" title="Permalink to this definition">¶</a></dt>
+<dt id="c.TEST_OK_IO_">
+error__t <code class="sig-name descname">TEST_OK_IO_</code><span class="sig-paren">(</span><em>expr</em>, <em>format…</em><span class="sig-paren">)</span><a class="headerlink" href="#c.TEST_OK_IO_" title="Permalink to this definition">¶</a></dt>
+<dt id="c.ASSERT_OK_IO">
+<code class="sig-name descname">ASSERT_OK_IO</code><span class="sig-paren">(</span><em>expr</em><span class="sig-paren">)</span><a class="headerlink" href="#c.ASSERT_OK_IO" title="Permalink to this definition">¶</a></dt>
+<dd><p>These all report an error if <cite>expr</cite> evaluates to <code class="docutils literal notranslate"><span class="pre">false</span></code>, and it is
+assumed that <a class="reference internal" href="external.html#c.errno" title="errno"><code class="xref c c-data docutils literal notranslate"><span class="pre">errno</span></code></a> has been set to a valid value which is used to
+report extra error information.</p>
+</dd></dl>
+
+<dl class="macro">
+<dt id="c.TEST_PTHREAD">
+error__t <code class="sig-name descname">TEST_PTHREAD</code><span class="sig-paren">(</span><em>expr</em><span class="sig-paren">)</span><a class="headerlink" href="#c.TEST_PTHREAD" title="Permalink to this definition">¶</a></dt>
+<dt id="c.TEST_PTHREAD_">
+error__t <code class="sig-name descname">TEST_PTHREAD_</code><span class="sig-paren">(</span><em>expr</em>, <em>format…</em><span class="sig-paren">)</span><a class="headerlink" href="#c.TEST_PTHREAD_" title="Permalink to this definition">¶</a></dt>
+<dt id="c.ASSERT_PTHREAD">
+<code class="sig-name descname">ASSERT_PTHREAD</code><span class="sig-paren">(</span><em>expr</em><span class="sig-paren">)</span><a class="headerlink" href="#c.ASSERT_PTHREAD" title="Permalink to this definition">¶</a></dt>
+<dd><p>These macros are designed to be used with the <code class="docutils literal notranslate"><span class="pre">&lt;pthread.h&gt;</span></code> family of
+functions.  These functions all return 0 on success and a non-zero error
+code which is compatible with <a class="reference internal" href="external.html#c.errno" title="errno"><code class="xref c c-data docutils literal notranslate"><span class="pre">errno</span></code></a> on failure.  Extra information
+from this error code is included in the returned result.</p>
+</dd></dl>
+
+<p>All of the <code class="docutils literal notranslate"><span class="pre">TEST_</span></code> macros above return a value of the following type:</p>
+<dl class="type">
+<dt id="c.error__t">
+<code class="sig-name descname">error__t</code><a class="headerlink" href="#c.error__t" title="Permalink to this definition">¶</a></dt>
+<dd><p>This type encapsulates an error message or success, represented by the value
+<code class="docutils literal notranslate"><span class="pre">ERROR_OK</span></code>.  Standard C error checking can be used to test for error or
+success: testing <code class="docutils literal notranslate"><span class="pre">ERROR_OK</span></code> behaves as <code class="docutils literal notranslate"><span class="pre">false</span></code>, any error code
+representing failure tests as true.</p>
+<p>As noted above, error handling functions are designed to be chained with the
+<code class="docutils literal notranslate"><span class="pre">?:</span></code> syntax.  Note also that error values <strong>must</strong> be handled with
+<a class="reference internal" href="#c.error_report" title="error_report"><code class="xref c c-func docutils literal notranslate"><span class="pre">error_report()</span></code></a> or <a class="reference internal" href="#c.error_discard" title="error_discard"><code class="xref c c-func docutils literal notranslate"><span class="pre">error_discard()</span></code></a>.</p>
+</dd></dl>
+
+</section>
+<section id="auxilliary-error-handling-macros">
+<h2><span class="section-number">7.2. </span>Auxilliary Error Handling Macros<a class="headerlink" href="#auxilliary-error-handling-macros" title="Permalink to this headline">¶</a></h2>
+<p>The following macros are used as helpers.</p>
+<dl class="macro">
+<dt id="c.ASSERT_FAIL">
+<code class="sig-name descname">ASSERT_FAIL</code><span class="sig-paren">(</span><em></em><span class="sig-paren">)</span><a class="headerlink" href="#c.ASSERT_FAIL" title="Permalink to this definition">¶</a></dt>
+<dd><p>Functionally equivalent to <code class="docutils literal notranslate"><span class="pre">ASSERT_OK(false)</span></code>, unconditionally terminates
+execution and does not return.</p>
+</dd></dl>
+
+<dl class="macro">
+<dt id="c.FAIL">
+error__t <code class="sig-name descname">FAIL</code><span class="sig-paren">(</span><em></em><span class="sig-paren">)</span><a class="headerlink" href="#c.FAIL" title="Permalink to this definition">¶</a></dt>
+<dt id="c.FAIL_">
+error__t <code class="sig-name descname">FAIL_</code><span class="sig-paren">(</span><em>message…</em><span class="sig-paren">)</span><a class="headerlink" href="#c.FAIL_" title="Permalink to this definition">¶</a></dt>
+<dd><p>Used to return a failure error code, functionally equivalent to
+<code class="docutils literal notranslate"><span class="pre">TEST_OK(false)</span></code> or <code class="docutils literal notranslate"><span class="pre">TEST_OK_(false,</span> <span class="pre">message...)</span></code>.</p>
+</dd></dl>
+
+<dl class="macro">
+<dt id="c.DO">
+error__t <code class="sig-name descname">DO</code><span class="sig-paren">(</span><em>action</em><span class="sig-paren">)</span><a class="headerlink" href="#c.DO" title="Permalink to this definition">¶</a></dt>
+<dd><p>Used to convert a function returning <code class="docutils literal notranslate"><span class="pre">void</span></code>, or indeed any sequence of C
+statements, into a successful expression.  Useful for including an
+unconditionally successful call in a sequence of error tests.</p>
+</dd></dl>
+
+<dl class="macro">
+<dt id="c.IF">
+error__t <code class="sig-name descname">IF</code><span class="sig-paren">(</span><em>test</em>, <em>iftrue</em><span class="sig-paren">)</span><a class="headerlink" href="#c.IF" title="Permalink to this definition">¶</a></dt>
+<dt id="c.IF_ELSE">
+error__t <code class="sig-name descname">IF_ELSE</code><span class="sig-paren">(</span><em>test</em>, <em>iftrue</em>, <em>iffalse</em><span class="sig-paren">)</span><a class="headerlink" href="#c.IF_ELSE" title="Permalink to this definition">¶</a></dt>
+<dd><p>Conditional execution of tested functions.  In both cases <cite>test</cite> is a
+boolean test; if it evaluates to <code class="docutils literal notranslate"><span class="pre">true</span></code> then the <cite>iftrue</cite> expression is
+evaluated, otherwise <cite>iffalse</cite> (if specified).</p>
+</dd></dl>
+
+<dl class="macro">
+<dt id="c.TRY_CATCH">
+error__t <code class="sig-name descname">TRY_CATCH</code><span class="sig-paren">(</span><em>action</em>, <em>on_fail…</em><span class="sig-paren">)</span><a class="headerlink" href="#c.TRY_CATCH" title="Permalink to this definition">¶</a></dt>
+<dd><p>This macro provides a limited form of exception handling.  <cite>action</cite> must
+return an <a class="reference internal" href="#c.error__t" title="error__t"><code class="xref c c-type docutils literal notranslate"><span class="pre">error__t</span></code></a>, which is returned by this macro.  If the error
+code is not <code class="docutils literal notranslate"><span class="pre">ERROR_OK</span></code> then the code <cite>on_fail</cite> is executed before
+returning.  Note that any value returned by <cite>on_fail</cite> is discarded.</p>
+</dd></dl>
+
+<dl class="macro">
+<dt id="c.DO_FINALLY">
+error__t <code class="sig-name descname">DO_FINALLY</code><span class="sig-paren">(</span><em>action</em>, <em>finally…</em><span class="sig-paren">)</span><a class="headerlink" href="#c.DO_FINALLY" title="Permalink to this definition">¶</a></dt>
+<dd><p>This macro unconditionally executes <cite>finally</cite> after <cite>action</cite> has been
+evaluated, and returns the error code from <cite>action</cite>.  Again, any value
+returned by <cite>finally</cite> is discarded.</p>
+<p>The only difference from <a class="reference internal" href="#c.TRY_CATCH" title="TRY_CATCH"><code class="xref c c-macro docutils literal notranslate"><span class="pre">TRY_CATCH</span></code></a> is that the <cite>finally</cite> code is
+unconditionally executed by <a class="reference internal" href="#c.DO_FINALLY" title="DO_FINALLY"><code class="xref c c-macro docutils literal notranslate"><span class="pre">DO_FINALLY</span></code></a>.</p>
+</dd></dl>
+
+<p>For the three multi-part macros <code class="docutils literal notranslate"><span class="pre">IF_ELSE</span></code>, <code class="docutils literal notranslate"><span class="pre">TRY_CATCH</span></code> and <code class="docutils literal notranslate"><span class="pre">DO_FINALLY</span></code>,
+the only separator between the key parts is a single comma character, so layout
+and an extra comment should be used to structure these, as shown below:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>IF_ELSE(test,
+    iftrue,
+//else
+    iffalse)  ?:
+TRY_CATCH(
+    action,
+//catch
+    on_fail)  ?:
+DO_FINALLY(
+    action,
+//finally
+    finally);
+</pre></div>
+</div>
+</section>
+<section id="error-reporting-and-management">
+<h2><span class="section-number">7.3. </span>Error Reporting and Management<a class="headerlink" href="#error-reporting-and-management" title="Permalink to this headline">¶</a></h2>
+<p>The functions described here are used for reporting, discarding, or otherwise
+managing error codes.</p>
+<dl class="function">
+<dt id="c.error_report">
+<a class="reference internal" href="external.html#c.bool" title="bool">bool</a> <code class="sig-name descname">error_report</code><span class="sig-paren">(</span><a class="reference internal" href="#c.error__t" title="error__t">error__t</a><em> error</em><span class="sig-paren">)</span><a class="headerlink" href="#c.error_report" title="Permalink to this definition">¶</a></dt>
+<dd><p>Converts <cite>error</cite> into a string and uses <a class="reference internal" href="#c.log_error" title="log_error"><code class="xref c c-func docutils literal notranslate"><span class="pre">log_error()</span></code></a> to report the
+error.  This is the normal destination for all error codes.  <code class="docutils literal notranslate"><span class="pre">true</span></code> is
+returned if <cite>error</cite> was an error (and an error message was reported), and
+<code class="docutils literal notranslate"><span class="pre">false</span></code> is returned if <cite>error</cite> is <code class="docutils literal notranslate"><span class="pre">ERROR_OK</span></code>, in which case no action
+was taken.</p>
+<p>This function disposes of <cite>error</cite>, and this value is no longer valid.</p>
+</dd></dl>
+
+<dl class="macro">
+<dt id="c.ERROR_REPORT">
+bool <code class="sig-name descname">ERROR_REPORT</code><span class="sig-paren">(</span><em>error</em>, <em>format…</em><span class="sig-paren">)</span><a class="headerlink" href="#c.ERROR_REPORT" title="Permalink to this definition">¶</a></dt>
+<dd><p>This helper macro will augment <cite>error</cite> with the message defined by
+<cite>format</cite> before reporting the error by calling <a class="reference internal" href="#c.error_report" title="error_report"><code class="xref c c-func docutils literal notranslate"><span class="pre">error_report()</span></code></a>.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="c.error_discard">
+<a class="reference internal" href="external.html#c.bool" title="bool">bool</a> <code class="sig-name descname">error_discard</code><span class="sig-paren">(</span><a class="reference internal" href="#c.error__t" title="error__t">error__t</a><em> error</em><span class="sig-paren">)</span><a class="headerlink" href="#c.error_discard" title="Permalink to this definition">¶</a></dt>
+<dd><p>This function silently discards <cite>error</cite>, after which the value is invalid.
+As for <a class="reference internal" href="#c.error_report" title="error_report"><code class="xref c c-func docutils literal notranslate"><span class="pre">error_report()</span></code></a>, <code class="docutils literal notranslate"><span class="pre">true</span></code> is returned if <cite>error</cite> was an error,
+and <code class="docutils literal notranslate"><span class="pre">false</span></code> if it was <code class="docutils literal notranslate"><span class="pre">ERROR_OK</span></code>.</p>
+</dd></dl>
+
+<dl class="macro">
+<dt id="c.error_extend">
+error__t <code class="sig-name descname">error_extend</code><span class="sig-paren">(</span><em>error__t error</em>, <em>const char *format</em>, <em>…</em><span class="sig-paren">)</span><a class="headerlink" href="#c.error_extend" title="Permalink to this definition">¶</a></dt>
+<dd><p>If <cite>error</cite> is not <code class="docutils literal notranslate"><span class="pre">ERROR_OK</span></code> then the information associated with <cite>error</cite>
+is augmented with the message defined by <cite>format</cite>.  The lifetime of <cite>error</cite>
+is unaffected, and the original <cite>error</cite> is also returned.</p>
+<p>This is useful for augmenting any error generated by <cite>expr</cite> as part of a
+processing chain.  The format argument processing only occurs if <cite>expr</cite>
+returns an error.  This is implemented as a macro to avoid unnecessary
+overhead in the absence of errors.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="c.error_format">
+const char *<code class="sig-name descname">error_format</code><span class="sig-paren">(</span><a class="reference internal" href="#c.error__t" title="error__t">error__t</a><em> error</em><span class="sig-paren">)</span><a class="headerlink" href="#c.error_format" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a formatted string representing the error code.  The lifetime of the
+returned string is identical to the lifetime of <cite>error</cite>, which must still be
+reported or discarded at the appropriate time.</p>
+</dd></dl>
+
+</section>
+<section id="message-logging-control">
+<h2><span class="section-number">7.4. </span>Message Logging Control<a class="headerlink" href="#message-logging-control" title="Permalink to this headline">¶</a></h2>
+<p>By default all error messages are sent to <code class="docutils literal notranslate"><span class="pre">stderr</span></code>, but syslog can be used
+instead.</p>
+<dl class="function">
+<dt id="c.vlog_message">
+void <code class="sig-name descname">vlog_message</code><span class="sig-paren">(</span>int<em> priority</em>, const char<em> *format</em>, <a class="reference internal" href="external.html#c.va_list" title="va_list">va_list</a><em> args</em><span class="sig-paren">)</span><a class="headerlink" href="#c.vlog_message" title="Permalink to this definition">¶</a></dt>
+<dd><p>Sends the given message to <code class="docutils literal notranslate"><span class="pre">stderr</span></code> or to syslog, depending on whether
+<a class="reference internal" href="#c.start_logging" title="start_logging"><code class="xref c c-func docutils literal notranslate"><span class="pre">start_logging()</span></code></a> has been called.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="c.log_message">
+void <code class="sig-name descname">log_message</code><span class="sig-paren">(</span>const char<em> *message</em>, ...<span class="sig-paren">)</span><a class="headerlink" href="#c.log_message" title="Permalink to this definition">¶</a></dt>
+<dt id="c.log_error">
+void <code class="sig-name descname">log_error</code><span class="sig-paren">(</span>const char<em> *message</em>, ...<span class="sig-paren">)</span><a class="headerlink" href="#c.log_error" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calls <a class="reference internal" href="#c.vlog_message" title="vlog_message"><code class="xref c c-func docutils literal notranslate"><span class="pre">vlog_message()</span></code></a> with with <cite>priority</cite> set to <code class="docutils literal notranslate"><span class="pre">LOG_INFO</span></code> for
+<a class="reference internal" href="#c.log_message" title="log_message"><code class="xref c c-func docutils literal notranslate"><span class="pre">log_message()</span></code></a>, and <code class="docutils literal notranslate"><span class="pre">LOG_ERR</span></code> for <a class="reference internal" href="#c.log_error" title="log_error"><code class="xref c c-func docutils literal notranslate"><span class="pre">log_error()</span></code></a>.</p>
+<p>Note that <a class="reference internal" href="#c.error_report" title="error_report"><code class="xref c c-func docutils literal notranslate"><span class="pre">error_report()</span></code></a> uses <a class="reference internal" href="#c.log_error" title="log_error"><code class="xref c c-func docutils literal notranslate"><span class="pre">log_error()</span></code></a>.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="c.start_logging">
+void <code class="sig-name descname">start_logging</code><span class="sig-paren">(</span>const char<em> *ident</em><span class="sig-paren">)</span><a class="headerlink" href="#c.start_logging" title="Permalink to this definition">¶</a></dt>
+<dd><p>This invokes <code class="xref c c-func docutils literal notranslate"><span class="pre">openlog()</span></code> (3) and sends all future messages to the
+system log with the log identifier <cite>ident</cite>.</p>
+</dd></dl>
+
+</section>
+<section id="miscellaneous-helpers">
+<h2><span class="section-number">7.5. </span>Miscellaneous Helpers<a class="headerlink" href="#miscellaneous-helpers" title="Permalink to this headline">¶</a></h2>
+<p>These macros have no other natural home and have found their place in this
+header file.</p>
+<dl class="macro">
+<dt id="c.ARRAY_SIZE">
+size_t <code class="sig-name descname">ARRAY_SIZE</code><span class="sig-paren">(</span><em>type array[]</em><span class="sig-paren">)</span><a class="headerlink" href="#c.ARRAY_SIZE" title="Permalink to this definition">¶</a></dt>
+<dd><p>If the number of elements of <cite>array</cite> is known at compile time this macro
+returns the number of elements.</p>
+</dd></dl>
+
+<dl class="macro">
+<dt id="c.CAST_FROM_TO">
+to_type <code class="sig-name descname">CAST_FROM_TO</code><span class="sig-paren">(</span><em>from_type</em>, <em>to_type</em>, <em>value</em><span class="sig-paren">)</span><a class="headerlink" href="#c.CAST_FROM_TO" title="Permalink to this definition">¶</a></dt>
+<dd><p>In some situations the compiler will not accept an ordinary C cast of the
+form <code class="docutils literal notranslate"><span class="pre">(type)</span> <span class="pre">value</span></code> because of anxieties about aliasing, or if a <code class="docutils literal notranslate"><span class="pre">const</span></code>
+attribute needs to be removed, or if some other low level bit preserving
+conversion is required.  This macro performs this cast in a more compiler
+friendly manner (via a <code class="docutils literal notranslate"><span class="pre">union</span></code> type), and checks that <cite>value</cite> has type
+<cite>from_type</cite> and that <cite>to_type</cite> and <cite>value</cite> have the same size.</p>
+<p>For example, this macro is used to remove the <code class="docutils literal notranslate"><span class="pre">const</span></code> attribute from a
+hashtable key in <code class="docutils literal notranslate"><span class="pre">hashtable.c</span></code> thus (here <code class="xref c c-func docutils literal notranslate"><span class="pre">release_key()</span></code> takes a
+<code class="docutils literal notranslate"><span class="pre">void</span> <span class="pre">*</span></code> argument):</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">static</span> <span class="n">void</span> <span class="n">release_key</span><span class="p">(</span><span class="n">struct</span> <span class="n">hash_table</span> <span class="o">*</span><span class="n">table</span><span class="p">,</span> <span class="n">const</span> <span class="n">void</span> <span class="o">*</span><span class="n">key</span><span class="p">)</span>
+<span class="p">{</span>
+    <span class="n">table</span><span class="o">-&gt;</span><span class="n">key_ops</span><span class="o">-&gt;</span><span class="n">release_key</span><span class="p">(</span>
+        <span class="n">CAST_FROM_TO</span><span class="p">(</span><span class="n">const</span> <span class="n">void</span> <span class="o">*</span><span class="p">,</span> <span class="n">void</span> <span class="o">*</span><span class="p">,</span> <span class="n">key</span><span class="p">));</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>Another application is the following which extracts the bit pattern of a
+floating point number as an integer:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">uint32_t</span> <span class="n">bit_pattern</span> <span class="o">=</span> <span class="n">CAST_FROM_TO</span><span class="p">(</span><span class="nb">float</span><span class="p">,</span> <span class="n">uint32_t</span><span class="p">,</span> <span class="mf">0.1</span><span class="n">F</span><span class="p">);</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="macro">
+<dt id="c.CAST_TO">
+to_type <code class="sig-name descname">CAST_TO</code><span class="sig-paren">(</span><em>to_type</em>, <em>value</em><span class="sig-paren">)</span><a class="headerlink" href="#c.CAST_TO" title="Permalink to this definition">¶</a></dt>
+<dd><p>This is a short-cut wrapper for <a class="reference internal" href="#c.CAST_FROM_TO" title="CAST_FROM_TO"><code class="xref c c-macro docutils literal notranslate"><span class="pre">CAST_FROM_TO</span></code></a> for use in the case
+when <cite>from_type</cite> is no more specific than <code class="docutils literal notranslate"><span class="pre">typeof(value)</span></code>.</p>
+</dd></dl>
+
+<dl class="macro">
+<dt id="c.ENSURE_TYPE">
+type <code class="sig-name descname">ENSURE_TYPE</code><span class="sig-paren">(</span><em>type</em>, <em>value</em><span class="sig-paren">)</span><a class="headerlink" href="#c.ENSURE_TYPE" title="Permalink to this definition">¶</a></dt>
+<dd><p>This is a weak cast from <cite>value</cite> to <cite>type</cite> which ensures that it is valid to
+assign <cite>value</cite> to this <cite>type</cite>.  Note that this will not work if <cite>type</cite> is a
+written out function type, in this case a typedef name would have to be
+used.</p>
+</dd></dl>
+
+<dl class="macro">
+<dt id="c.IGNORE">
+<code class="sig-name descname">IGNORE</code><span class="sig-paren">(</span><em>expr</em><span class="sig-paren">)</span><a class="headerlink" href="#c.IGNORE" title="Permalink to this definition">¶</a></dt>
+<dd><p>Discards a return value without compiler warning even when
+<code class="docutils literal notranslate"><span class="pre">warn_unused_result</span></code> is in force.</p>
+</dd></dl>
+
+<dl class="macro">
+<dt id="c.unlikely">
+<code class="sig-name descname">unlikely</code><span class="sig-paren">(</span><em>expr</em><span class="sig-paren">)</span><a class="headerlink" href="#c.unlikely" title="Permalink to this definition">¶</a></dt>
+<dd><p>Provides a hint to the compiler that <code class="docutils literal notranslate"><span class="pre">expr</span></code> is likely to be <code class="docutils literal notranslate"><span class="pre">0</span></code>, can
+help in the optimisation of very rarely taken branches.</p>
+</dd></dl>
+
+<dl class="macro">
+<dt id="c.COMPILE_ASSERT">
+<code class="sig-name descname">COMPILE_ASSERT</code><span class="sig-paren">(</span><em>expr</em><span class="sig-paren">)</span><a class="headerlink" href="#c.COMPILE_ASSERT" title="Permalink to this definition">¶</a></dt>
+<dt id="c.STATIC_COMPILE_ASSERT">
+<code class="sig-name descname">STATIC_COMPILE_ASSERT</code><span class="sig-paren">(</span><em>expr</em><span class="sig-paren">)</span><a class="headerlink" href="#c.STATIC_COMPILE_ASSERT" title="Permalink to this definition">¶</a></dt>
+<dd><p>This macro forces a compile time error if <cite>expr</cite> evaluates to <code class="docutils literal notranslate"><span class="pre">false</span></code> at
+compile time.  <a class="reference internal" href="#c.COMPILE_ASSERT" title="COMPILE_ASSERT"><code class="xref c c-macro docutils literal notranslate"><span class="pre">COMPILE_ASSERT</span></code></a> must be used inside a function
+declaration, while <a class="reference internal" href="#c.STATIC_COMPILE_ASSERT" title="STATIC_COMPILE_ASSERT"><code class="xref c c-macro docutils literal notranslate"><span class="pre">STATIC_COMPILE_ASSERT</span></code></a> must be used at the top
+declaration level.</p>
+</dd></dl>
+
+<dl class="macro">
+<dt id="c.MIN">
+<code class="sig-name descname">MIN</code><span class="sig-paren">(</span><em>x</em>, <em>y</em><span class="sig-paren">)</span><a class="headerlink" href="#c.MIN" title="Permalink to this definition">¶</a></dt>
+<dt id="c.MAX">
+<code class="sig-name descname">MAX</code><span class="sig-paren">(</span><em>x</em>, <em>y</em><span class="sig-paren">)</span><a class="headerlink" href="#c.MAX" title="Permalink to this definition">¶</a></dt>
+<dd><p>Macro safe minimum and maximum functions.</p>
+</dd></dl>
+
+<dl class="macro">
+<dt id="c.container_of">
+<code class="sig-name descname">container_of</code><span class="sig-paren">(</span><em>ptr</em>, <em>type</em>, <em>member</em><span class="sig-paren">)</span><a class="headerlink" href="#c.container_of" title="Permalink to this definition">¶</a></dt>
+<dd><p>Casts a member of a structure out to the containing structure.  For example,
+given <cite>py</cite> constructed thus:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">struct</span> <span class="n">xy</span> <span class="p">{</span> <span class="nb">int</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">;</span> <span class="p">}</span> <span class="n">xy</span><span class="p">;</span>
+<span class="nb">int</span> <span class="o">*</span><span class="n">py</span> <span class="o">=</span> <span class="o">&amp;</span><span class="n">xy</span><span class="o">.</span><span class="n">y</span><span class="p">;</span>
+</pre></div>
+</div>
+<p>a pointer to <cite>xy</cite> can be reconstructed as:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">struct</span> <span class="n">xy</span> <span class="o">*</span><span class="n">pxy</span> <span class="o">=</span> <span class="n">container_of</span><span class="p">(</span><span class="n">py</span><span class="p">,</span> <span class="n">struct</span> <span class="n">xy</span><span class="p">,</span> <span class="n">y</span><span class="p">);</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="macro">
+<dt id="c._WITH_ENTER_LEAVE">
+<code class="sig-name descname">_WITH_ENTER_LEAVE</code><span class="sig-paren">(</span><em>enter</em>, <em>leave</em><span class="sig-paren">)</span><a class="headerlink" href="#c._WITH_ENTER_LEAVE" title="Permalink to this definition">¶</a></dt>
+<dd><p>This macro is used to construct helper macros for wrapping enter and exit
+code around a block.  Instances of this macro must be followed by a single
+statement or a block of code in braces, and the <cite>enter</cite> and <cite>leave</cite> clauses
+are used to bracket the code.  In other words, the following use of this
+macro:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">_WITH_ENTER_LEAVE</span><span class="p">(</span><span class="n">enter</span><span class="p">,</span> <span class="n">leave</span><span class="p">)</span>
+<span class="p">{</span>
+    <span class="n">statements</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>is exactly equivalent to:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+    <span class="n">enter</span><span class="p">;</span>
+    <span class="n">statements</span><span class="p">;</span>
+    <span class="n">leave</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>Note that the <cite>enter</cite> clause may include the declaration of a local
+variable, the scope of which includes the statements following and the
+<cite>leave</cite> clause.</p>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p><code class="docutils literal notranslate"><span class="pre">break</span></code> and <code class="docutils literal notranslate"><span class="pre">return</span></code> must <strong>not</strong> be used to exit the statement
+block guarded by <a class="reference internal" href="#c._WITH_ENTER_LEAVE" title="_WITH_ENTER_LEAVE"><code class="xref c c-macro docutils literal notranslate"><span class="pre">_WITH_ENTER_LEAVE</span></code></a> or any of its derivatives.
+Using <code class="docutils literal notranslate"><span class="pre">break</span></code> will restart the block after reinvoking <cite>enter</cite>, and
+using <code class="docutils literal notranslate"><span class="pre">return</span></code> will bypass <cite>leave</cite>.</p>
+</aside>
+</dd></dl>
+
+<dl class="macro">
+<dt id="c.WITH_MUTEX">
+<code class="sig-name descname">WITH_MUTEX</code><span class="sig-paren">(</span><em>mutex</em><span class="sig-paren">)</span><a class="headerlink" href="#c.WITH_MUTEX" title="Permalink to this definition">¶</a></dt>
+<dd><p>This macro wraps the statement or block of code that follows with calls to
+<code class="docutils literal notranslate"><span class="pre">pthread_mutex_lock(&amp;mutex)</span></code> and <code class="docutils literal notranslate"><span class="pre">pthread_mutex_unlock(&amp;mutex)</span></code>.  The
+locking call is checked for success and an assertion failure is raised if
+an error is detected.</p>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>Do <strong>not</strong> exit the guarded block with <code class="docutils literal notranslate"><span class="pre">break</span></code> or <code class="docutils literal notranslate"><span class="pre">return</span></code>.</p>
+</aside>
+</dd></dl>
+
+<dl class="macro">
+<dt id="c.WITH_MUTEX_UNCHECKED">
+<code class="sig-name descname">WITH_MUTEX_UNCHECKED</code><span class="sig-paren">(</span><em>mutex</em><span class="sig-paren">)</span><a class="headerlink" href="#c.WITH_MUTEX_UNCHECKED" title="Permalink to this definition">¶</a></dt>
+<dd><p>Similar to <a class="reference internal" href="#c.WITH_MUTEX" title="WITH_MUTEX"><code class="xref c c-macro docutils literal notranslate"><span class="pre">WITH_MUTEX</span></code></a>, except that lock errors are ignored.</p>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>Do <strong>not</strong> exit the guarded block with <code class="docutils literal notranslate"><span class="pre">break</span></code> or <code class="docutils literal notranslate"><span class="pre">return</span></code>.</p>
+</aside>
+</dd></dl>
+
+<dl class="macro">
+<dt id="c.ERROR_WITH_MUTEX">
+error__t <code class="sig-name descname">ERROR_WITH_MUTEX</code><span class="sig-paren">(</span><em>mutex</em>, <em>error</em><span class="sig-paren">)</span><a class="headerlink" href="#c.ERROR_WITH_MUTEX" title="Permalink to this definition">¶</a></dt>
+<dd><p>This wraps mutex locking around an error expression, and evaluates to the
+result of evaluating <cite>error</cite> under the lock, which must be an expression of
+type <a class="reference internal" href="#c.error__t" title="error__t"><code class="xref c c-type docutils literal notranslate"><span class="pre">error__t</span></code></a>.</p>
+</dd></dl>
+
+</section>
+<section id="pitfalls">
+<h2><span class="section-number">7.6. </span>Pitfalls<a class="headerlink" href="#pitfalls" title="Permalink to this headline">¶</a></h2>
+<p>The main pitfall is that if an error code is discarded then a memory leak will
+be created and errors will not be reported.  Unfortunately it is very easy to do
+this by mistake.</p>
+<ol class="arabic">
+<li><p>Deliberately discarding the error code.</p>
+<p>Example where error code is discarded, here we want to convert an
+<a class="reference internal" href="#c.error__t" title="error__t"><code class="xref c c-type docutils literal notranslate"><span class="pre">error__t</span></code></a> into a boolean indicating success:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>error__t test_function(void) { ... }
+
+bool bad_drop_error(void) {
+    return !test_function();
+}
+</pre></div>
+</div>
+<p>In this case the error code is silently dropped.  This should be rewritten
+in one of the following two forms:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>bool noisy_drop_error(void) {
+    return !error_report(test_function());
+}
+</pre></div>
+</div>
+<p>if the error should be reported, or:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>bool quiet_drop_error(void) {
+    return !error_discard(test_function());
+}
+</pre></div>
+</div>
+<p>if the error needs to be silently discarded.</p>
+</li>
+<li><p>Accidentially discarding the error code.</p>
+<p>Inevitably there are many ways of doing this, but one way is particularly
+easy and unfortunate: consider this code:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>error__t chained(void) {
+    error__t error =
+        function1()  ?:
+        function2();
+        function3()  ?:
+        function4();
+    return error;
+}
+</pre></div>
+</div>
+<p>Oops.  This code has two very unfortunate behaviours.  Firstly, any error
+code returned by <code class="docutils literal notranslate"><span class="pre">function3()</span></code> or <code class="docutils literal notranslate"><span class="pre">function4()</span></code> will be silently
+discarded … and worse, even if <code class="docutils literal notranslate"><span class="pre">function1()</span></code> or <code class="docutils literal notranslate"><span class="pre">function2()</span></code> fails,
+the last two functions will still be called.</p>
+<p>Do try not to do this.  I think it’s impossible to persuade the compiler to
+pick this up, alas.</p>
+</li>
+</ol>
+</section>
+</section>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">7. Error Handling Macros and Other Facilities</a><ul>
+<li><a class="reference internal" href="#core-handling-macros">7.1. Core Handling Macros</a></li>
+<li><a class="reference internal" href="#auxilliary-error-handling-macros">7.2. Auxilliary Error Handling Macros</a></li>
+<li><a class="reference internal" href="#error-reporting-and-management">7.3. Error Reporting and Management</a></li>
+<li><a class="reference internal" href="#message-logging-control">7.4. Message Logging Control</a></li>
+<li><a class="reference internal" href="#miscellaneous-helpers">7.5. Miscellaneous Helpers</a></li>
+<li><a class="reference internal" href="#pitfalls">7.6. Pitfalls</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="pvlogging.html"
+                        title="previous chapter"><span class="section-number">6. </span>Support for PV Logging</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="hashtable.html"
+                        title="next chapter"><span class="section-number">8. </span>Generic Hash Table</a></p>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/error.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="hashtable.html" title="8. Generic Hash Table"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="pvlogging.html" title="6. Support for PV Logging"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">EPICS Device  documentation</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2015, Michael Abbott.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 2.3.1.
+    </div>
+  </body>
+</html>

@@ -1,0 +1,126 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
+
+    <title>6. Support for PV Logging &#8212; EPICS Device  documentation</title>
+    <link rel="stylesheet" href="_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="_static/language_data.js"></script>
+    
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="7. Error Handling Macros and Other Facilities" href="error.html" />
+    <link rel="prev" title="5. Support for Persistent PV State" href="persistence.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="error.html" title="7. Error Handling Macros and Other Facilities"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="persistence.html" title="5. Support for Persistent PV State"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">EPICS Device  documentation</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <section id="support-for-pv-logging">
+<h1><span class="section-number">6. </span>Support for PV Logging<a class="headerlink" href="#support-for-pv-logging" title="Permalink to this headline">¶</a></h1>
+<p>The PV logging interface is currently very simple and crude and consists of the
+function <a class="reference internal" href="#c.hook_pv_logging" title="hook_pv_logging"><code class="xref c c-func docutils literal notranslate"><span class="pre">hook_pv_logging()</span></code></a>.  This can be called during initialisation to
+enable logging.</p>
+<p>The functionality described here is defined in the header file <code class="docutils literal notranslate"><span class="pre">pvlogging.h</span></code>.</p>
+<dl class="function">
+<dt id="c.hook_pv_logging">
+<a class="reference internal" href="error.html#c.error__t" title="error__t">error__t</a> <code class="sig-name descname">hook_pv_logging</code><span class="sig-paren">(</span>const char<em> *access_file</em>, int<em> max_length</em><span class="sig-paren">)</span><a class="headerlink" href="#c.hook_pv_logging" title="Permalink to this definition">¶</a></dt>
+<dd><p>When called enables logging of all Channel Access PV puts.  The parameter
+<cite>max_length</cite> determines how many elements of waveforms are logged.  The
+<cite>access_file</cite> parameter must name a file readable by the IOC containing at
+least the following:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">ASG</span><span class="p">(</span><span class="n">DEFAULT</span><span class="p">)</span> <span class="p">{</span>
+    <span class="n">RULE</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">READ</span><span class="p">)</span>
+    <span class="n">RULE</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">WRITE</span><span class="p">,</span> <span class="n">TRAPWRITE</span><span class="p">)</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</section>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="persistence.html"
+                        title="previous chapter"><span class="section-number">5. </span>Support for Persistent PV State</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="error.html"
+                        title="next chapter"><span class="section-number">7. </span>Error Handling Macros and Other Facilities</a></p>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/pvlogging.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="error.html" title="7. Error Handling Macros and Other Facilities"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="persistence.html" title="5. Support for Persistent PV State"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">EPICS Device  documentation</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2015, Michael Abbott.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 2.3.1.
+    </div>
+  </body>
+</html>

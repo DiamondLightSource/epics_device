@@ -1,0 +1,1231 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
+
+    <title>2. Core EPICS Device Functionality &#8212; EPICS Device  documentation</title>
+    <link rel="stylesheet" href="_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="_static/language_data.js"></script>
+    
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="3. Extra EPICS Device Support" href="epics_extra.html" />
+    <link rel="prev" title="1. Introduction to EPICS Device Support" href="overview.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="epics_extra.html" title="3. Extra EPICS Device Support"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="overview.html" title="1. Introduction to EPICS Device Support"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">EPICS Device  documentation</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <section id="core-epics-device-functionality">
+<h1><span class="section-number">2. </span>Core EPICS Device Functionality<a class="headerlink" href="#core-epics-device-functionality" title="Permalink to this headline">¶</a></h1>
+<p>The EPICS Device support module is used to create and manage a tight binding
+between EPICS PVs and a “driver” implementation.  The so called “driver” layer
+implements the actual functionality of the IOC, while the “device” layer
+provided by this support module provides binding between the “driver” and EPICS.</p>
+<p>The functionality described here is defined in the header file
+<code class="docutils literal notranslate"><span class="pre">epics_device.h</span></code>.</p>
+<p>The design of this module implements a one-to-one correspondence between PVs and
+internally published PV names, and the builder support code is designed to help
+maintain this correspondence.</p>
+<p>Using this module involves the following steps:</p>
+<ol class="arabic simple">
+<li><p>The support module itself must be initialised by calling the function
+<a class="reference internal" href="#c.initialise_epics_device" title="initialise_epics_device"><code class="xref c c-func docutils literal notranslate"><span class="pre">initialise_epics_device()</span></code></a> before any PVs are declared.</p></li>
+<li><p>All PVs should be internally published using the <a class="reference internal" href="#c.PUBLISH" title="PUBLISH"><code class="xref c c-func docutils literal notranslate"><span class="pre">PUBLISH()</span></code></a> macros and
+numerous allies.  This process establishes a set of valid internal PV names
+with associated processing actions: each <a class="reference internal" href="#c.PUBLISH" title="PUBLISH"><code class="xref c c-func docutils literal notranslate"><span class="pre">PUBLISH()</span></code></a> call binds one name
+to a processing action and possibly an initialisation action.</p></li>
+<li><p>If persistence is used then <a class="reference internal" href="persistence.html#c.load_persistent_state" title="load_persistent_state"><code class="xref c c-func docutils literal notranslate"><span class="pre">load_persistent_state()</span></code></a> should now be
+called.</p></li>
+<li><p>Finally the IOC itself can be started.  This involves at least the following
+steps:</p>
+<ul class="simple">
+<li><p>Load the IOC <code class="docutils literal notranslate"><span class="pre">.dbd</span></code> file, which must include the <code class="docutils literal notranslate"><span class="pre">epics_device.dbd</span></code>
+file and complete database registration.</p></li>
+<li><p>Load the database.  This should contain record definitions corresponding
+to each internal PV name published above.  The <a class="reference internal" href="builder.html"><span class="doc">Database Builder Support</span></a> chapter
+documents how to create this database.</p></li>
+<li><p>Finally <a class="reference internal" href="external.html#c.iocInit" title="iocInit"><code class="xref c c-func docutils literal notranslate"><span class="pre">iocInit()</span></code></a> can be called.</p></li>
+</ul>
+</li>
+</ol>
+<p>In this chapter we document the core PV publishing API.</p>
+<section id="initialisation">
+<h2><span class="section-number">2.1. </span>Initialisation<a class="headerlink" href="#initialisation" title="Permalink to this headline">¶</a></h2>
+<p>One function is provided for initialisation.</p>
+<dl class="function">
+<dt id="c.initialise_epics_device">
+<a class="reference internal" href="error.html#c.error__t" title="error__t">error__t</a> <code class="sig-name descname">initialise_epics_device</code><span class="sig-paren">(</span>void<span class="sig-paren">)</span><a class="headerlink" href="#c.initialise_epics_device" title="Permalink to this definition">¶</a></dt>
+<dd><p>This function must be called at least once before publishing any records or
+calling any other function listed here.  Repeated calls have no further
+effect.</p>
+<p>This function can be called from the IOC shell, but in this case the return
+code is lost.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="c.check_unused_record_bindings">
+unsigned int <code class="sig-name descname">check_unused_record_bindings</code><span class="sig-paren">(</span><a class="reference internal" href="external.html#c.bool" title="bool">bool</a><em> verbose</em><span class="sig-paren">)</span><a class="headerlink" href="#c.check_unused_record_bindings" title="Permalink to this definition">¶</a></dt>
+<dd><p>This function is useful for checking for any mis-match between the published
+record bindings and the EPICS database.  This should be called after
+<a class="reference internal" href="external.html#c.iocInit" title="iocInit"><code class="xref c c-func docutils literal notranslate"><span class="pre">iocInit()</span></code></a> has been called, and will return the number of published
+bindings with no corresponding bound EPICS record.  If <cite>verbose</cite> is set a
+message will be printed naming each missing binding.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="c.set_default_epics_device_mutex">
+<a class="reference internal" href="external.html#c.pthread_mutex_t" title="pthread_mutex_t">pthread_mutex_t</a> *<code class="sig-name descname">set_default_epics_device_mutex</code><span class="sig-paren">(</span><a class="reference internal" href="external.html#c.pthread_mutex_t" title="pthread_mutex_t">pthread_mutex_t</a><em> *mutex</em><span class="sig-paren">)</span><a class="headerlink" href="#c.set_default_epics_device_mutex" title="Permalink to this definition">¶</a></dt>
+<dd><p>Each record can associated with a mutex which is locked when the record is
+processed.  The mutex can be specified by setting the <code class="docutils literal notranslate"><span class="pre">.mutex</span></code> attribute,
+or if this is not set then the default specified by this function is used.
+The previously set default is returned.</p>
+</dd></dl>
+
+<dl class="macro">
+<dt id="c.WITH_DEFAULT_MUTEX">
+<code class="sig-name descname">WITH_DEFAULT_MUTEX</code><span class="sig-paren">(</span><em>mutex</em><span class="sig-paren">)</span><a class="headerlink" href="#c.WITH_DEFAULT_MUTEX" title="Permalink to this definition">¶</a></dt>
+<dd><p>This macro can be used instead of calling
+<a class="reference internal" href="#c.set_default_epics_device_mutex" title="set_default_epics_device_mutex"><code class="xref c c-func docutils literal notranslate"><span class="pre">set_default_epics_device_mutex()</span></code></a> directly.  Pass the mutex to be used
+as the <cite>mutex</cite> argument and follow this macro with a block of publishing
+code, for instance:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">WITH_DEFAULT_MUTEX</span><span class="p">(</span><span class="n">mutex</span><span class="p">)</span>
+<span class="p">{</span>
+    <span class="n">PUBLISH</span><span class="p">(</span><span class="n">ao</span><span class="p">,</span> <span class="s1">&#39;AOUT&#39;</span><span class="p">,</span> <span class="n">write</span><span class="p">)</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>This is equivalent to setting <code class="docutils literal notranslate"><span class="pre">.mutex=mutex</span></code> in every <code class="docutils literal notranslate"><span class="pre">PUBLISH</span></code> call,
+and the original mutex is restored on exit from the associated block.</p>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>Do <strong>not</strong> exit the guarded block with <code class="docutils literal notranslate"><span class="pre">break</span></code> or <code class="docutils literal notranslate"><span class="pre">return</span></code>.</p>
+</aside>
+</dd></dl>
+
+</section>
+<section id="publish-overview">
+<h2><span class="section-number">2.2. </span>PUBLISH Overview<a class="headerlink" href="#publish-overview" title="Permalink to this headline">¶</a></h2>
+<p>The following record types are supported: <code class="docutils literal notranslate"><span class="pre">ai</span></code>, <code class="docutils literal notranslate"><span class="pre">bi</span></code>, <code class="docutils literal notranslate"><span class="pre">longin</span></code>, <code class="docutils literal notranslate"><span class="pre">mbbi</span></code>,
+<code class="docutils literal notranslate"><span class="pre">stringin</span></code>, <code class="docutils literal notranslate"><span class="pre">ao</span></code>, <code class="docutils literal notranslate"><span class="pre">bo</span></code>, <code class="docutils literal notranslate"><span class="pre">longout</span></code>, <code class="docutils literal notranslate"><span class="pre">mbbo</span></code>, <code class="docutils literal notranslate"><span class="pre">stringout</span></code>,
+<code class="docutils literal notranslate"><span class="pre">waveform</span></code>, together with aliases <code class="docutils literal notranslate"><span class="pre">ulongin</span></code> and <code class="docutils literal notranslate"><span class="pre">ulongout</span></code>.  For
+the C datatype corresponding to each record type see <a class="reference internal" href="#c.TYPEOF" title="TYPEOF"><code class="xref c c-func docutils literal notranslate"><span class="pre">TYPEOF()</span></code></a>.</p>
+<p>Note that <code class="docutils literal notranslate"><span class="pre">ulongin</span></code> and <code class="docutils literal notranslate"><span class="pre">ulongout</span></code> are aliases for <code class="docutils literal notranslate"><span class="pre">longin</span></code> and
+<code class="docutils literal notranslate"><span class="pre">longout</span></code>, but supporting unsigned types internally.  The data type over
+Channel Access is still signed, but internally the driver treats the values as
+unsigned.</p>
+<p>EPICS records are published with the use of a variety of <code class="docutils literal notranslate"><span class="pre">PUBLISH...()</span></code>
+macros, defined below.  Three classes of record are supported with slightly
+different macros and arguments.  The table below summarises the options for
+record publishing.</p>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>IN records</p></th>
+<th class="head"></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>Record types: <code class="docutils literal notranslate"><span class="pre">[u]longin</span></code>, <code class="docutils literal notranslate"><span class="pre">ai</span></code>, <code class="docutils literal notranslate"><span class="pre">bi</span></code>, <code class="docutils literal notranslate"><span class="pre">stringin</span></code>, <code class="docutils literal notranslate"><span class="pre">mbbi</span></code></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#c.PUBLISH" title="PUBLISH"><code class="xref c c-func docutils literal notranslate"><span class="pre">PUBLISH(record,</span> <span class="pre">name,</span> <span class="pre">read,</span> <span class="pre">.context,</span> <span class="pre">.io_intr,</span> <span class="pre">.set_time,</span> <span class="pre">.mutex)</span></code></a></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#c.PUBLISH_READ_VAR" title="PUBLISH_READ_VAR"><code class="xref c c-func docutils literal notranslate"><span class="pre">PUBLISH_READ_VAR[_I](record,</span> <span class="pre">name,</span> <span class="pre">variable)</span></code></a></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#c.PUBLISH_READER" title="PUBLISH_READER"><code class="xref c c-func docutils literal notranslate"><span class="pre">PUBLISH_READER[_I](record,</span> <span class="pre">name,</span> <span class="pre">reader)</span></code></a></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#c.PUBLISH_TRIGGER" title="PUBLISH_TRIGGER"><code class="xref c c-func docutils literal notranslate"><span class="pre">PUBLISH_TRIGGER[_T](name)</span></code></a></p></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>OUT records</p></th>
+<th class="head"></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>Record types: <code class="docutils literal notranslate"><span class="pre">[u]longout</span></code>, <code class="docutils literal notranslate"><span class="pre">ao</span></code>, <code class="docutils literal notranslate"><span class="pre">bo</span></code>, <code class="docutils literal notranslate"><span class="pre">stringout</span></code>, <code class="docutils literal notranslate"><span class="pre">mbbo</span></code></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#c.PUBLISH" title="PUBLISH"><code class="xref c c-func docutils literal notranslate"><span class="pre">PUBLISH(record,</span> <span class="pre">name,</span> <span class="pre">write,</span> <span class="pre">.init,</span> <span class="pre">.context,</span> <span class="pre">.persist,</span> <span class="pre">.mutex)</span></code></a></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#c.PUBLISH_WRITE_VAR" title="PUBLISH_WRITE_VAR"><code class="xref c c-func docutils literal notranslate"><span class="pre">PUBLISH_WRITE_VAR[_P](record,</span> <span class="pre">name,</span> <span class="pre">variable)</span></code></a></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#c.PUBLISH_WRITER" title="PUBLISH_WRITER"><code class="xref c c-func docutils literal notranslate"><span class="pre">PUBLISH_WRITER[_B][_P](record,</span> <span class="pre">name,</span> <span class="pre">writer)</span></code></a></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#c.PUBLISH_ACTION" title="PUBLISH_ACTION"><code class="xref c c-func docutils literal notranslate"><span class="pre">PUBLISH_ACTION(name,</span> <span class="pre">action)</span></code></a></p></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>WAVEFORM records</p></th>
+<th class="head"></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>Record type: <code class="docutils literal notranslate"><span class="pre">waveform</span></code></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p>Field types: <code class="docutils literal notranslate"><span class="pre">char</span></code>, <code class="docutils literal notranslate"><span class="pre">short</span></code>, <code class="docutils literal notranslate"><span class="pre">int</span></code>, <code class="docutils literal notranslate"><span class="pre">float</span></code>, <code class="docutils literal notranslate"><span class="pre">double</span></code></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#c.PUBLISH_WAVEFORM" title="PUBLISH_WAVEFORM"><code class="xref c c-func docutils literal notranslate"><span class="pre">PUBLISH_WAVEFORM(field_type,</span> <span class="pre">name,</span> <span class="pre">length,</span> <span class="pre">process,</span> <span class="pre">.init,</span> <span class="pre">.context,</span> <span class="pre">.persist,</span> <span class="pre">.io_intr,</span> <span class="pre">.mutex)</span></code></a></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#c.PUBLISH_WF_READ_VAR" title="PUBLISH_WF_READ_VAR"><code class="xref c c-func docutils literal notranslate"><span class="pre">PUBLISH_WF_READ_VAR[_I](field_type,</span> <span class="pre">name,</span> <span class="pre">length,</span> <span class="pre">waveform)</span></code></a></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#c.PUBLISH_WF_READ_VAR_LEN" title="PUBLISH_WF_READ_VAR_LEN"><code class="xref c c-func docutils literal notranslate"><span class="pre">PUBLISH_WF_READ_VAR_LEN[_I](field_type,</span> <span class="pre">name,</span> <span class="pre">max_len,</span> <span class="pre">len,</span> <span class="pre">waveform)</span></code></a></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#c.PUBLISH_WF_WRITE_VAR" title="PUBLISH_WF_WRITE_VAR"><code class="xref c c-func docutils literal notranslate"><span class="pre">PUBLISH_WF_WRITE_VAR[_P](field_type,</span> <span class="pre">name,</span> <span class="pre">length,</span> <span class="pre">waveform)</span></code></a></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#c.PUBLISH_WF_WRITE_VAR_LEN" title="PUBLISH_WF_WRITE_VAR_LEN"><code class="xref c c-func docutils literal notranslate"><span class="pre">PUBLISH_WF_WRITE_VAR_LEN[_P](field_type,</span> <span class="pre">name,</span> <span class="pre">max_len,</span> <span class="pre">len,</span> <span class="pre">waveform)</span></code></a></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#c.PUBLISH_WF_ACTION" title="PUBLISH_WF_ACTION"><code class="xref c c-func docutils literal notranslate"><span class="pre">PUBLISH_WF_ACTION{,_I,_P}(field_type,</span> <span class="pre">name,</span> <span class="pre">length,</span> <span class="pre">action)</span></code></a></p></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Suffixes:</p></th>
+<th class="head"></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">_I</span></code></p></td>
+<td><p>Sets <cite>.io_intr</cite> to enable <code class="docutils literal notranslate"><span class="pre">I/O</span> <span class="pre">Intr</span></code> scanning</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">_P</span></code></p></td>
+<td><p>Sets <cite>.persist</cite> to enable persistent storage</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">_T</span></code></p></td>
+<td><p>Sets <cite>.set_time</cite> to enable timestamp override</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">_B</span></code></p></td>
+<td><p>Enables writer to return <a class="reference internal" href="external.html#c.bool" title="bool"><code class="xref c c-type docutils literal notranslate"><span class="pre">bool</span></code></a> result</p></td>
+</tr>
+</tbody>
+</table>
+<p>Throughout this document the dotted arguments are optional and should be
+specified using C99 named initialiser syntax, eg:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">PUBLISH</span><span class="p">(</span><span class="n">longin</span><span class="p">,</span> <span class="s2">&quot;RECORD&quot;</span><span class="p">,</span> <span class="n">on_read</span><span class="p">,</span> <span class="o">.</span><span class="n">context</span> <span class="o">=</span> <span class="n">read_context</span><span class="p">)</span><span class="o">.</span>
+</pre></div>
+</div>
+<section id="common-datatypes">
+<h3><span class="section-number">2.2.1. </span>Common Datatypes<a class="headerlink" href="#common-datatypes" title="Permalink to this headline">¶</a></h3>
+<dl class="type">
+<dt id="c.EPICS_STRING">
+<code class="sig-name descname">EPICS_STRING</code><a class="headerlink" href="#c.EPICS_STRING" title="Permalink to this definition">¶</a></dt>
+<dd><p>This is a typedef:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">typedef</span> <span class="n">struct</span> <span class="p">{</span> <span class="n">char</span> <span class="n">s</span><span class="p">[</span><span class="mi">40</span><span class="p">];</span> <span class="p">}</span> <span class="n">EPICS_STRING</span><span class="p">;</span>
+</pre></div>
+</div>
+<p>used for EPICS strings.  This form of declaration allows strings to be
+passed by value and thus supports a more uniform interface to the EPICS
+Driver software.  The helper function <a class="reference internal" href="#c.format_epics_string" title="format_epics_string"><code class="xref c c-func docutils literal notranslate"><span class="pre">format_epics_string()</span></code></a> should be
+used to modify values of this type.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="c.format_epics_string">
+<a class="reference internal" href="external.html#c.bool" title="bool">bool</a> <code class="sig-name descname">format_epics_string</code><span class="sig-paren">(</span><a class="reference internal" href="#c.EPICS_STRING" title="EPICS_STRING">EPICS_STRING</a><em> *s</em>, const char<em> *format</em>, ...<span class="sig-paren">)</span><a class="headerlink" href="#c.format_epics_string" title="Permalink to this definition">¶</a></dt>
+<dd><p>This helper function should be used for writing to a <a class="reference internal" href="#c.EPICS_STRING" title="EPICS_STRING"><code class="xref c c-type docutils literal notranslate"><span class="pre">EPICS_STRING</span></code></a>.
+This function wraps <a class="reference internal" href="external.html#c.snprintf" title="snprintf"><code class="xref c c-func docutils literal notranslate"><span class="pre">snprintf()</span></code></a> to ensure that the string buffer does
+not overflow.  <code class="docutils literal notranslate"><span class="pre">false</span></code> is returned if the formatted string is too long and
+has been truncated to fit.</p>
+</dd></dl>
+
+<dl class="type">
+<dt id="c.epics_record">
+struct <code class="sig-name descname">epics_record</code><a class="headerlink" href="#c.epics_record" title="Permalink to this definition">¶</a></dt>
+<dd><p>This is an opaque structure type used to represent the return value from
+calling a <code class="docutils literal notranslate"><span class="pre">PUBLISH...()</span></code> macro.  The following functions can be called on
+values of this type depending on the underlying class of the defined record:</p>
+<table class="docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p>IN, WAVEFORM</p></td>
+<td><p><a class="reference internal" href="#c.trigger_record" title="trigger_record"><code class="xref c c-func docutils literal notranslate"><span class="pre">trigger_record()</span></code></a>, <a class="reference internal" href="#c.set_record_severity" title="set_record_severity"><code class="xref c c-func docutils literal notranslate"><span class="pre">set_record_severity()</span></code></a>,
+<a class="reference internal" href="#c.set_record_timestamp" title="set_record_timestamp"><code class="xref c c-func docutils literal notranslate"><span class="pre">set_record_timestamp()</span></code></a></p></td>
+</tr>
+<tr class="row-even"><td><p>OUT</p></td>
+<td><p><a class="reference internal" href="#c.WRITE_OUT_RECORD" title="WRITE_OUT_RECORD"><code class="xref c c-macro docutils literal notranslate"><span class="pre">WRITE_OUT_RECORD</span></code></a></p></td>
+</tr>
+<tr class="row-odd"><td><p>WAVEFORM</p></td>
+<td><p><a class="reference internal" href="#c.WRITE_OUT_RECORD_WF" title="WRITE_OUT_RECORD_WF"><code class="xref c c-macro docutils literal notranslate"><span class="pre">WRITE_OUT_RECORD_WF</span></code></a></p></td>
+</tr>
+<tr class="row-even"><td><p>IN, OUT</p></td>
+<td><p><a class="reference internal" href="#c.READ_RECORD_VALUE" title="READ_RECORD_VALUE"><code class="xref c c-macro docutils literal notranslate"><span class="pre">READ_RECORD_VALUE</span></code></a></p></td>
+</tr>
+<tr class="row-odd"><td><p>WAVEFORM</p></td>
+<td><p><a class="reference internal" href="#c.READ_RECORD_VALUE_WF" title="READ_RECORD_VALUE_WF"><code class="xref c c-macro docutils literal notranslate"><span class="pre">READ_RECORD_VALUE_WF</span></code></a></p></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</section>
+</section>
+<section id="publish-api">
+<h2><span class="section-number">2.3. </span>PUBLISH API<a class="headerlink" href="#publish-api" title="Permalink to this headline">¶</a></h2>
+<p>All the <code class="docutils literal notranslate"><span class="pre">PUBLISH...()</span></code> macros in this section and the <a class="reference internal" href="#publish-waveform-api">PUBLISH_WAVEFORM API</a>
+section return values of type <code class="docutils literal notranslate"><span class="pre">struct</span></code> <a class="reference internal" href="#c.epics_record" title="epics_record"><code class="xref c c-type docutils literal notranslate"><span class="pre">epics_record</span> <span class="pre">*</span></code></a>.</p>
+<dl class="macro">
+<dt id="c.TYPEOF">
+<code class="sig-name descname">TYPEOF</code><span class="sig-paren">(</span><em>record</em><span class="sig-paren">)</span><a class="headerlink" href="#c.TYPEOF" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p>record class <cite>record</cite></p></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<p>Given one of the supported record type names listed in the table below, this
+macro computes the appropriate C datatype as shown:</p>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>In Record</p></th>
+<th class="head"><p>Out Record</p></th>
+<th class="head"><p>C Type</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>ai</p></td>
+<td><p>ao</p></td>
+<td><p>double</p></td>
+</tr>
+<tr class="row-odd"><td><p>bi</p></td>
+<td><p>bo</p></td>
+<td><p>bool</p></td>
+</tr>
+<tr class="row-even"><td><p>longin</p></td>
+<td><p>longout</p></td>
+<td><p>int32_t</p></td>
+</tr>
+<tr class="row-odd"><td><p>ulongin</p></td>
+<td><p>ulongout</p></td>
+<td><p>uint32_t</p></td>
+</tr>
+<tr class="row-even"><td><p>mbbi</p></td>
+<td><p>mbbo</p></td>
+<td><p>uint16_t</p></td>
+</tr>
+<tr class="row-odd"><td><p>longin</p></td>
+<td><p>longout</p></td>
+<td><p><a class="reference internal" href="#c.EPICS_STRING" title="EPICS_STRING"><code class="xref c c-type docutils literal notranslate"><span class="pre">EPICS_STRING</span></code></a></p></td>
+</tr>
+</tbody>
+</table>
+<p>Thus the list of valid identifiers for “record class” <cite>record</cite> is:</p>
+<blockquote>
+<div><p><code class="docutils literal notranslate"><span class="pre">longin</span></code>, <code class="docutils literal notranslate"><span class="pre">ulongin</span></code>, <code class="docutils literal notranslate"><span class="pre">ai</span></code>, <code class="docutils literal notranslate"><span class="pre">bi</span></code>, <code class="docutils literal notranslate"><span class="pre">stringin</span></code>, <code class="docutils literal notranslate"><span class="pre">mbbi</span></code>,
+<code class="docutils literal notranslate"><span class="pre">longout</span></code>, <code class="docutils literal notranslate"><span class="pre">ulongout</span></code>, <code class="docutils literal notranslate"><span class="pre">ao</span></code>, <code class="docutils literal notranslate"><span class="pre">bo</span></code>, <code class="docutils literal notranslate"><span class="pre">stringout</span></code>, <code class="docutils literal notranslate"><span class="pre">mbbo</span></code></p>
+</div></blockquote>
+</dd></dl>
+
+<dl class="macro">
+<dt id="c.PUBLISH">
+struct epics_record *<code class="sig-name descname">PUBLISH</code><span class="sig-paren">(</span><em>record</em>, <em>name</em>, <em>read</em>, <em>.context</em>, <em>.io_intr</em>, <em>.set_time</em>, <em>.mutex</em><span class="sig-paren">)</span><a class="headerlink" href="#c.PUBLISH" title="Permalink to this definition">¶</a></dt>
+<dt>
+struct epics_record *<code class="sig-name descname">PUBLISH</code><span class="sig-paren">(</span><em>record</em>, <em>name</em>, <em>write</em>, <em>.init</em>, <em>.context</em>, <em>.persist</em>, <em>.mutex</em><span class="sig-paren">)</span></dt>
+<dd><table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p></p></th>
+<th class="head"><p>IN/OUT</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>record class <cite>record</cite></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p>const char *<cite>name</cite></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p>void *<cite>context</cite></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p>bool <cite>read</cite>(void *context, TYPEOF(<cite>record</cite>) *value)</p></td>
+<td><p>IN</p></td>
+</tr>
+<tr class="row-even"><td><p>bool <cite>io_intr</cite></p></td>
+<td><p>IN</p></td>
+</tr>
+<tr class="row-odd"><td><p>bool <cite>set_time</cite></p></td>
+<td><p>IN</p></td>
+</tr>
+<tr class="row-even"><td><p>bool <cite>write</cite>(void *context, TYPEOF(<cite>record</cite>) *value)</p></td>
+<td><p>OUT</p></td>
+</tr>
+<tr class="row-odd"><td><p>bool <cite>init</cite>(void *context, TYPEOF(<cite>record</cite>) *value)</p></td>
+<td><p>OUT</p></td>
+</tr>
+<tr class="row-even"><td><p>bool <cite>persist</cite></p></td>
+<td><p>OUT</p></td>
+</tr>
+<tr class="row-odd"><td><p>pthread_mutex_t *<cite>mutex</cite></p></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<p>The PUBLISH macro is used to create a software binding for the appropriate
+record type to the given name.  The corresponding read or write method will
+be called when the record processes, and the macro ensures proper type
+checking.  Note that IN records and OUT records support different arguments,
+the first form is for IN records, the second for OUT records.</p>
+<p>The macros documented below provide support for more specialised variants of
+these records with hard-wired implementations of the read and write methods.</p>
+<p>Calling <a class="reference internal" href="#c.PUBLISH" title="PUBLISH"><code class="xref c c-func docutils literal notranslate"><span class="pre">PUBLISH()</span></code></a> returns a pointer to <a class="reference internal" href="#c.epics_record" title="epics_record"><code class="xref c c-type docutils literal notranslate"><span class="pre">epics_record</span></code></a>.</p>
+<p>The arguments are as follows.</p>
+<dl>
+<dt><cite>record</cite></dt><dd><p>This identifies the record type, and must be one of <code class="docutils literal notranslate"><span class="pre">longin</span></code>,
+<code class="docutils literal notranslate"><span class="pre">ulongin</span></code>, <code class="docutils literal notranslate"><span class="pre">ai</span></code>, <code class="docutils literal notranslate"><span class="pre">bi</span></code>, <code class="docutils literal notranslate"><span class="pre">stringin</span></code>, <code class="docutils literal notranslate"><span class="pre">mbbi</span></code> for IN records or
+one of <code class="docutils literal notranslate"><span class="pre">ulongout</span></code>, <code class="docutils literal notranslate"><span class="pre">longout</span></code>, <code class="docutils literal notranslate"><span class="pre">ao</span></code>, <code class="docutils literal notranslate"><span class="pre">bo</span></code>, <code class="docutils literal notranslate"><span class="pre">stringout</span></code>,
+<code class="docutils literal notranslate"><span class="pre">mbbo</span></code> for OUT records.  Using any other identifier will generate a
+cryptic compiler error.</p>
+</dd>
+<dt><cite>name</cite></dt><dd><p>This is the internal name for the PV and must be passed as a C string.
+The string will be copied before <a class="reference internal" href="#c.PUBLISH" title="PUBLISH"><code class="xref c c-func docutils literal notranslate"><span class="pre">PUBLISH()</span></code></a> returns, so dynamically
+generated strings can be used here.  The same identifer should appear in
+the <code class="docutils literal notranslate"><span class="pre">INP</span></code> or <code class="docutils literal notranslate"><span class="pre">OUT</span></code> field of the record definition.</p>
+</dd>
+<dt><cite>context</cite></dt><dd><p>This is a <cite>void*</cite> pointer which can be used by the caller of
+<a class="reference internal" href="#c.PUBLISH" title="PUBLISH"><code class="xref c c-func docutils literal notranslate"><span class="pre">PUBLISH()</span></code></a> to bind the callbacks to any local context.  This
+pointer is passed unchanged to the <cite>read</cite>, <cite>write</cite>, and <cite>init</cite> methods.</p>
+</dd>
+<dt>bool <cite>read</cite>(void *context, TYPEOF(<cite>record</cite>) *value)</dt><dd><p>For IN records this method will be called when the record is
+processed.  If possible a valid value should be assigned to <cite>*value</cite>
+and <code class="docutils literal notranslate"><span class="pre">true</span></code> returned, otherwise false can be returned to indicate no
+value available, in which case the record will be marked as invalid.</p>
+</dd>
+<dt>bool <cite>write</cite>(void *context, TYPEOF(<cite>record</cite>) *value)</dt><dd><p>For OUT records this will be called on record processing with the
+value written to the record passed by reference.  If the value is
+accepted then true should be return, otherwise if <code class="docutils literal notranslate"><span class="pre">false</span></code> is returned
+then value is treated as being rejected, the previous value of the
+record will be restored, and any associated Channel Access put will
+fail.  Note that the value being written can be modified if required.</p>
+</dd>
+<dt>bool <cite>init</cite>(void *context, TYPEOF(<cite>record</cite>) *value)</dt><dd><p>For OUT records if this function is specified it will be called record
+initialisation to assign an initial value to the record unless a
+persistent initial value can be found.  <code class="docutils literal notranslate"><span class="pre">false</span></code> can be returned to
+indicate failure.  If <cite>persist</cite> is set and a value is successfully
+read from storage then this method will be ignored.</p>
+</dd>
+<dt><cite>io_intr</cite></dt><dd><p>If it is desired to operate an IN record with self generated triggering,
+i.e. with <code class="docutils literal notranslate"><span class="pre">SCAN='I/O</span> <span class="pre">Intr'</span></code> then this optional boolean flag must be
+set to <code class="docutils literal notranslate"><span class="pre">true</span></code>.  If this is done record processing can then be
+triggered at any time by calling <a class="reference internal" href="#c.trigger_record" title="trigger_record"><code class="xref c c-func docutils literal notranslate"><span class="pre">trigger_record()</span></code></a>.  The <code class="docutils literal notranslate"><span class="pre">_I</span></code>
+macro variants automatically set this flag.</p>
+<p>Note that <code class="docutils literal notranslate"><span class="pre">I/O</span> <span class="pre">Intr</span></code> processing of OUT records is deliberately not
+supported.</p>
+</dd>
+<dt><cite>set_time</cite></dt><dd><p>It is possible for the driver software to specify the timestamp of IN
+records.  This is done by setting <code class="docutils literal notranslate"><span class="pre">TSE=-2</span></code> and setting this optional
+boolean flag to <code class="docutils literal notranslate"><span class="pre">true</span></code>.  In this case <a class="reference internal" href="#c.set_record_timestamp" title="set_record_timestamp"><code class="xref c c-func docutils literal notranslate"><span class="pre">set_record_timestamp()</span></code></a>
+must be used to explicitly set the record timestamp each time it
+processes.  The <code class="docutils literal notranslate"><span class="pre">_T</span></code> macro variant automatically sets this flag.</p>
+<p>Again, this facility is deliberately not supported for OUT records.</p>
+</dd>
+<dt><cite>persist</cite></dt><dd><p>OUT records can be marked for “persistence” by setting this optional
+boolean flag to <code class="docutils literal notranslate"><span class="pre">true</span></code>.  If this is set then during record
+initialisation (during <a class="reference internal" href="external.html#c.iocInit" title="iocInit"><code class="xref c c-func docutils literal notranslate"><span class="pre">iocInit()</span></code></a>) the persistence store will be
+checked for an initial value which will be loaded into the record
+instead of calling its <cite>init</cite> function.</p>
+</dd>
+<dt><cite>mutex</cite></dt><dd><p>If a pthread mutex is specified here or is set by
+<a class="reference internal" href="#c.set_default_epics_device_mutex" title="set_default_epics_device_mutex"><code class="xref c c-func docutils literal notranslate"><span class="pre">set_default_epics_device_mutex()</span></code></a> then this mutex will be locked
+while calling the associated <cite>read</cite>, <cite>write</cite>, or <cite>process</cite> method.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<p>The following macros provide shortcuts when setting the <cite>context</cite> and <cite>persist</cite>
+attributes of a record definition:</p>
+<dl class="macro">
+<dt id="c.PUBLISH_C">
+struct epics_record *<code class="sig-name descname">PUBLISH_C</code><span class="sig-paren">(</span><em>record</em>, <em>name</em>, <em>process</em>, <em>context</em>, <em>…</em><span class="sig-paren">)</span><a class="headerlink" href="#c.PUBLISH_C" title="Permalink to this definition">¶</a></dt>
+<dd><p>This macro publishes a record with the <code class="docutils literal notranslate"><span class="pre">.context</span></code> field set to <cite>context</cite>.</p>
+</dd></dl>
+
+<dl class="macro">
+<dt id="c.PUBLISH_P">
+struct epics_record *<code class="sig-name descname">PUBLISH_P</code><span class="sig-paren">(</span><em>record</em>, <em>name</em>, <em>process</em>, <em>…</em><span class="sig-paren">)</span><a class="headerlink" href="#c.PUBLISH_P" title="Permalink to this definition">¶</a></dt>
+<dd><p>This macro publishes a persistent record with <code class="docutils literal notranslate"><span class="pre">.persist</span></code> set to <code class="docutils literal notranslate"><span class="pre">true</span></code>.</p>
+</dd></dl>
+
+<dl class="macro">
+<dt id="c.PUBLISH_C_P">
+struct epics_record *<code class="sig-name descname">PUBLISH_C_P</code><span class="sig-paren">(</span><em>record</em>, <em>name</em>, <em>process</em>, <em>context</em>, <em>…</em><span class="sig-paren">)</span><a class="headerlink" href="#c.PUBLISH_C_P" title="Permalink to this definition">¶</a></dt>
+<dd><p>This macro combines the actions of <a class="reference internal" href="#c.PUBLISH_C" title="PUBLISH_C"><code class="xref c c-macro docutils literal notranslate"><span class="pre">PUBLISH_C</span></code></a> and
+<a class="reference internal" href="#c.PUBLISH_P" title="PUBLISH_P"><code class="xref c c-macro docutils literal notranslate"><span class="pre">PUBLISH_P</span></code></a>.</p>
+</dd></dl>
+
+<p>The following macros provide specialisation for specific types of record.  See
+the descriptions for <a class="reference internal" href="#c.PUBLISH" title="PUBLISH"><code class="xref c c-func docutils literal notranslate"><span class="pre">PUBLISH()</span></code></a> above for descriptions of arguments not
+described below.</p>
+<dl class="macro">
+<dt id="c.PUBLISH_READ_VAR">
+struct epics_record *<code class="sig-name descname">PUBLISH_READ_VAR</code><span class="sig-paren">(</span><em>record</em>, <em>name</em>, <em>variable</em>, <em>…</em><span class="sig-paren">)</span><a class="headerlink" href="#c.PUBLISH_READ_VAR" title="Permalink to this definition">¶</a></dt>
+<dt id="c.PUBLISH_READ_VAR_I">
+struct epics_record *<code class="sig-name descname">PUBLISH_READ_VAR_I</code><span class="sig-paren">(</span><em>record</em>, <em>name</em>, <em>variable</em>, <em>…</em><span class="sig-paren">)</span><a class="headerlink" href="#c.PUBLISH_READ_VAR_I" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p>record class <cite>record</cite></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p>const char *<cite>name</cite></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p>TYPEOF(<cite>record</cite>) <cite>variable</cite></p></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<p>The given variable will be read each time the record is processed.  The
+variable must be of type <code class="docutils literal notranslate"><span class="pre">TYPEOF(record)</span></code> and should be passed by name to
+this macro.</p>
+</dd></dl>
+
+<dl class="macro">
+<dt id="c.PUBLISH_READER">
+struct epics_record *<code class="sig-name descname">PUBLISH_READER</code><span class="sig-paren">(</span><em>record</em>, <em>name</em>, <em>reader</em>, <em>…</em><span class="sig-paren">)</span><a class="headerlink" href="#c.PUBLISH_READER" title="Permalink to this definition">¶</a></dt>
+<dt id="c.PUBLISH_READER_I">
+struct epics_record *<code class="sig-name descname">PUBLISH_READER_I</code><span class="sig-paren">(</span><em>record</em>, <em>name</em>, <em>reader</em>, <em>…</em><span class="sig-paren">)</span><a class="headerlink" href="#c.PUBLISH_READER_I" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p>record class <cite>record</cite></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p>const char *<cite>name</cite></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p>TYPEOF(<cite>record</cite>) <cite>reader</cite>(void)</p></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<p>This will be called each time the record processes and should return the
+value to be used to update the record.</p>
+</dd></dl>
+
+<dl class="macro">
+<dt id="c.PUBLISH_TRIGGER">
+struct epics_record *<code class="sig-name descname">PUBLISH_TRIGGER</code><span class="sig-paren">(</span><em>name</em>, <em>…</em><span class="sig-paren">)</span><a class="headerlink" href="#c.PUBLISH_TRIGGER" title="Permalink to this definition">¶</a></dt>
+<dt id="c.PUBLISH_TRIGGER_T">
+struct epics_record *<code class="sig-name descname">PUBLISH_TRIGGER_T</code><span class="sig-paren">(</span><em>name</em>, <em>…</em><span class="sig-paren">)</span><a class="headerlink" href="#c.PUBLISH_TRIGGER_T" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p>const char *<cite>name</cite></p></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<p>This record is useful for generating triggers into the database.  The record
+type is set to <code class="docutils literal notranslate"><span class="pre">bi</span></code> and the <cite>io_intr</cite> flag is set.  Call
+<a class="reference internal" href="#c.trigger_record" title="trigger_record"><code class="xref c c-func docutils literal notranslate"><span class="pre">trigger_record()</span></code></a> to make this record process, use <code class="docutils literal notranslate"><span class="pre">FLNK</span></code> in the
+database to build a useful processing chain.</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">_T</span></code> option is available for generating triggers with time specified
+by <a class="reference internal" href="#c.set_record_timestamp" title="set_record_timestamp"><code class="xref c c-func docutils literal notranslate"><span class="pre">set_record_timestamp()</span></code></a> before calling <a class="reference internal" href="#c.trigger_record" title="trigger_record"><code class="xref c c-func docutils literal notranslate"><span class="pre">trigger_record()</span></code></a>.</p>
+</dd></dl>
+
+<dl class="macro">
+<dt id="c.PUBLISH_WRITE_VAR">
+struct epics_record *<code class="sig-name descname">PUBLISH_WRITE_VAR</code><span class="sig-paren">(</span><em>record</em>, <em>name</em>, <em>variable</em>, <em>…</em><span class="sig-paren">)</span><a class="headerlink" href="#c.PUBLISH_WRITE_VAR" title="Permalink to this definition">¶</a></dt>
+<dt id="c.PUBLISH_WRITE_VAR_P">
+struct epics_record *<code class="sig-name descname">PUBLISH_WRITE_VAR_P</code><span class="sig-paren">(</span><em>record</em>, <em>name</em>, <em>variable</em>, <em>…</em><span class="sig-paren">)</span><a class="headerlink" href="#c.PUBLISH_WRITE_VAR_P" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p>record class <cite>record</cite></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p>const char *<cite>name</cite></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p>TYPEOF(<cite>record</cite>) <cite>variable</cite></p></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<p>The variable is written each time the record is processed and is read on
+startup to initialise the associated EPICS record.  The variable must be of
+type <code class="docutils literal notranslate"><span class="pre">TYPEOF(record)</span></code>.</p>
+</dd></dl>
+
+<dl class="macro">
+<dt id="c.PUBLISH_WRITER">
+struct epics_record *<code class="sig-name descname">PUBLISH_WRITER</code><span class="sig-paren">(</span><em>record</em>, <em>name</em>, <em>writer</em>, <em>…</em><span class="sig-paren">)</span><a class="headerlink" href="#c.PUBLISH_WRITER" title="Permalink to this definition">¶</a></dt>
+<dt id="c.PUBLISH_WRITER_P">
+struct epics_record *<code class="sig-name descname">PUBLISH_WRITER_P</code><span class="sig-paren">(</span><em>record</em>, <em>name</em>, <em>writer</em>, <em>…</em><span class="sig-paren">)</span><a class="headerlink" href="#c.PUBLISH_WRITER_P" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p>record class <cite>record</cite></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p>const char *<cite>name</cite></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p>void <cite>writer</cite>(TYPEOF(<cite>record</cite>) value)</p></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<p>This method will be called each time the record processes with the current
+value of the record.</p>
+</dd></dl>
+
+<dl class="macro">
+<dt id="c.PUBLISH_WRITER_B">
+struct epics_record *<code class="sig-name descname">PUBLISH_WRITER_B</code><span class="sig-paren">(</span><em>record</em>, <em>name</em>, <em>writer</em>, <em>…</em><span class="sig-paren">)</span><a class="headerlink" href="#c.PUBLISH_WRITER_B" title="Permalink to this definition">¶</a></dt>
+<dt id="c.PUBLISH_WRITER_B_P">
+struct epics_record *<code class="sig-name descname">PUBLISH_WRITER_B_P</code><span class="sig-paren">(</span><em>record</em>, <em>name</em>, <em>writer</em>, <em>…</em><span class="sig-paren">)</span><a class="headerlink" href="#c.PUBLISH_WRITER_B_P" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p>record class <cite>record</cite></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p>const char *<cite>name</cite></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p>bool <cite>writer</cite>(TYPEOF(<cite>record</cite>) value)</p></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<p>This method will be called each time the record processes.  The writer can
+return a boolean to optionally reject the write, otherwise <code class="xref c c-type docutils literal notranslate"><span class="pre">void</span></code> is
+returned and the write is unconditional.</p>
+</dd></dl>
+
+<dl class="macro">
+<dt id="c.PUBLISH_ACTION">
+struct epics_record *<code class="sig-name descname">PUBLISH_ACTION</code><span class="sig-paren">(</span><em>name</em>, <em>action</em>, <em>…</em><span class="sig-paren">)</span><a class="headerlink" href="#c.PUBLISH_ACTION" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p>const char *<cite>name</cite></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p>void <cite>action</cite>(void)</p></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<p>This method is called when the record processes.</p>
+</dd></dl>
+
+</section>
+<section id="publish-waveform-api">
+<h2><span class="section-number">2.4. </span>PUBLISH_WAVEFORM API<a class="headerlink" href="#publish-waveform-api" title="Permalink to this headline">¶</a></h2>
+<dl class="macro">
+<dt id="c.PUBLISH_WAVEFORM">
+struct epics_record *<code class="sig-name descname">PUBLISH_WAVEFORM</code><span class="sig-paren">(</span><em>field_type</em>, <em>name</em>, <em>max_length</em>, <em>process</em>, <em>.init</em>, <em>.context</em>, <em>.persist</em>, <em>.io_intr</em><span class="sig-paren">)</span><a class="headerlink" href="#c.PUBLISH_WAVEFORM" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p>type name <cite>field_type</cite></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p>const char *<cite>name</cite></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p>unsigned int <cite>max_length</cite></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p>void <cite>process</cite>(void *context, field_type array[<cite>max_length</cite>], unsigned int *length)</p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p>void <cite>init</cite>(void *context, field_type array[<cite>max_length</cite>], unsigned int *length)</p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p>void *<cite>context</cite></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p>bool <cite>persist</cite></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p>bool <cite>io_intr</cite></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p>pthread_mutex_t *<cite>mutex</cite></p></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<p>This macro creates the software binding for waveform records with data of
+the specified type.  The process method will be called each time the record
+processes – the process method can choose whether to implement reading or
+writing as the primitive operation.  Again, a pointer to
+<a class="reference internal" href="#c.epics_record" title="epics_record"><code class="xref c c-type docutils literal notranslate"><span class="pre">epics_record</span></code></a> is returned which can be used for triggering and
+access.</p>
+<p>EPICS waveform record support manages a buffer of length <cite>max_length</cite>.  A
+pointer to this buffer is passed into the <cite>process</cite> and <cite>init</cite> functions
+defined here during record processing and initialisation (respectively);
+it’s up to the driver implementation to decide on the appropriate action to
+take.</p>
+<p>The arguments are as follows:</p>
+<dl>
+<dt><cite>field_type</cite></dt><dd><p>This specifies the type of values in the waveforms handled by this
+record.  One of the following identifiers must be used, otherwise a
+cryptic compiler error message will be generated, and the corresponding
+string must be written into the <code class="docutils literal notranslate"><span class="pre">FTVL</span></code> field:</p>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>C type</p></th>
+<th class="head"><p><code class="docutils literal notranslate"><span class="pre">FTVL</span></code> setting</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">char</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">'CHAR'</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">short</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">'SHORT'</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">int</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">'LONG'</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">float</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">'FLOAT'</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">double</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">'DOUBLE'</span></code></p></td>
+</tr>
+</tbody>
+</table>
+<p>Note that the <code class="docutils literal notranslate"><span class="pre">int</span></code> type is anomalous – although EPICS uses the
+description <code class="docutils literal notranslate"><span class="pre">'LONG'</span></code> this must in fact be a 32-bit type.  The current
+implementation of EPICS Device assumes <code class="docutils literal notranslate"><span class="pre">sizeof(int)</span> <span class="pre">==</span>
+<span class="pre">sizeof(int32_t)</span></code> and will fail on other targets.  Clearly this can be
+fixed if necessary.</p>
+</dd>
+<dt><cite>max_length</cite></dt><dd><p>This specifies the number of points in the waveform and must match the
+value specified in the <code class="docutils literal notranslate"><span class="pre">NELM</span></code> field of the record.</p>
+</dd>
+<dt><cite>name</cite>, <cite>context</cite>, <cite>io_intr</cite>, <cite>persist</cite>, <cite>mutex</cite></dt><dd><p>As documented above for <a class="reference internal" href="#c.PUBLISH" title="PUBLISH"><code class="xref c c-func docutils literal notranslate"><span class="pre">PUBLISH()</span></code></a>.  Note that as WAVEFORM records
+can act as either IN or OUT records, both types of functionality are
+supported.</p>
+</dd>
+<dt>void <cite>process</cite>(void *context, field_type array[<cite>max_length</cite>], unsigned int *length)</dt><dd><p>This is called during record processing with <cite>*length</cite> initialised with
+the current waveform length, as set in the <code class="docutils literal notranslate"><span class="pre">NORD</span></code> field of the the
+record.  The array can be read or written as required and <cite>*length</cite> (and
+thus <code class="docutils literal notranslate"><span class="pre">NORD</span></code>) can be updated as appropriate if the data length changes
+(though of course <cite>max_length</cite> must not be exceeded).</p>
+</dd>
+<dt>void <cite>init</cite>(void *context, field_type array[<cite>max_length</cite>], unsigned int *length)</dt><dd><p>This optional function may be called during initialisation to initialise
+the waveform if a persistent value is not specified.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<p>The following macros provide shortcuts when setting the <cite>context</cite> and <cite>persist</cite>
+attributes of a waveform definition:</p>
+<dl class="macro">
+<dt id="c.PUBLISH_WAVEFORM_C">
+struct epics_record *<code class="sig-name descname">PUBLISH_WAVEFORM_C</code><span class="sig-paren">(</span><em>field_type</em>, <em>name</em>, <em>length</em>, <em>process</em>, <em>context</em>, <em>…</em><span class="sig-paren">)</span><a class="headerlink" href="#c.PUBLISH_WAVEFORM_C" title="Permalink to this definition">¶</a></dt>
+<dd><p>This macro publishes a waveform record with the <code class="docutils literal notranslate"><span class="pre">.context</span></code> field set to
+<cite>context</cite>.</p>
+</dd></dl>
+
+<dl class="macro">
+<dt id="c.PUBLISH_WAVEFORM_P">
+struct epics_record *<code class="sig-name descname">PUBLISH_WAVEFORM_P</code><span class="sig-paren">(</span><em>field_type</em>, <em>name</em>, <em>length</em>, <em>process</em>, <em>…</em><span class="sig-paren">)</span><a class="headerlink" href="#c.PUBLISH_WAVEFORM_P" title="Permalink to this definition">¶</a></dt>
+<dd><p>This macro publishes a persistent waveform record with <code class="docutils literal notranslate"><span class="pre">.persist</span></code> set to
+<code class="docutils literal notranslate"><span class="pre">true</span></code>.</p>
+</dd></dl>
+
+<dl class="macro">
+<dt id="c.PUBLISH_WAVEFORM_C_P">
+struct epics_record *<code class="sig-name descname">PUBLISH_WAVEFORM_C_P</code><span class="sig-paren">(</span><em>field_type</em>, <em>name</em>, <em>length</em>, <em>process</em>, <em>context</em>, <em>…</em><span class="sig-paren">)</span><a class="headerlink" href="#c.PUBLISH_WAVEFORM_C_P" title="Permalink to this definition">¶</a></dt>
+<dd><p>This macro combines the actions of <a class="reference internal" href="#c.PUBLISH_WAVEFORM_C" title="PUBLISH_WAVEFORM_C"><code class="xref c c-macro docutils literal notranslate"><span class="pre">PUBLISH_WAVEFORM_C</span></code></a> and
+<a class="reference internal" href="#c.PUBLISH_WAVEFORM_P" title="PUBLISH_WAVEFORM_P"><code class="xref c c-macro docutils literal notranslate"><span class="pre">PUBLISH_WAVEFORM_P</span></code></a>.</p>
+</dd></dl>
+
+<dl class="macro">
+<dt id="c.PUBLISH_WF_READ_VAR">
+struct epics_record *<code class="sig-name descname">PUBLISH_WF_READ_VAR</code><span class="sig-paren">(</span><em>field_type</em>, <em>name</em>, <em>max_length</em>, <em>waveform</em>, <em>…</em><span class="sig-paren">)</span><a class="headerlink" href="#c.PUBLISH_WF_READ_VAR" title="Permalink to this definition">¶</a></dt>
+<dt id="c.PUBLISH_WF_READ_VAR_I">
+struct epics_record *<code class="sig-name descname">PUBLISH_WF_READ_VAR_I</code><span class="sig-paren">(</span><em>field_type</em>, <em>name</em>, <em>max_length</em>, <em>waveform</em>, <em>…</em><span class="sig-paren">)</span><a class="headerlink" href="#c.PUBLISH_WF_READ_VAR_I" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p>type name <cite>field_type</cite></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p>const char *<cite>name</cite></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p>unsigned int <cite>max_length</cite></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><cite>field_type</cite> <cite>waveform</cite>[<cite>max_length</cite>]</p></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<p><cite>waveform</cite> will be copied into the record buffer each time this record
+processes.  This is useful for publishing internally generated waveforms.</p>
+</dd></dl>
+
+<dl class="macro">
+<dt id="c.PUBLISH_WF_READ_VAR_LEN">
+struct epics_record *<code class="sig-name descname">PUBLISH_WF_READ_VAR_LEN</code><span class="sig-paren">(</span><em>field_type</em>, <em>name</em>, <em>max_length</em>, <em>length</em>, <em>waveform</em>, <em>…</em><span class="sig-paren">)</span><a class="headerlink" href="#c.PUBLISH_WF_READ_VAR_LEN" title="Permalink to this definition">¶</a></dt>
+<dt id="c.PUBLISH_WF_READ_VAR_LEN_I">
+struct epics_record *<code class="sig-name descname">PUBLISH_WF_READ_VAR_LEN_I</code><span class="sig-paren">(</span><em>field_type</em>, <em>name</em>, <em>max_length</em>, <em>length</em>, <em>waveform</em>, <em>…</em><span class="sig-paren">)</span><a class="headerlink" href="#c.PUBLISH_WF_READ_VAR_LEN_I" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p>type name <cite>field_type</cite></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p>const char *<cite>name</cite></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p>unsigned int <cite>max_length</cite></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p>const unsigned int *<cite>length</cite></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p><cite>field_type</cite> <cite>waveform</cite>[<cite>max_length</cite>]</p></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<p><cite>waveform</cite> will be copied into the record buffer each time this record
+processes.  This is useful for publishing internally generated waveforms.
+<cite>length</cite> will be read and used to update the length of the waveform.</p>
+</dd></dl>
+
+<dl class="macro">
+<dt id="c.PUBLISH_WF_WRITE_VAR">
+struct epics_record *<code class="sig-name descname">PUBLISH_WF_WRITE_VAR</code><span class="sig-paren">(</span><em>field_type</em>, <em>name</em>, <em>max_length</em>, <em>waveform</em>, <em>…</em><span class="sig-paren">)</span><a class="headerlink" href="#c.PUBLISH_WF_WRITE_VAR" title="Permalink to this definition">¶</a></dt>
+<dt id="c.PUBLISH_WF_WRITE_VAR_P">
+struct epics_record *<code class="sig-name descname">PUBLISH_WF_WRITE_VAR_P</code><span class="sig-paren">(</span><em>field_type</em>, <em>name</em>, <em>max_length</em>, <em>waveform</em>, <em>…</em><span class="sig-paren">)</span><a class="headerlink" href="#c.PUBLISH_WF_WRITE_VAR_P" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p>type name <cite>field_type</cite></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p>const char *<cite>name</cite></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p>unsigned int <cite>max_length</cite></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><cite>field_type</cite> <cite>waveform</cite>[<cite>max_length</cite>]</p></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<p><cite>waveform</cite> will updated from the record each time the record processes.</p>
+</dd></dl>
+
+<dl class="macro">
+<dt id="c.PUBLISH_WF_WRITE_VAR_LEN">
+struct epics_record *<code class="sig-name descname">PUBLISH_WF_WRITE_VAR_LEN</code><span class="sig-paren">(</span><em>field_type</em>, <em>name</em>, <em>max_length</em>, <em>length</em>, <em>waveform</em>, <em>…</em><span class="sig-paren">)</span><a class="headerlink" href="#c.PUBLISH_WF_WRITE_VAR_LEN" title="Permalink to this definition">¶</a></dt>
+<dt id="c.PUBLISH_WF_WRITE_VAR_LEN_P">
+struct epics_record *<code class="sig-name descname">PUBLISH_WF_WRITE_VAR_LEN_P</code><span class="sig-paren">(</span><em>field_type</em>, <em>name</em>, <em>max_length</em>, <em>length</em>, <em>waveform</em>, <em>…</em><span class="sig-paren">)</span><a class="headerlink" href="#c.PUBLISH_WF_WRITE_VAR_LEN_P" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p>type name <cite>field_type</cite></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p>const char *<cite>name</cite></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p>unsigned int <cite>max_length</cite></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p>unsigned int *<cite>length</cite></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p><cite>field_type</cite> <cite>waveform</cite>[<cite>max_length</cite>]</p></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<p><cite>waveform</cite> will updated from the record each time the record processes and
+<cite>length</cite> will be updated with the new length of <cite>waveform</cite>.</p>
+</dd></dl>
+
+<dl class="macro">
+<dt id="c.PUBLISH_WF_ACTION">
+struct epics_record *<code class="sig-name descname">PUBLISH_WF_ACTION</code><span class="sig-paren">(</span><em>field_type</em>, <em>name</em>, <em>max_length</em>, <em>action</em>, <em>…</em><span class="sig-paren">)</span><a class="headerlink" href="#c.PUBLISH_WF_ACTION" title="Permalink to this definition">¶</a></dt>
+<dt id="c.PUBLISH_WF_ACTION_I">
+struct epics_record *<code class="sig-name descname">PUBLISH_WF_ACTION_I</code><span class="sig-paren">(</span><em>field_type</em>, <em>name</em>, <em>max_length</em>, <em>action</em>, <em>…</em><span class="sig-paren">)</span><a class="headerlink" href="#c.PUBLISH_WF_ACTION_I" title="Permalink to this definition">¶</a></dt>
+<dt id="c.PUBLISH_WF_ACTION_P">
+struct epics_record *<code class="sig-name descname">PUBLISH_WF_ACTION_P</code><span class="sig-paren">(</span><em>field_type</em>, <em>name</em>, <em>max_length</em>, <em>action</em>, <em>…</em><span class="sig-paren">)</span><a class="headerlink" href="#c.PUBLISH_WF_ACTION_P" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p>type name <cite>field_type</cite></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p>const char *<cite>name</cite></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p>unsigned int <cite>max_length</cite></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p>void <cite>action</cite>(<cite>field_type</cite> value[<cite>max_length</cite>])</p></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<p>This is called each time the record processes.  It is up to the
+implementation of <cite>action</cite> to determine whether this is a read or a
+write action. <a class="reference internal" href="#c.PUBLISH_WF_ACTION" title="PUBLISH_WF_ACTION"><code class="xref c c-func docutils literal notranslate"><span class="pre">PUBLISH_WF_ACTION()</span></code></a></p>
+</dd></dl>
+
+</section>
+<section id="auxiliary-api">
+<h2><span class="section-number">2.5. </span>Auxiliary API<a class="headerlink" href="#auxiliary-api" title="Permalink to this headline">¶</a></h2>
+<p>A handful of auxiliary functions and macros allow some further processing of
+records.</p>
+<dl class="function">
+<dt id="c.push_record_name_prefix">
+void <code class="sig-name descname">push_record_name_prefix</code><span class="sig-paren">(</span>const char<em> *prefix</em><span class="sig-paren">)</span><a class="headerlink" href="#c.push_record_name_prefix" title="Permalink to this definition">¶</a></dt>
+<dt id="c.pop_record_name_prefix">
+void <code class="sig-name descname">pop_record_name_prefix</code><span class="sig-paren">(</span>void<span class="sig-paren">)</span><a class="headerlink" href="#c.pop_record_name_prefix" title="Permalink to this definition">¶</a></dt>
+<dt id="c.set_record_name_separator">
+void <code class="sig-name descname">set_record_name_separator</code><span class="sig-paren">(</span>const char<em> *separator</em><span class="sig-paren">)</span><a class="headerlink" href="#c.set_record_name_separator" title="Permalink to this definition">¶</a></dt>
+<dd><p>These two functions can be used to manage a string prefixed to the name of
+each record published by any of the <a class="reference internal" href="#c.PUBLISH" title="PUBLISH"><code class="xref c c-macro docutils literal notranslate"><span class="pre">PUBLISH</span></code></a> macros.  The list of
+pushed prefixes is prepended to the record name generated, and prefixes are
+deleted in reverse order.  Each <cite>prefix</cite> is followed by the <cite>separator</cite>,
+which defaults to <code class="docutils literal notranslate"><span class="pre">&quot;:&quot;</span></code> at startup, but can be changed.</p>
+<p>Note that when <a class="reference internal" href="#c.set_record_name_separator" title="set_record_name_separator"><code class="xref c c-func docutils literal notranslate"><span class="pre">set_record_name_separator()</span></code></a> is used to change the
+record name separator, the change only affects subsequent calls to
+<a class="reference internal" href="#c.push_record_name_prefix" title="push_record_name_prefix"><code class="xref c c-func docutils literal notranslate"><span class="pre">push_record_name_prefix()</span></code></a>, any existing prefix is unchanged.</p>
+</dd></dl>
+
+<dl class="macro">
+<dt id="c.WITH_NAME_PREFIX">
+<code class="sig-name descname">WITH_NAME_PREFIX</code><span class="sig-paren">(</span><em>prefix</em><span class="sig-paren">)</span><a class="headerlink" href="#c.WITH_NAME_PREFIX" title="Permalink to this definition">¶</a></dt>
+<dd><p>This macro is designed to be used instead of <a class="reference internal" href="#c.push_record_name_prefix" title="push_record_name_prefix"><code class="xref c c-func docutils literal notranslate"><span class="pre">push_record_name_prefix()</span></code></a>
+and <a class="reference internal" href="#c.pop_record_name_prefix" title="pop_record_name_prefix"><code class="xref c c-func docutils literal notranslate"><span class="pre">pop_record_name_prefix()</span></code></a>.  Specify the record name prefix as the
+only argument, and follow with a block of record publishing code, for
+example:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">WITH_NAME_PREFIX</span><span class="p">(</span><span class="s2">&quot;prefix&quot;</span><span class="p">)</span>
+<span class="p">{</span>
+    <span class="n">PUBLISH</span><span class="p">(</span><span class="n">ai</span><span class="p">,</span> <span class="s2">&quot;AIN&quot;</span><span class="p">,</span> <span class="n">read_ain</span><span class="p">);</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>Do <strong>not</strong> exit the guarded block with <code class="docutils literal notranslate"><span class="pre">break</span></code> or <code class="docutils literal notranslate"><span class="pre">return</span></code>.</p>
+</aside>
+</dd></dl>
+
+<dl class="type">
+<dt id="c.epics_alarm_severity">
+enum <code class="sig-name descname">epics_alarm_severity</code><a class="headerlink" href="#c.epics_alarm_severity" title="Permalink to this definition">¶</a></dt>
+<dd><p>This is a copy of the base EPICS severity type with the following possible
+values:</p>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>enum name</p></th>
+<th class="head"><p>Value</p></th>
+<th class="head"><p>Meaning</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>epics_sev_none</p></td>
+<td><p>0</p></td>
+<td><p>Normal status, no alarm</p></td>
+</tr>
+<tr class="row-odd"><td><p>epics_sev_minor</p></td>
+<td><p>1</p></td>
+<td><p>Minor alarm status</p></td>
+</tr>
+<tr class="row-even"><td><p>epics_sev_major</p></td>
+<td><p>2</p></td>
+<td><p>Major alarm status</p></td>
+</tr>
+<tr class="row-odd"><td><p>epics_sev_invalid</p></td>
+<td><p>3</p></td>
+<td><p>PV value is invalid</p></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="c.set_record_severity">
+void <code class="sig-name descname">set_record_severity</code><span class="sig-paren">(</span>struct <a class="reference internal" href="#c.epics_record" title="epics_record">epics_record</a><em> *epics_record</em>, enum <a class="reference internal" href="#c.epics_alarm_severity" title="epics_alarm_severity">epics_alarm_severity</a><em> severity</em><span class="sig-paren">)</span><a class="headerlink" href="#c.set_record_severity" title="Permalink to this definition">¶</a></dt>
+<dd><p>Can be used to update the reported record severity for any IN or WAVEFORM
+<cite>epics_record</cite>.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="c.set_record_timestamp">
+void <code class="sig-name descname">set_record_timestamp</code><span class="sig-paren">(</span>struct <a class="reference internal" href="#c.epics_record" title="epics_record">epics_record</a><em> *epics_record</em>, const struct <a class="reference internal" href="external.html#c.timespec" title="timespec">timespec</a><em> *timestamp</em><span class="sig-paren">)</span><a class="headerlink" href="#c.set_record_timestamp" title="Permalink to this definition">¶</a></dt>
+<dd><p>If <cite>epics_record</cite> was published with <cite>set_time</cite> set then this function
+should be called before or as part of record processing to set the
+<cite>timestamp</cite>.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="c.trigger_record">
+void <code class="sig-name descname">trigger_record</code><span class="sig-paren">(</span>struct <a class="reference internal" href="#c.epics_record" title="epics_record">epics_record</a><em> *epics_record</em><span class="sig-paren">)</span><a class="headerlink" href="#c.trigger_record" title="Permalink to this definition">¶</a></dt>
+<dd><p>If <cite>epics_record</cite> was published with <cite>io_intr</cite> set then calling this
+function will trigger record processing.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="c.get_current_epics_record">
+struct <a class="reference internal" href="#c.epics_record" title="epics_record">epics_record</a> *<code class="sig-name descname">get_current_epics_record</code><span class="sig-paren">(</span>void<span class="sig-paren">)</span><a class="headerlink" href="#c.get_current_epics_record" title="Permalink to this definition">¶</a></dt>
+<dd><p>During record processing this will return the record being processed.  At
+other times <code class="docutils literal notranslate"><span class="pre">NULL</span></code> is returned.</p>
+</dd></dl>
+
+<dl class="macro">
+<dt id="c.LOOKUP_RECORD">
+struct epics_record *<code class="sig-name descname">LOOKUP_RECORD</code><span class="sig-paren">(</span><em>record</em>, <em>name</em><span class="sig-paren">)</span><a class="headerlink" href="#c.LOOKUP_RECORD" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p>record class <cite>record</cite></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p>const char *<cite>name</cite></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p>returns <code class="docutils literal notranslate"><span class="pre">struct</span></code> <a class="reference internal" href="#c.epics_record" title="epics_record"><code class="xref c c-type docutils literal notranslate"><span class="pre">epics_record*</span></code></a></p></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<p>If a record of the specified <cite>record</cite> class has been published with the
+given <cite>name</cite> this function returns a pointer to the <a class="reference internal" href="#c.epics_record" title="epics_record"><code class="xref c c-type docutils literal notranslate"><span class="pre">epics_record</span></code></a>
+structure for the record, otherwise <code class="docutils literal notranslate"><span class="pre">NULL</span></code> is returned.</p>
+</dd></dl>
+
+<dl class="macro">
+<dt id="c.WRITE_OUT_RECORD">
+bool <code class="sig-name descname">WRITE_OUT_RECORD</code><span class="sig-paren">(</span><em>record</em>, <em>epics_record</em>, <em>value</em>, <em>process</em><span class="sig-paren">)</span><a class="headerlink" href="#c.WRITE_OUT_RECORD" title="Permalink to this definition">¶</a></dt>
+<dt id="c.WRITE_NAMED_RECORD">
+bool <code class="sig-name descname">WRITE_NAMED_RECORD</code><span class="sig-paren">(</span><em>record</em>, <em>name</em>, <em>value</em><span class="sig-paren">)</span><a class="headerlink" href="#c.WRITE_NAMED_RECORD" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p>record class <cite>record</cite></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p>struct epics_record *<cite>epics_record</cite></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p>const char *<cite>name</cite></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p>TYPEOF(<cite>record</cite>) <cite>value</cite></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p>bool <cite>process</cite></p></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<p>The given <cite>value</cite> is written directly to the EPICS record associated with
+<cite>epics_record</cite>.  <cite>process</cite> can be set to <code class="docutils literal notranslate"><span class="pre">false</span></code> to suppress normal record
+processing, otherwise normal record processing will occur and the driver’s
+<cite>write</cite> method will be called.  <code class="docutils literal notranslate"><span class="pre">false</span></code> is returned if writing to the
+record fails, typically if the update is rejected during record processing.</p>
+<p>The <a class="reference internal" href="#c.WRITE_NAMED_RECORD" title="WRITE_NAMED_RECORD"><code class="xref c c-func docutils literal notranslate"><span class="pre">WRITE_NAMED_RECORD()</span></code></a> variant includes an unchecked call to
+<a class="reference internal" href="#c.LOOKUP_RECORD" title="LOOKUP_RECORD"><code class="xref c c-func docutils literal notranslate"><span class="pre">LOOKUP_RECORD()</span></code></a> to translate a record name to the appropriate <code class="docutils literal notranslate"><span class="pre">struct</span>
+<span class="pre">epics_record*</span></code> value.</p>
+</dd></dl>
+
+<dl class="macro">
+<dt id="c.WRITE_OUT_RECORD_WF">
+bool <code class="sig-name descname">WRITE_OUT_RECORD_WF</code><span class="sig-paren">(</span><em>field_type</em>, <em>epics_record</em>, <em>value</em>, <em>length</em>, <em>process</em><span class="sig-paren">)</span><a class="headerlink" href="#c.WRITE_OUT_RECORD_WF" title="Permalink to this definition">¶</a></dt>
+<dt id="c.WRITE_NAMED_RECORD_WF">
+bool <code class="sig-name descname">WRITE_NAMED_RECORD_WF</code><span class="sig-paren">(</span><em>field_type</em>, <em>name</em>, <em>value</em>, <em>length</em><span class="sig-paren">)</span><a class="headerlink" href="#c.WRITE_NAMED_RECORD_WF" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p>type name <cite>field_type</cite></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p>struct epics_record *<cite>epics_record</cite></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p>const char *<cite>name</cite></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p>const <cite>field_type</cite> <cite>value</cite>[<cite>length</cite>]</p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p>unsigned int <cite>length</cite></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p>bool <cite>process</cite></p></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<p>As for <a class="reference internal" href="#c.WRITE_OUT_RECORD" title="WRITE_OUT_RECORD"><code class="xref c c-func docutils literal notranslate"><span class="pre">WRITE_OUT_RECORD()</span></code></a>, and <a class="reference internal" href="#c.WRITE_NAMED_RECORD" title="WRITE_NAMED_RECORD"><code class="xref c c-func docutils literal notranslate"><span class="pre">WRITE_NAMED_RECORD()</span></code></a> but for
+waveform records.  The EPICS copy of the waveform is updated, and the record
+is processed or not as appropriate.</p>
+</dd></dl>
+
+<dl class="macro">
+<dt id="c.READ_RECORD_VALUE">
+TYPEOF(record) <code class="sig-name descname">READ_RECORD_VALUE</code><span class="sig-paren">(</span><em>record</em>, <em>epics_record</em><span class="sig-paren">)</span><a class="headerlink" href="#c.READ_RECORD_VALUE" title="Permalink to this definition">¶</a></dt>
+<dt id="c.READ_NAMED_RECORD">
+TYPEOF(record) <code class="sig-name descname">READ_NAMED_RECORD</code><span class="sig-paren">(</span><em>record</em>, <em>name</em><span class="sig-paren">)</span><a class="headerlink" href="#c.READ_NAMED_RECORD" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p>record class <cite>record</cite></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p>struct epics_record *<cite>epics_record</cite></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p>const char *<cite>name</cite></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p>returns TYPEOF(<cite>record</cite>)</p></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<p>Returns the current value of any scalar record.  Can be called with either
+<cite>epics_record</cite> or <cite>name</cite> which is subject to an unchecked lookup.</p>
+</dd></dl>
+
+<dl class="macro">
+<dt id="c.READ_RECORD_VALUE_WF">
+<code class="sig-name descname">READ_RECORD_VALUE_WF</code><span class="sig-paren">(</span><em>field_type</em>, <em>epics_record</em>, <em>value</em>, <em>length</em><span class="sig-paren">)</span><a class="headerlink" href="#c.READ_RECORD_VALUE_WF" title="Permalink to this definition">¶</a></dt>
+<dt id="c.READ_NAMED_RECORD_WF">
+<code class="sig-name descname">READ_NAMED_RECORD_WF</code><span class="sig-paren">(</span><em>field_type</em>, <em>name</em>, <em>value</em>, <em>length</em><span class="sig-paren">)</span><a class="headerlink" href="#c.READ_NAMED_RECORD_WF" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p>type name <cite>field_type</cite></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p>struct epics_record *<cite>epics_record</cite></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p>const char *<cite>name</cite></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><cite>field_type</cite> <cite>value</cite>[<cite>length</cite>]</p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p>unsigned int <cite>length</cite></p></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<p>Reads the current waveform value of a waveform record.</p>
+</dd></dl>
+
+</section>
+</section>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">2. Core EPICS Device Functionality</a><ul>
+<li><a class="reference internal" href="#initialisation">2.1. Initialisation</a></li>
+<li><a class="reference internal" href="#publish-overview">2.2. PUBLISH Overview</a><ul>
+<li><a class="reference internal" href="#common-datatypes">2.2.1. Common Datatypes</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#publish-api">2.3. PUBLISH API</a></li>
+<li><a class="reference internal" href="#publish-waveform-api">2.4. PUBLISH_WAVEFORM API</a></li>
+<li><a class="reference internal" href="#auxiliary-api">2.5. Auxiliary API</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="overview.html"
+                        title="previous chapter"><span class="section-number">1. </span>Introduction to EPICS Device Support</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="epics_extra.html"
+                        title="next chapter"><span class="section-number">3. </span>Extra EPICS Device Support</a></p>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/epics_device.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="epics_extra.html" title="3. Extra EPICS Device Support"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="overview.html" title="1. Introduction to EPICS Device Support"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">EPICS Device  documentation</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2015, Michael Abbott.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 2.3.1.
+    </div>
+  </body>
+</html>
