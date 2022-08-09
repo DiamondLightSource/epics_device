@@ -20,6 +20,6 @@ EPICSDBBUILDER ?= /dls_sw/prod/python3/RHEL7-x86_64/epicsdbbuilder/1.5
 
 SPHINXBUILD ?= /dls_sw/prod/python3/RHEL7-x86_64/sphinx/2.3.1/prefix/bin/sphinx-build
 
-PYTHON ?= python3
+PYTHON ?= python
 
 # vim: set filetype=make:
