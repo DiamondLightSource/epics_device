@@ -1,11 +1,10 @@
 
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
-  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<!DOCTYPE html>
 
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
-    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
-    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <meta charset="utf-8" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
+
     <title>3. Extra EPICS Device Support &#8212; EPICS Device  documentation</title>
     <link rel="stylesheet" href="_static/classic.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
@@ -45,22 +44,22 @@
         <div class="bodywrapper">
           <div class="body" role="main">
             
-  <div class="section" id="extra-epics-device-support">
-<h1>3. Extra EPICS Device Support<a class="headerlink" href="#extra-epics-device-support" title="Permalink to this headline">¶</a></h1>
+  <section id="extra-epics-device-support">
+<h1><span class="section-number">3. </span>Extra EPICS Device Support<a class="headerlink" href="#extra-epics-device-support" title="Permalink to this headline">¶</a></h1>
 <p>A number of extra helper routines and other facilities are provided through the
 header file <code class="docutils literal notranslate"><span class="pre">epics_extra.h</span></code>.</p>
-<div class="section" id="initialisation-etc">
-<h2>3.1. Initialisation Etc<a class="headerlink" href="#initialisation-etc" title="Permalink to this headline">¶</a></h2>
+<section id="initialisation-etc">
+<h2><span class="section-number">3.1. </span>Initialisation Etc<a class="headerlink" href="#initialisation-etc" title="Permalink to this headline">¶</a></h2>
 <dl class="function">
 <dt id="c.wait_for_epics_start">
-void <code class="descname">wait_for_epics_start</code><span class="sig-paren">(</span>void<span class="sig-paren">)</span><a class="headerlink" href="#c.wait_for_epics_start" title="Permalink to this definition">¶</a></dt>
+void <code class="sig-name descname">wait_for_epics_start</code><span class="sig-paren">(</span>void<span class="sig-paren">)</span><a class="headerlink" href="#c.wait_for_epics_start" title="Permalink to this definition">¶</a></dt>
 <dd><p>This call will block until EPICS has completed initialisation, as reported
 by the <a class="reference internal" href="external.html#c.initHookAtEnd" title="initHookAtEnd"><code class="xref c c-macro docutils literal notranslate"><span class="pre">initHookAtEnd</span></code></a> initialisation hook event.</p>
 </dd></dl>
 
 <dl class="function">
 <dt id="c.check_epics_ready">
-<a class="reference internal" href="external.html#c.bool" title="bool">bool</a> <code class="descname">check_epics_ready</code><span class="sig-paren">(</span>void<span class="sig-paren">)</span><a class="headerlink" href="#c.check_epics_ready" title="Permalink to this definition">¶</a></dt>
+<a class="reference internal" href="external.html#c.bool" title="bool">bool</a> <code class="sig-name descname">check_epics_ready</code><span class="sig-paren">(</span>void<span class="sig-paren">)</span><a class="headerlink" href="#c.check_epics_ready" title="Permalink to this definition">¶</a></dt>
 <dd><p>This call checks whether the completion of EPICS initialisation has been
 reported yet.  If <code class="docutils literal notranslate"><span class="pre">true</span></code> is returned the <a class="reference internal" href="#c.wait_for_epics_start" title="wait_for_epics_start"><code class="xref c c-func docutils literal notranslate"><span class="pre">wait_for_epics_start()</span></code></a> is
 guaranteed not to block.</p>
@@ -68,7 +67,7 @@ guaranteed not to block.</p>
 
 <dl class="function">
 <dt id="c.start_caRepeater">
-<a class="reference internal" href="error.html#c.error__t" title="error__t">error__t</a> <code class="descname">start_caRepeater</code><span class="sig-paren">(</span>void<span class="sig-paren">)</span><a class="headerlink" href="#c.start_caRepeater" title="Permalink to this definition">¶</a></dt>
+<a class="reference internal" href="error.html#c.error__t" title="error__t">error__t</a> <code class="sig-name descname">start_caRepeater</code><span class="sig-paren">(</span>void<span class="sig-paren">)</span><a class="headerlink" href="#c.start_caRepeater" title="Permalink to this definition">¶</a></dt>
 <dd><p>This will start a background caRepeater thread.  This is useful for embedded
 use where arranging for an extra caRepeater application to run is an extra
 annoyance.</p>
@@ -76,9 +75,9 @@ annoyance.</p>
 
 <dl class="function">
 <dt id="c.database_add_macro">
-void <code class="descname">database_add_macro</code><span class="sig-paren">(</span>const char<em>&nbsp;*macro</em>, const char<em>&nbsp;*format</em>, ...<span class="sig-paren">)</span><a class="headerlink" href="#c.database_add_macro" title="Permalink to this definition">¶</a></dt>
+void <code class="sig-name descname">database_add_macro</code><span class="sig-paren">(</span>const char<em> *macro</em>, const char<em> *format</em>, ...<span class="sig-paren">)</span><a class="headerlink" href="#c.database_add_macro" title="Permalink to this definition">¶</a></dt>
 <dt id="c.database_load_file">
-<a class="reference internal" href="error.html#c.error__t" title="error__t">error__t</a> <code class="descname">database_load_file</code><span class="sig-paren">(</span>const char<em>&nbsp;*filename</em><span class="sig-paren">)</span><a class="headerlink" href="#c.database_load_file" title="Permalink to this definition">¶</a></dt>
+<a class="reference internal" href="error.html#c.error__t" title="error__t">error__t</a> <code class="sig-name descname">database_load_file</code><span class="sig-paren">(</span>const char<em> *filename</em><span class="sig-paren">)</span><a class="headerlink" href="#c.database_load_file" title="Permalink to this definition">¶</a></dt>
 <dd><p>These two functions are designed to be used together to load EPICS database
 files, and are designed to be called before calling <a class="reference internal" href="external.html#c.iocInit" title="iocInit"><code class="xref c c-func docutils literal notranslate"><span class="pre">iocInit()</span></code></a>.  If
 macro expansion is required while loading the database call
@@ -97,9 +96,9 @@ backslashes and quotation marks will almost certainly cause
 <a class="reference internal" href="#c.database_load_file" title="database_load_file"><code class="xref c c-func docutils literal notranslate"><span class="pre">database_load_file()</span></code></a> to fail or malfunction.</p>
 </dd></dl>
 
-</div>
-<div class="section" id="coherent-record-updates">
-<h2>3.2. Coherent Record Updates<a class="headerlink" href="#coherent-record-updates" title="Permalink to this headline">¶</a></h2>
+</section>
+<section id="coherent-record-updates">
+<h2><span class="section-number">3.2. </span>Coherent Record Updates<a class="headerlink" href="#coherent-record-updates" title="Permalink to this headline">¶</a></h2>
 <p>When publishing a large value to EPICS, particularly when publishing waveforms,
 it is important to ensure that the data seen over Channel Access is coherent.
 The functions provided here are designed to support this by providing a
@@ -109,7 +108,7 @@ record processing is reading it.</p>
 function, see that link for an example.</p>
 <dl class="type">
 <dt id="c.epics_interlock">
-struct <code class="descname">epics_interlock</code><a class="headerlink" href="#c.epics_interlock" title="Permalink to this definition">¶</a></dt>
+struct <code class="sig-name descname">epics_interlock</code><a class="headerlink" href="#c.epics_interlock" title="Permalink to this definition">¶</a></dt>
 <dd><p>This is an opaque type representing an interlock consisting of the two EPICS
 records created by <a class="reference internal" href="builder.html#epics_device.Trigger" title="epics_device.Trigger"><code class="xref py py-func docutils literal notranslate"><span class="pre">Trigger()</span></code></a> and supporting the methods listed
 below.  Values are created by <a class="reference internal" href="#c.create_interlock" title="create_interlock"><code class="xref c c-func docutils literal notranslate"><span class="pre">create_interlock()</span></code></a>.</p>
@@ -117,7 +116,7 @@ below.  Values are created by <a class="reference internal" href="#c.create_inte
 
 <dl class="function">
 <dt id="c.create_interlock">
-struct <a class="reference internal" href="#c.epics_interlock" title="epics_interlock">epics_interlock</a> *<code class="descname">create_interlock</code><span class="sig-paren">(</span>const char<em>&nbsp;*base_name</em>, <a class="reference internal" href="external.html#c.bool" title="bool">bool</a><em>&nbsp;set_time</em><span class="sig-paren">)</span><a class="headerlink" href="#c.create_interlock" title="Permalink to this definition">¶</a></dt>
+struct <a class="reference internal" href="#c.epics_interlock" title="epics_interlock">epics_interlock</a> *<code class="sig-name descname">create_interlock</code><span class="sig-paren">(</span>const char<em> *base_name</em>, <a class="reference internal" href="external.html#c.bool" title="bool">bool</a><em> set_time</em><span class="sig-paren">)</span><a class="headerlink" href="#c.create_interlock" title="Permalink to this definition">¶</a></dt>
 <dd><p>Publishes two records, one an I/O triggered <code class="docutils literal notranslate"><span class="pre">bi</span></code> record named <cite>base_name</cite><code class="docutils literal notranslate"><span class="pre">:TRIG</span></code>, the other a <code class="docutils literal notranslate"><span class="pre">bo</span></code> record named <cite>base_name</cite><code class="docutils literal notranslate"><span class="pre">:DONE</span></code>.  The flag
 <cite>set_time</cite> determines that timestamps are to be specified by the IOC (rather
 than using default timestamping) if <code class="docutils literal notranslate"><span class="pre">true</span></code>.</p>
@@ -128,7 +127,7 @@ linkage is automatically managed by <a class="reference internal" href="builder.
 
 <dl class="function">
 <dt id="c.interlock_wait">
-void <code class="descname">interlock_wait</code><span class="sig-paren">(</span>struct <a class="reference internal" href="#c.epics_interlock" title="epics_interlock">epics_interlock</a><em>&nbsp;*interlock</em><span class="sig-paren">)</span><a class="headerlink" href="#c.interlock_wait" title="Permalink to this definition">¶</a></dt>
+void <code class="sig-name descname">interlock_wait</code><span class="sig-paren">(</span>struct <a class="reference internal" href="#c.epics_interlock" title="epics_interlock">epics_interlock</a><em> *interlock</em><span class="sig-paren">)</span><a class="headerlink" href="#c.interlock_wait" title="Permalink to this definition">¶</a></dt>
 <dd><p>This function blocks until either all EPICS initialisation is complete, as
 reported by <a class="reference internal" href="#c.check_epics_ready" title="check_epics_ready"><code class="xref c c-func docutils literal notranslate"><span class="pre">check_epics_ready()</span></code></a>, or until any previous record
 processing has complete, as signalled by the <code class="docutils literal notranslate"><span class="pre">:DONE</span></code> record processing.
@@ -139,25 +138,25 @@ part of the <a class="reference internal" href="#c.epics_interlock" title="epics
 
 <dl class="function">
 <dt id="c.interlock_signal">
-void <code class="descname">interlock_signal</code><span class="sig-paren">(</span>struct <a class="reference internal" href="#c.epics_interlock" title="epics_interlock">epics_interlock</a><em>&nbsp;*interlock</em>, struct <a class="reference internal" href="external.html#c.timespec" title="timespec">timespec</a><em>&nbsp;*ts</em><span class="sig-paren">)</span><a class="headerlink" href="#c.interlock_signal" title="Permalink to this definition">¶</a></dt>
+void <code class="sig-name descname">interlock_signal</code><span class="sig-paren">(</span>struct <a class="reference internal" href="#c.epics_interlock" title="epics_interlock">epics_interlock</a><em> *interlock</em>, struct <a class="reference internal" href="external.html#c.timespec" title="timespec">timespec</a><em> *ts</em><span class="sig-paren">)</span><a class="headerlink" href="#c.interlock_signal" title="Permalink to this definition">¶</a></dt>
 <dd><p>When data processing is complete this function should be called to trigger
 the <code class="docutils literal notranslate"><span class="pre">:TRIG</span></code> record and all the associated data records.</p>
 </dd></dl>
 
-</div>
-<div class="section" id="records-with-data">
-<h2>3.3. Records With Data<a class="headerlink" href="#records-with-data" title="Permalink to this headline">¶</a></h2>
+</section>
+<section id="records-with-data">
+<h2><span class="section-number">3.3. </span>Records With Data<a class="headerlink" href="#records-with-data" title="Permalink to this headline">¶</a></h2>
 <div class="admonition note">
-<p class="first admonition-title">Note</p>
-<p class="last">The API described in this section is <em>not</em> intended as core functionality
+<p class="admonition-title">Note</p>
+<p>The API described in this section is <em>not</em> intended as core functionality
 (despite its complexity), instead it is an experimental extension designed
 to be used sparingly.</p>
-</div>
+</aside>
 <p>Although in most cases it is enough to bind a published “in” record to a single
 value, there are a couple of cases where both the published value and the
 associated record need to be managed together:</p>
 <ol class="arabic">
-<li><p class="first">When a single value is being updated and triggered separately from any other
+<li><p>When a single value is being updated and triggered separately from any other
 records.  The standard implementation for this is:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">struct</span> <span class="n">epics_record</span> <span class="o">*</span><span class="n">record1</span><span class="p">;</span>
 <span class="n">double</span> <span class="n">value1</span><span class="p">;</span>
@@ -171,7 +170,7 @@ records.  The standard implementation for this is:</p>
 </pre></div>
 </div>
 </li>
-<li><p class="first">When both the value and severity associated with the record need to be
+<li><p>When both the value and severity associated with the record need to be
 maintained.  The standard implementation is:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">struct</span> <span class="n">epics_record</span> <span class="o">*</span><span class="n">record2</span><span class="p">;</span>
 <span class="n">double</span> <span class="n">value2</span><span class="p">;</span>
@@ -199,17 +198,17 @@ the first code example above can be replaced by:</p>
 <p>The API consists of the following definitions.</p>
 <dl class="type">
 <dt id="c.in_epics_record_longin">
-struct <code class="descname">in_epics_record_longin</code><a class="headerlink" href="#c.in_epics_record_longin" title="Permalink to this definition">¶</a></dt>
+struct <code class="sig-name descname">in_epics_record_longin</code><a class="headerlink" href="#c.in_epics_record_longin" title="Permalink to this definition">¶</a></dt>
 <dt id="c.in_epics_record_ulongin">
-struct <code class="descname">in_epics_record_ulongin</code><a class="headerlink" href="#c.in_epics_record_ulongin" title="Permalink to this definition">¶</a></dt>
+struct <code class="sig-name descname">in_epics_record_ulongin</code><a class="headerlink" href="#c.in_epics_record_ulongin" title="Permalink to this definition">¶</a></dt>
 <dt id="c.in_epics_record_ai">
-struct <code class="descname">in_epics_record_ai</code><a class="headerlink" href="#c.in_epics_record_ai" title="Permalink to this definition">¶</a></dt>
+struct <code class="sig-name descname">in_epics_record_ai</code><a class="headerlink" href="#c.in_epics_record_ai" title="Permalink to this definition">¶</a></dt>
 <dt id="c.in_epics_record_bi">
-struct <code class="descname">in_epics_record_bi</code><a class="headerlink" href="#c.in_epics_record_bi" title="Permalink to this definition">¶</a></dt>
+struct <code class="sig-name descname">in_epics_record_bi</code><a class="headerlink" href="#c.in_epics_record_bi" title="Permalink to this definition">¶</a></dt>
 <dt id="c.in_epics_record_stringin">
-struct <code class="descname">in_epics_record_stringin</code><a class="headerlink" href="#c.in_epics_record_stringin" title="Permalink to this definition">¶</a></dt>
+struct <code class="sig-name descname">in_epics_record_stringin</code><a class="headerlink" href="#c.in_epics_record_stringin" title="Permalink to this definition">¶</a></dt>
 <dt id="c.in_epics_record_mbbi">
-struct <code class="descname">in_epics_record_mbbi</code><a class="headerlink" href="#c.in_epics_record_mbbi" title="Permalink to this definition">¶</a></dt>
+struct <code class="sig-name descname">in_epics_record_mbbi</code><a class="headerlink" href="#c.in_epics_record_mbbi" title="Permalink to this definition">¶</a></dt>
 <dd><p>Each EPICS “in” record type has an associated record wrapper type.  These
 are created by the appropriate <a class="reference internal" href="#c.PUBLISH_IN_VALUE" title="PUBLISH_IN_VALUE"><code class="xref c c-func docutils literal notranslate"><span class="pre">PUBLISH_IN_VALUE()</span></code></a> call and can be
 passed to any of the other functions documented in this section.</p>
@@ -217,29 +216,25 @@ passed to any of the other functions documented in this section.</p>
 
 <dl class="macro">
 <dt id="c.PUBLISH_IN_VALUE">
-struct in_epics_record_##record *<code class="descname">PUBLISH_IN_VALUE</code><span class="sig-paren">(</span><em>record</em>, <em>name</em>, <em>.set_time</em>, <em>.merge_update</em><span class="sig-paren">)</span><a class="headerlink" href="#c.PUBLISH_IN_VALUE" title="Permalink to this definition">¶</a></dt>
+struct in_epics_record_##record *<code class="sig-name descname">PUBLISH_IN_VALUE</code><span class="sig-paren">(</span><em>record</em>, <em>name</em>, <em>.set_time</em>, <em>.merge_update</em><span class="sig-paren">)</span><a class="headerlink" href="#c.PUBLISH_IN_VALUE" title="Permalink to this definition">¶</a></dt>
 <dt id="c.PUBLISH_IN_VALUE_I">
-struct in_epics_record_##record *<code class="descname">PUBLISH_IN_VALUE_I</code><span class="sig-paren">(</span><em>record</em>, <em>name</em>, <em>.set_time</em>, <em>.merge_update</em><span class="sig-paren">)</span><a class="headerlink" href="#c.PUBLISH_IN_VALUE_I" title="Permalink to this definition">¶</a></dt>
-<dd><table border="1" class="docutils">
-<colgroup>
-<col width="99%" />
-<col width="1%" />
-</colgroup>
-<tbody valign="top">
-<tr class="row-odd"><td>record class <cite>record</cite></td>
-<td>&#160;</td>
+struct in_epics_record_##record *<code class="sig-name descname">PUBLISH_IN_VALUE_I</code><span class="sig-paren">(</span><em>record</em>, <em>name</em>, <em>.set_time</em>, <em>.merge_update</em><span class="sig-paren">)</span><a class="headerlink" href="#c.PUBLISH_IN_VALUE_I" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p>record class <cite>record</cite></p></td>
+<td></td>
 </tr>
-<tr class="row-even"><td>const char *<cite>name</cite></td>
-<td>&#160;</td>
+<tr class="row-even"><td><p>const char *<cite>name</cite></p></td>
+<td></td>
 </tr>
-<tr class="row-odd"><td>bool <cite>set_time</cite></td>
-<td>&#160;</td>
+<tr class="row-odd"><td><p>bool <cite>set_time</cite></p></td>
+<td></td>
 </tr>
-<tr class="row-even"><td>bool <cite>merge_update</cite></td>
-<td>&#160;</td>
+<tr class="row-even"><td><p>bool <cite>merge_update</cite></p></td>
+<td></td>
 </tr>
-<tr class="row-odd"><td>Returns in_epics_record_<cite>record</cite>*</td>
-<td>&#160;</td>
+<tr class="row-odd"><td><p>Returns in_epics_record_<cite>record</cite>*</p></td>
+<td></td>
 </tr>
 </tbody>
 </table>
@@ -255,30 +250,26 @@ this.</p>
 
 <dl class="macro">
 <dt id="c.WRITE_IN_RECORD">
-<code class="descname">WRITE_IN_RECORD</code><span class="sig-paren">(</span><em>record</em>, <em>in_record</em>, <em>value</em>, <em>.severity</em>, <em>.timestamp</em>, <em>.force_update</em><span class="sig-paren">)</span><a class="headerlink" href="#c.WRITE_IN_RECORD" title="Permalink to this definition">¶</a></dt>
-<dd><table border="1" class="docutils">
-<colgroup>
-<col width="99%" />
-<col width="1%" />
-</colgroup>
-<tbody valign="top">
-<tr class="row-odd"><td>record class <cite>record</cite></td>
-<td>&#160;</td>
+<code class="sig-name descname">WRITE_IN_RECORD</code><span class="sig-paren">(</span><em>record</em>, <em>in_record</em>, <em>value</em>, <em>.severity</em>, <em>.timestamp</em>, <em>.force_update</em><span class="sig-paren">)</span><a class="headerlink" href="#c.WRITE_IN_RECORD" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p>record class <cite>record</cite></p></td>
+<td></td>
 </tr>
-<tr class="row-even"><td>in_epics_record_<cite>record</cite> *<cite>in_record</cite></td>
-<td>&#160;</td>
+<tr class="row-even"><td><p>in_epics_record_<cite>record</cite> *<cite>in_record</cite></p></td>
+<td></td>
 </tr>
-<tr class="row-odd"><td>TYPEOF(<cite>record</cite>) <cite>value</cite></td>
-<td>&#160;</td>
+<tr class="row-odd"><td><p>TYPEOF(<cite>record</cite>) <cite>value</cite></p></td>
+<td></td>
 </tr>
-<tr class="row-even"><td>bool <cite>severity</cite></td>
-<td>&#160;</td>
+<tr class="row-even"><td><p>bool <cite>severity</cite></p></td>
+<td></td>
 </tr>
-<tr class="row-odd"><td>const struct timespec *<cite>timestamp</cite></td>
-<td>&#160;</td>
+<tr class="row-odd"><td><p>const struct timespec *<cite>timestamp</cite></p></td>
+<td></td>
 </tr>
-<tr class="row-even"><td>bool <cite>force_update</cite></td>
-<td>&#160;</td>
+<tr class="row-even"><td><p>bool <cite>force_update</cite></p></td>
+<td></td>
 </tr>
 </tbody>
 </table>
@@ -294,24 +285,20 @@ used to force an update.</p>
 
 <dl class="macro">
 <dt id="c.WRITE_IN_RECORD_SEV">
-<code class="descname">WRITE_IN_RECORD_SEV</code><span class="sig-paren">(</span><em>record</em>, <em>in_record</em>, <em>severity</em>, <em>.timestamp</em><span class="sig-paren">)</span><a class="headerlink" href="#c.WRITE_IN_RECORD_SEV" title="Permalink to this definition">¶</a></dt>
-<dd><table border="1" class="docutils">
-<colgroup>
-<col width="99%" />
-<col width="1%" />
-</colgroup>
-<tbody valign="top">
-<tr class="row-odd"><td>record class <cite>record</cite></td>
-<td>&#160;</td>
+<code class="sig-name descname">WRITE_IN_RECORD_SEV</code><span class="sig-paren">(</span><em>record</em>, <em>in_record</em>, <em>severity</em>, <em>.timestamp</em><span class="sig-paren">)</span><a class="headerlink" href="#c.WRITE_IN_RECORD_SEV" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p>record class <cite>record</cite></p></td>
+<td></td>
 </tr>
-<tr class="row-even"><td>in_epics_record_<cite>record</cite> *<cite>in_record</cite></td>
-<td>&#160;</td>
+<tr class="row-even"><td><p>in_epics_record_<cite>record</cite> *<cite>in_record</cite></p></td>
+<td></td>
 </tr>
-<tr class="row-odd"><td>bool <cite>severity</cite></td>
-<td>&#160;</td>
+<tr class="row-odd"><td><p>bool <cite>severity</cite></p></td>
+<td></td>
 </tr>
-<tr class="row-even"><td>const struct timespec *<cite>timestamp</cite></td>
-<td>&#160;</td>
+<tr class="row-even"><td><p>const struct timespec *<cite>timestamp</cite></p></td>
+<td></td>
 </tr>
 </tbody>
 </table>
@@ -323,29 +310,25 @@ updating is always forced for this call.</p>
 
 <dl class="macro">
 <dt id="c.READ_IN_RECORD">
-TYPEOF(record) <code class="descname">READ_IN_RECORD</code><span class="sig-paren">(</span><em>record</em>, <em>in_record</em><span class="sig-paren">)</span><a class="headerlink" href="#c.READ_IN_RECORD" title="Permalink to this definition">¶</a></dt>
-<dd><table border="1" class="docutils">
-<colgroup>
-<col width="99%" />
-<col width="1%" />
-</colgroup>
-<tbody valign="top">
-<tr class="row-odd"><td>record class <cite>record</cite></td>
-<td>&#160;</td>
+TYPEOF(record) <code class="sig-name descname">READ_IN_RECORD</code><span class="sig-paren">(</span><em>record</em>, <em>in_record</em><span class="sig-paren">)</span><a class="headerlink" href="#c.READ_IN_RECORD" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p>record class <cite>record</cite></p></td>
+<td></td>
 </tr>
-<tr class="row-even"><td>in_epics_record_<cite>record</cite> *<cite>in_record</cite></td>
-<td>&#160;</td>
+<tr class="row-even"><td><p>in_epics_record_<cite>record</cite> *<cite>in_record</cite></p></td>
+<td></td>
 </tr>
-<tr class="row-odd"><td>Returns TYPEOF(<cite>record</cite>)</td>
-<td>&#160;</td>
+<tr class="row-odd"><td><p>Returns TYPEOF(<cite>record</cite>)</p></td>
+<td></td>
 </tr>
 </tbody>
 </table>
 <p>Returns the current value associated with <cite>in_record</cite>.</p>
 </dd></dl>
 
-</div>
-</div>
+</section>
+</section>
 
 
           </div>
@@ -365,10 +348,10 @@ TYPEOF(record) <code class="descname">READ_IN_RECORD</code><span class="sig-pare
 
   <h4>Previous topic</h4>
   <p class="topless"><a href="epics_device.html"
-                        title="previous chapter">2. Core EPICS Device Functionality</a></p>
+                        title="previous chapter"><span class="section-number">2. </span>Core EPICS Device Functionality</a></p>
   <h4>Next topic</h4>
   <p class="topless"><a href="builder.html"
-                        title="next chapter">4. Database Builder Support</a></p>
+                        title="next chapter"><span class="section-number">4. </span>Database Builder Support</a></p>
   <div role="note" aria-label="source link">
     <h3>This Page</h3>
     <ul class="this-page-menu">
@@ -377,13 +360,11 @@ TYPEOF(record) <code class="descname">READ_IN_RECORD</code><span class="sig-pare
     </ul>
    </div>
 <div id="searchbox" style="display: none" role="search">
-  <h3>Quick search</h3>
+  <h3 id="searchlabel">Quick search</h3>
     <div class="searchformwrapper">
     <form class="search" action="search.html" method="get">
-      <input type="text" name="q" />
+      <input type="text" name="q" aria-labelledby="searchlabel" />
       <input type="submit" value="Go" />
-      <input type="hidden" name="check_keywords" value="yes" />
-      <input type="hidden" name="area" value="default" />
     </form>
     </div>
 </div>
@@ -412,7 +393,7 @@ TYPEOF(record) <code class="descname">READ_IN_RECORD</code><span class="sig-pare
     </div>
     <div class="footer" role="contentinfo">
         &#169; Copyright 2015, Michael Abbott.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.5.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 2.3.1.
     </div>
   </body>
 </html>

@@ -1,11 +1,10 @@
 
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
-  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<!DOCTYPE html>
 
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
-    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
-    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <meta charset="utf-8" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
+
     <title>5. Support for Persistent PV State &#8212; EPICS Device  documentation</title>
     <link rel="stylesheet" href="_static/classic.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
@@ -45,8 +44,8 @@
         <div class="bodywrapper">
           <div class="body" role="main">
             
-  <div class="section" id="support-for-persistent-pv-state">
-<h1>5. Support for Persistent PV State<a class="headerlink" href="#support-for-persistent-pv-state" title="Permalink to this headline">¶</a></h1>
+  <section id="support-for-persistent-pv-state">
+<h1><span class="section-number">5. </span>Support for Persistent PV State<a class="headerlink" href="#support-for-persistent-pv-state" title="Permalink to this headline">¶</a></h1>
 <p>This EPICS Device module provides a mechanism for persistent PV state which is
 quite different from the mechanism provided by autosave/restore.  If
 autosave/restore is used then this functionality can be ignored, and no PVs
@@ -60,7 +59,7 @@ PVs are published to the device by the IOC.</p>
 <p>The following functions provide the persistence interface.</p>
 <dl class="function">
 <dt id="c.load_persistent_state">
-<a class="reference internal" href="error.html#c.error__t" title="error__t">error__t</a> <code class="descname">load_persistent_state</code><span class="sig-paren">(</span>const char<em>&nbsp;*file_name</em>, int<em>&nbsp;save_interval</em>, <a class="reference internal" href="external.html#c.bool" title="bool">bool</a><em>&nbsp;check_parse</em><span class="sig-paren">)</span><a class="headerlink" href="#c.load_persistent_state" title="Permalink to this definition">¶</a></dt>
+<a class="reference internal" href="error.html#c.error__t" title="error__t">error__t</a> <code class="sig-name descname">load_persistent_state</code><span class="sig-paren">(</span>const char<em> *file_name</em>, int<em> save_interval</em>, <a class="reference internal" href="external.html#c.bool" title="bool">bool</a><em> check_parse</em><span class="sig-paren">)</span><a class="headerlink" href="#c.load_persistent_state" title="Permalink to this definition">¶</a></dt>
 <dd><p>This should be called once after publishing all PVs to EPICS device but
 before calling <a class="reference internal" href="external.html#c.iocInit" title="iocInit"><code class="xref c c-func docutils literal notranslate"><span class="pre">iocInit()</span></code></a>.  The given <cite>file_name</cite> will be loaded, if
 present, to determine initial values for all PVs marked for persistence.
@@ -74,19 +73,19 @@ code is lost.</p>
 
 <dl class="function">
 <dt id="c.update_persistent_state">
-<a class="reference internal" href="error.html#c.error__t" title="error__t">error__t</a> <code class="descname">update_persistent_state</code><span class="sig-paren">(</span>void<span class="sig-paren">)</span><a class="headerlink" href="#c.update_persistent_state" title="Permalink to this definition">¶</a></dt>
+<a class="reference internal" href="error.html#c.error__t" title="error__t">error__t</a> <code class="sig-name descname">update_persistent_state</code><span class="sig-paren">(</span>void<span class="sig-paren">)</span><a class="headerlink" href="#c.update_persistent_state" title="Permalink to this definition">¶</a></dt>
 <dd><p>This can be called to force the state file to be written if any persistent
 PVs have changed their state.</p>
 </dd></dl>
 
 <dl class="function">
 <dt id="c.terminate_persistent_state">
-void <code class="descname">terminate_persistent_state</code><span class="sig-paren">(</span>void<span class="sig-paren">)</span><a class="headerlink" href="#c.terminate_persistent_state" title="Permalink to this definition">¶</a></dt>
+void <code class="sig-name descname">terminate_persistent_state</code><span class="sig-paren">(</span>void<span class="sig-paren">)</span><a class="headerlink" href="#c.terminate_persistent_state" title="Permalink to this definition">¶</a></dt>
 <dd><p>This can be called during IOC shutdown to force an orderly termination of
 the persistence state and ensure that the state file is up to date.</p>
 </dd></dl>
 
-</div>
+</section>
 
 
           </div>
@@ -96,10 +95,10 @@ the persistence state and ensure that the state file is up to date.</p>
         <div class="sphinxsidebarwrapper">
   <h4>Previous topic</h4>
   <p class="topless"><a href="builder.html"
-                        title="previous chapter">4. Database Builder Support</a></p>
+                        title="previous chapter"><span class="section-number">4. </span>Database Builder Support</a></p>
   <h4>Next topic</h4>
   <p class="topless"><a href="pvlogging.html"
-                        title="next chapter">6. Support for PV Logging</a></p>
+                        title="next chapter"><span class="section-number">6. </span>Support for PV Logging</a></p>
   <div role="note" aria-label="source link">
     <h3>This Page</h3>
     <ul class="this-page-menu">
@@ -108,13 +107,11 @@ the persistence state and ensure that the state file is up to date.</p>
     </ul>
    </div>
 <div id="searchbox" style="display: none" role="search">
-  <h3>Quick search</h3>
+  <h3 id="searchlabel">Quick search</h3>
     <div class="searchformwrapper">
     <form class="search" action="search.html" method="get">
-      <input type="text" name="q" />
+      <input type="text" name="q" aria-labelledby="searchlabel" />
       <input type="submit" value="Go" />
-      <input type="hidden" name="check_keywords" value="yes" />
-      <input type="hidden" name="area" value="default" />
     </form>
     </div>
 </div>
@@ -143,7 +140,7 @@ the persistence state and ensure that the state file is up to date.</p>
     </div>
     <div class="footer" role="contentinfo">
         &#169; Copyright 2015, Michael Abbott.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.5.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 2.3.1.
     </div>
   </body>
 </html>
