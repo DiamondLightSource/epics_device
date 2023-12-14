@@ -338,6 +338,9 @@ bool format_epics_string(EPICS_STRING *s, const char *format, ...)
 /* This is the abstract interface returned by all core publish methods. */
 struct epics_record;
 
+/* Utility function to dump all currently published entries in the database */
+void dump_db(void);
+
 /* Makes the named record of the given type available for binding.  The
  * particular structure passed to args is determined by the record type, this
  * function should only ever be called via the PUBLISH() or PUBLISH_WAVEFORM()
