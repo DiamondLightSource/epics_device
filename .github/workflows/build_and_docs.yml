@@ -13,15 +13,13 @@ on:
 # Global environment
 env:
   # EPICS Base version for system block IOC
-  EPICS_BASE_VER: R3.14.12.7
-  EPICS_BASE_DIR: epics_base
   EPCISDBBUILER_VERSION: 1.5
-  SPHINXBUILD_LOCATION: ~/.local/bin/
 
 jobs:
   build:
     name: "Build and Docs CI"
     runs-on: ubuntu-latest
+    container: ghcr.io/epics-containers/epics-base-linux-developer:7.0.7ec3
 
     steps:
       - name: Checkout Source
@@ -34,38 +32,16 @@ jobs:
       - name: Install Packages
         # Pin Sphinx version to one that supports Python3, but does not feature an API
         # change that would break our custom cdomain.py extension
+        # Pin Jinja2 and alabaster to fix dependency issue between them and sphinx
         run: |
-          pip install epicsdbbuilder==${EPCISDBBUILER_VERSION} sphinx==2.3.1
-
-      - name: Cache EPICS Base
-        uses: actions/cache@v2
-        id: epics-base-cache
-        with:
-          path: ${{ env.EPICS_BASE_DIR }}
-          key: epics_base-${{ runner.os }}-${{ env.EPICS_BASE_VER }}
-
-      - name: Install EPICS Base
-        if: steps.epics-base-cache.outputs.cache-hit != 'true'
-        run: |
-          wget -nv https://github.com/epics-base/epics-base/archive/${EPICS_BASE_VER}.tar.gz
-          tar -zxf ${EPICS_BASE_VER}.tar.gz
-          mv epics-base-${EPICS_BASE_VER} ${EPICS_BASE_DIR}
-          make -sj -C ${EPICS_BASE_DIR}/
-
-      - name: Set environment for future steps (Overrides variables in config/CONFIG_SITE)
-        # Override various environment variables defined in CONFIG_SITE with values that
-        # work on CI. Delete the compiler targets as they don't actually build, they just
-        # silently pass despite doing nothing. Leaving them in place confuses the example
-        # IOC builds.
-        run: |
-          echo "EPICS_BASE=`pwd`/${EPICS_BASE_DIR}" >> $GITHUB_ENV
-          echo "PYTHON=python" >> $GITHUB_ENV 
-          echo "EPICSDBBUILDER=${EPCISDBBUILER_VERSION}" >> $GITHUB_ENV
-          echo "SPHINXBUILD=${SPHINXBUILD_LOCATION}/sphinx-build" >> $GITHUB_ENV
-          sed -i '/CROSS_COMPILER_TARGET_ARCHS/d' configure/CONFIG_SITE
+          pip install epicsdbbuilder==${EPCISDBBUILER_VERSION} sphinx==2.3.1 Jinja2==3.0.3 alabaster==0.7.12
 
       - name: Build (including docs)
         run: |
+          echo "EPICS_BASE=${EPICS_BASE}" > configure/RELEASE
+          echo "EPICS_BASE=${EPICS_BASE}" >> examples/basic_ioc/configure/RELEASE
+          echo "EPICS_BASE=${EPICS_BASE}" >> examples/example_ioc/configure/RELEASE
+          echo "SPHINXBUILD=sphinx-build" >> configure/CONFIG_SITE
           make
 
       - name: Build Examples
