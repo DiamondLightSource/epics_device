@@ -243,6 +243,7 @@
 
 #include <stdbool.h>
 #include <stdint.h>
+#include <stdio.h>
 #include <pthread.h>    // Needed for pthread_mutex_t declaration
 
 struct timespec;
@@ -339,7 +340,7 @@ bool format_epics_string(EPICS_STRING *s, const char *format, ...)
 struct epics_record;
 
 /* Utility function to dump all currently published entries in the database */
-void dump_db(void);
+void dump_epics_device_db(FILE *output);
 
 /* Makes the named record of the given type available for binding.  The
  * particular structure passed to args is determined by the record type, this

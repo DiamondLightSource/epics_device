@@ -1166,18 +1166,18 @@ DEFINE_DEVICE(mbbi,      5, read_mbbi);
 DEFINE_DEVICE(mbbo,      5, write_mbbo);
 DEFINE_DEVICE(waveform,  5, process_waveform);
 
+
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 /*                          Utility Functions                                */
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-void dump_db(void)
+void dump_epics_device_db(FILE *output)
 {
     const void *key;
     void *value;
-    printf("Dumping database:\n");
     for (int ix = 0; hash_table_walk(hash_table, &ix, &key, &value);)
     {
         const struct epics_record *base = value;
-        printf("\t%s\n", base->key);
+        fprintf(output, "\t%s\n", base->key);
     }
 }
