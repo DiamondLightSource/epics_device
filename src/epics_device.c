@@ -148,7 +148,7 @@ static enum PERSISTENCE_TYPES record_type_to_persistence(
         case RECORD_TYPE_ao:        return PERSISTENT_double;
         case RECORD_TYPE_bo:        return PERSISTENT_bool;
         case RECORD_TYPE_stringout: return PERSISTENT_string;
-        case RECORD_TYPE_mbbo:      return PERSISTENT_int;
+        case RECORD_TYPE_mbbo:      return PERSISTENT_short;
         default: ASSERT_FAIL();
     }
 }
@@ -516,14 +516,14 @@ static short record_type_dbr(enum record_type record_type)
         case RECORD_TYPE_ai:        return DBR_DOUBLE;
         case RECORD_TYPE_bi:        return DBR_CHAR;
         case RECORD_TYPE_stringin:  return DBR_STRING;
-        case RECORD_TYPE_mbbi:      return DBR_LONG;
+        case RECORD_TYPE_mbbi:      return DBR_SHORT;
 
         case RECORD_TYPE_longout:   return DBR_LONG;
         case RECORD_TYPE_ulongout:  return DBR_LONG;
         case RECORD_TYPE_ao:        return DBR_DOUBLE;
         case RECORD_TYPE_bo:        return DBR_CHAR;
         case RECORD_TYPE_stringout: return DBR_STRING;
-        case RECORD_TYPE_mbbo:      return DBR_LONG;
+        case RECORD_TYPE_mbbo:      return DBR_SHORT;
 
         default: ASSERT_FAIL();
     }
