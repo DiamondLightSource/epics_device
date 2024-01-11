@@ -39,14 +39,14 @@
   <h1>Source code for epicsdbbuilder.recordbase</h1><div class="highlight"><pre>
 <span></span><span class="sd">&#39;&#39;&#39;Support for generating epics records.&#39;&#39;&#39;</span>
 
-<span class="kn">from</span> <span class="nn">__future__</span> <span class="k">import</span> <span class="n">print_function</span>
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">print_function</span>
 
 <span class="kn">import</span> <span class="nn">string</span>
 <span class="kn">import</span> <span class="nn">json</span>
-<span class="kn">from</span> <span class="nn">collections</span> <span class="k">import</span> <span class="n">OrderedDict</span>
+<span class="kn">from</span> <span class="nn">collections</span> <span class="kn">import</span> <span class="n">OrderedDict</span>
 
-<span class="kn">from</span> <span class="nn">.</span> <span class="k">import</span> <span class="n">recordnames</span>
-<span class="kn">from</span> <span class="nn">.recordset</span> <span class="k">import</span> <span class="n">recordset</span>
+<span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">recordnames</span>
+<span class="kn">from</span> <span class="nn">.recordset</span> <span class="kn">import</span> <span class="n">recordset</span>
 
 
 <span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span>
@@ -94,7 +94,7 @@
         <span class="n">BuildRecord</span><span class="o">.</span><span class="vm">__name__</span> <span class="o">=</span> <span class="n">recordType</span>
 
         <span class="c1"># Perform any class extension required for this particular record type.</span>
-        <span class="kn">from</span> <span class="nn">.</span> <span class="k">import</span> <span class="n">bits</span>
+        <span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">bits</span>
         <span class="k">return</span> <span class="n">bits</span><span class="o">.</span><span class="n">ExtendClass</span><span class="p">(</span><span class="n">BuildRecord</span><span class="p">)</span>
 
 
@@ -144,7 +144,7 @@
     <span class="c1"># }</span>
     <span class="c1">#</span>
     <span class="c1"># Record links can be wrapped with PP(), CP(), MS() and NP() calls.</span>
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">record</span><span class="p">,</span> <span class="o">**</span><span class="n">fields</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">record</span><span class="p">,</span> <span class="o">**</span><span class="n">fields</span><span class="p">):</span>
 
         <span class="c1"># Make sure the Device class providing this record is instantiated</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_on_use</span><span class="p">:</span>
@@ -222,21 +222,21 @@
 
 
     <span class="c1"># The string for a record is just its name.</span>
-    <span class="k">def</span> <span class="nf">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span>
 
     <span class="c1"># The representation string for a record identifies its type and name,</span>
     <span class="c1"># but we can&#39;t do much more.</span>
-    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="s1">&#39;&lt;record </span><span class="si">%s</span><span class="s1"> &quot;</span><span class="si">%s</span><span class="s1">&quot;&gt;&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_type</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
 
     <span class="c1"># Calling the record generates a self link with a list of specifiers.</span>
-    <span class="k">def</span> <span class="nf">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">specifiers</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">specifiers</span><span class="p">):</span>
         <span class="k">return</span> <span class="n">_Link</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="o">*</span><span class="n">specifiers</span><span class="p">)</span>
 
 
     <span class="c1"># Assigning to a record attribute updates a field.</span>
-    <span class="k">def</span> <span class="nf">__setattr__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fieldname</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__setattr__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fieldname</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
         <span class="k">if</span> <span class="n">fieldname</span> <span class="o">==</span> <span class="s1">&#39;address&#39;</span><span class="p">:</span>
             <span class="n">fieldname</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__address</span>
         <span class="k">if</span> <span class="n">value</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
@@ -249,7 +249,7 @@
             <span class="c1"># ensure we convert record pointers into links.  It&#39;s unlikely</span>
             <span class="c1"># that this will have unfortunate side effects elsewhere, but it&#39;s</span>
             <span class="c1"># always possible...</span>
-            <span class="k">if</span> <span class="n">callable</span><span class="p">(</span><span class="n">value</span><span class="p">):</span>
+            <span class="k">if</span> <span class="nb">callable</span><span class="p">(</span><span class="n">value</span><span class="p">):</span>
                 <span class="n">value</span> <span class="o">=</span> <span class="n">value</span><span class="p">()</span>
             <span class="k">if</span> <span class="ow">not</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="s1">&#39;ValidateLater&#39;</span><span class="p">,</span> <span class="kc">False</span><span class="p">):</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">__ValidateField</span><span class="p">(</span><span class="n">fieldname</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span>
@@ -278,14 +278,14 @@
 
 
     <span class="c1"># Allow individual fields to be deleted from the record.</span>
-    <span class="k">def</span> <span class="nf">__delattr__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fieldname</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__delattr__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fieldname</span><span class="p">):</span>
         <span class="k">if</span> <span class="n">fieldname</span> <span class="o">==</span> <span class="s1">&#39;address&#39;</span><span class="p">:</span>
             <span class="n">fieldname</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__address</span>
         <span class="k">del</span> <span class="bp">self</span><span class="o">.</span><span class="n">__fields</span><span class="p">[</span><span class="n">fieldname</span><span class="p">]</span>
 
 
     <span class="c1"># Reading a record attribute returns a link to the field.</span>
-    <span class="k">def</span> <span class="nf">__getattr__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fieldname</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__getattr__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fieldname</span><span class="p">):</span>
         <span class="k">if</span> <span class="n">fieldname</span> <span class="o">==</span> <span class="s1">&#39;address&#39;</span><span class="p">:</span>
             <span class="n">fieldname</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__address</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_validate</span><span class="o">.</span><span class="n">ValidFieldName</span><span class="p">(</span><span class="n">fieldname</span><span class="p">)</span>
@@ -320,19 +320,19 @@
 <span class="c1"># of its type, and so no validation can be done: all that can be done to an</span>
 <span class="c1"># imported record is to link to it.</span>
 <span class="k">class</span> <span class="nc">ImportRecord</span><span class="p">:</span>
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">name</span>
 
-    <span class="k">def</span> <span class="nf">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span>
 
-    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="s1">&#39;&lt;external record &quot;</span><span class="si">%s</span><span class="s1">&quot;&gt;&#39;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span>
 
-    <span class="k">def</span> <span class="nf">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">specifiers</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">specifiers</span><span class="p">):</span>
         <span class="k">return</span> <span class="n">_Link</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="o">*</span><span class="n">specifiers</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">__getattr__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fieldname</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__getattr__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fieldname</span><span class="p">):</span>
         <span class="c1"># Brain-dead minimal validation: just check for all uppercase!</span>
         <span class="n">ValidChars</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">string</span><span class="o">.</span><span class="n">ascii_uppercase</span> <span class="o">+</span> <span class="n">string</span><span class="o">.</span><span class="n">digits</span><span class="p">)</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="nb">set</span><span class="p">(</span><span class="n">fieldname</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="n">ValidChars</span><span class="p">:</span>
@@ -347,12 +347,12 @@
 <span class="c1"># the record, the linked field, and a list of specifiers (such as PP, CP,</span>
 <span class="c1"># etcetera).</span>
 <span class="k">class</span> <span class="nc">_Link</span><span class="p">:</span>
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">record</span><span class="p">,</span> <span class="n">field</span><span class="p">,</span> <span class="o">*</span><span class="n">specifiers</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">record</span><span class="p">,</span> <span class="n">field</span><span class="p">,</span> <span class="o">*</span><span class="n">specifiers</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">record</span> <span class="o">=</span> <span class="n">record</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">field</span> <span class="o">=</span> <span class="n">field</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">specifiers</span> <span class="o">=</span> <span class="n">specifiers</span>
 
-    <span class="k">def</span> <span class="nf">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="n">result</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">record</span><span class="o">.</span><span class="n">name</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">field</span><span class="p">:</span>
             <span class="n">result</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="si">%s</span><span class="s1">.</span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">result</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">field</span><span class="p">)</span>
@@ -360,7 +360,7 @@
             <span class="n">result</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="si">%s</span><span class="s1"> </span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">result</span><span class="p">,</span> <span class="n">specifier</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">result</span>
 
-    <span class="k">def</span> <span class="nf">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">specifiers</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">specifiers</span><span class="p">):</span>
         <span class="k">return</span> <span class="n">_Link</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">record</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">field</span><span class="p">,</span> <span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">specifiers</span> <span class="o">+</span> <span class="n">specifiers</span><span class="p">)</span>
 
     <span class="c1"># Returns the value currently assigned to this field.</span>
@@ -371,7 +371,7 @@
 <span class="c1"># Some helper routines for building links</span>
 
 <div class="viewcode-block" id="PP"><a class="viewcode-back" href="../../builder.html#epicsdbbuilder.PP">[docs]</a><span class="k">def</span> <span class="nf">PP</span><span class="p">(</span><span class="n">record</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot; &quot;Process Passive&quot;: any record update through a PP output link will be</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot; &quot;Process Passive&quot;: any record update through a PP output link will be</span>
 <span class="sd">    processed if its scan is Passive.</span>
 
 <span class="sd">    Example (Python source)</span>
@@ -385,7 +385,7 @@
     <span class="k">return</span> <span class="n">record</span><span class="p">(</span><span class="s1">&#39;PP&#39;</span><span class="p">)</span></div>
 
 <span class="k">def</span> <span class="nf">CA</span><span class="p">(</span><span class="n">record</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot; &quot;Channel Access&quot;: a CA (input or output) link will be treated as</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot; &quot;Channel Access&quot;: a CA (input or output) link will be treated as</span>
 <span class="sd">    a channel access link regardless whether it is a DB link or not.</span>
 
 <span class="sd">    Example (Python source)</span>
@@ -400,7 +400,7 @@
 
 
 <div class="viewcode-block" id="CP"><a class="viewcode-back" href="../../builder.html#epicsdbbuilder.CP">[docs]</a><span class="k">def</span> <span class="nf">CP</span><span class="p">(</span><span class="n">record</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot; &quot;Channel Process&quot;: a CP input link will cause the linking record</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot; &quot;Channel Process&quot;: a CP input link will cause the linking record</span>
 <span class="sd">    to process any time the linked record is updated.</span>
 
 <span class="sd">    Example (Python source)</span>
@@ -414,7 +414,7 @@
     <span class="k">return</span> <span class="n">record</span><span class="p">(</span><span class="s1">&#39;CP&#39;</span><span class="p">)</span></div>
 
 <span class="k">def</span> <span class="nf">CPP</span><span class="p">(</span><span class="n">record</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot; &quot;Channel Process if Passive&quot;: a CP input link will be treated as</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot; &quot;Channel Process if Passive&quot;: a CP input link will be treated as</span>
 <span class="sd">    a channel access link and if the linking record is passive,</span>
 <span class="sd">    the linking passive record will be processed any time the linked record</span>
 <span class="sd">    is updated.</span>
@@ -431,7 +431,7 @@
 
 
 <div class="viewcode-block" id="MS"><a class="viewcode-back" href="../../builder.html#epicsdbbuilder.MS">[docs]</a><span class="k">def</span> <span class="nf">MS</span><span class="p">(</span><span class="n">record</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot; &quot;Maximise Severity&quot;: any alarm state on the linked record is propagated</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot; &quot;Maximise Severity&quot;: any alarm state on the linked record is propagated</span>
 <span class="sd">    to the linking record. When propagated, the alarm status will become</span>
 <span class="sd">    `LINK_ALARM`.</span>
 
@@ -447,7 +447,7 @@
 
 
 <span class="k">def</span> <span class="nf">MSS</span><span class="p">(</span><span class="n">record</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot; &quot;Maximise Status and Severity&quot;: both alarm status and alarm severity</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot; &quot;Maximise Status and Severity&quot;: both alarm status and alarm severity</span>
 <span class="sd">    on the linked record are propagated to the linking record.</span>
 
 <span class="sd">    Example (Python source)</span>
@@ -462,7 +462,7 @@
 
 
 <span class="k">def</span> <span class="nf">MSI</span><span class="p">(</span><span class="n">record</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot; &quot;Maximise Severity if Invalid&quot;: propagate an alarm state on the linked</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot; &quot;Maximise Severity if Invalid&quot;: propagate an alarm state on the linked</span>
 <span class="sd">    record only if the alarm severity is `INVALID_ALARM`.</span>
 <span class="sd">    When propagated, the alarm status will become `LINK_ALARM`.</span>
 
@@ -478,7 +478,7 @@
 
 
 <span class="k">def</span> <span class="nf">NMS</span><span class="p">(</span><span class="n">record</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot; &quot;Non-Maximise Severity&quot;: no alarm is propagated.</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot; &quot;Non-Maximise Severity&quot;: no alarm is propagated.</span>
 <span class="sd">    This is the default behavior of EPICS links.</span>
 
 <span class="sd">    Example (Python source)</span>
@@ -493,7 +493,7 @@
 
 
 <div class="viewcode-block" id="NP"><a class="viewcode-back" href="../../builder.html#epicsdbbuilder.NP">[docs]</a><span class="k">def</span> <span class="nf">NP</span><span class="p">(</span><span class="n">record</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot; &quot;No Process&quot;: the linked record is not processed.</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot; &quot;No Process&quot;: the linked record is not processed.</span>
 <span class="sd">    This is the default behavior of EPICS links.</span>
 
 <span class="sd">    Example (Python source)</span>

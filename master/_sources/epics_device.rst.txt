@@ -793,3 +793,13 @@ records.
     ========================================================================== =
 
     Reads the current waveform value of a waveform record.
+
+Utility Functions
+-----------------
+
+Documentation for miscellaenous auxiliary functions.
+
+..  function:: void dump_epics_device_db(FILE *output)
+
+    This prints all currently published entries in the database to the given
+    output object.

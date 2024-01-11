@@ -3,7 +3,7 @@
 
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
-    <meta charset="utf-8" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
+    <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
     <title>4. Database Builder Support &#8212; EPICS Device  documentation</title>
     <link rel="stylesheet" href="_static/classic.css" type="text/css" />
@@ -65,7 +65,7 @@ be exported from the make file and then the following example script will work:<
 <span class="n">sys</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">[</span><span class="s1">&#39;EPICS_DEVICE&#39;</span><span class="p">])</span>
 
 <span class="c1"># Import and initialise EPICS device</span>
-<span class="kn">from</span> <span class="nn">epics_device</span> <span class="k">import</span> <span class="o">*</span>
+<span class="kn">from</span> <span class="nn">epics_device</span> <span class="kn">import</span> <span class="o">*</span>
 
 <span class="c1"># Configure an appropriate record naming convention</span>
 <span class="n">SetTemplateRecordNames</span><span class="p">()</span>
@@ -80,10 +80,10 @@ be exported from the make file and then the following example script will work:<
 <p>Invoking a Python script of this form will write a valid EPICS database file.
 With this script the following lines added to the <code class="docutils literal notranslate"><span class="pre">Db/Makefile</span></code> after
 <code class="docutils literal notranslate"><span class="pre">include</span> <span class="pre">$(TOP)/configure/RULES</span></code> will build the database as required:</p>
-<div class="highlight-make notranslate"><div class="highlight"><pre><span></span><span class="k">export</span> <span class="nv">EPICS_DEVICE</span>
+<div class="highlight-make notranslate"><div class="highlight"><pre><span></span><span class="k">export</span><span class="w"> </span><span class="nv">EPICS_DEVICE</span>
 
-<span class="nf">$(COMMON_DIR)/%.db</span><span class="o">:</span> ../%.<span class="n">py</span>
-        <span class="k">$(</span>PYTHON<span class="k">)</span> $&lt; <span class="nv">$@</span>
+<span class="nf">$(COMMON_DIR)/%.db</span><span class="o">:</span><span class="w"> </span>../%.<span class="n">py</span>
+<span class="w">        </span><span class="k">$(</span>PYTHON<span class="k">)</span><span class="w"> </span>$&lt;<span class="w"> </span><span class="nv">$@</span>
 </pre></div>
 </div>
 <section id="creating-epics-records">
@@ -333,28 +333,28 @@ responsible for timestamping the records.</p>
 </div>
 <p>can be combined with the following C code to trigger simultaneous and
 coherent updates of the three named PVs:</p>
-<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="k">static</span> <span class="k">struct</span> <span class="n">epics_interlock</span> <span class="o">*</span><span class="n">update</span><span class="p">;</span>
-<span class="k">static</span> <span class="kt">double</span> <span class="n">v1</span><span class="p">,</span> <span class="n">v2</span><span class="p">,</span> <span class="n">v3</span><span class="p">;</span>
-<span class="k">static</span> <span class="kt">int</span> <span class="n">wf</span><span class="p">[</span><span class="mi">1000</span><span class="p">];</span>
-<span class="k">static</span> <span class="kt">void</span> <span class="nf">compute_update</span><span class="p">(</span>
-    <span class="kt">double</span> <span class="o">*</span><span class="n">v1</span><span class="p">,</span> <span class="kt">double</span> <span class="o">*</span><span class="n">v2</span><span class="p">,</span> <span class="kt">double</span> <span class="o">*</span><span class="n">v3</span><span class="p">,</span> <span class="kt">int</span> <span class="n">wf</span><span class="p">[])</span> <span class="p">{</span> <span class="p">...</span> <span class="p">}</span>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="k">static</span><span class="w"> </span><span class="k">struct</span><span class="w"> </span><span class="nc">epics_interlock</span><span class="w"> </span><span class="o">*</span><span class="n">update</span><span class="p">;</span>
+<span class="k">static</span><span class="w"> </span><span class="kt">double</span><span class="w"> </span><span class="n">v1</span><span class="p">,</span><span class="w"> </span><span class="n">v2</span><span class="p">,</span><span class="w"> </span><span class="n">v3</span><span class="p">;</span>
+<span class="k">static</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">wf</span><span class="p">[</span><span class="mi">1000</span><span class="p">];</span>
+<span class="k">static</span><span class="w"> </span><span class="kt">void</span><span class="w"> </span><span class="nf">compute_update</span><span class="p">(</span>
+<span class="w">    </span><span class="kt">double</span><span class="w"> </span><span class="o">*</span><span class="n">v1</span><span class="p">,</span><span class="w"> </span><span class="kt">double</span><span class="w"> </span><span class="o">*</span><span class="n">v2</span><span class="p">,</span><span class="w"> </span><span class="kt">double</span><span class="w"> </span><span class="o">*</span><span class="n">v3</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">wf</span><span class="p">[])</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="p">...</span><span class="w"> </span><span class="p">}</span>
 
 <span class="c1">// Called in response to some internal or external action</span>
-<span class="kt">void</span> <span class="nf">trigger_update</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span>
+<span class="kt">void</span><span class="w"> </span><span class="nf">trigger_update</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span>
 <span class="p">{</span>
-    <span class="n">interlock_wait</span><span class="p">(</span><span class="n">update</span><span class="p">);</span>
-    <span class="n">compute_update</span><span class="p">(</span><span class="o">&amp;</span><span class="n">v1</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">v2</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">v3</span><span class="p">,</span> <span class="n">wf</span><span class="p">);</span>
-    <span class="n">interlock_signal</span><span class="p">(</span><span class="n">update</span><span class="p">,</span> <span class="nb">NULL</span><span class="p">);</span>
+<span class="w">    </span><span class="n">interlock_wait</span><span class="p">(</span><span class="n">update</span><span class="p">);</span>
+<span class="w">    </span><span class="n">compute_update</span><span class="p">(</span><span class="o">&amp;</span><span class="n">v1</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="n">v2</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="n">v3</span><span class="p">,</span><span class="w"> </span><span class="n">wf</span><span class="p">);</span>
+<span class="w">    </span><span class="n">interlock_signal</span><span class="p">(</span><span class="n">update</span><span class="p">,</span><span class="w"> </span><span class="nb">NULL</span><span class="p">);</span>
 <span class="p">}</span>
 
 <span class="c1">// Publish the PVs</span>
-<span class="kt">void</span> <span class="nf">publish_pvs</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span>
+<span class="kt">void</span><span class="w"> </span><span class="nf">publish_pvs</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span>
 <span class="p">{</span>
-    <span class="n">update</span> <span class="o">=</span> <span class="n">create_interlock</span><span class="p">(</span><span class="s">&quot;UPDATE&quot;</span><span class="p">,</span> <span class="nb">false</span><span class="p">);</span>
-    <span class="n">PUBLISH_READ_VAR</span><span class="p">(</span><span class="n">ai</span><span class="p">,</span> <span class="s">&quot;V1&quot;</span><span class="p">,</span> <span class="n">v1</span><span class="p">);</span>
-    <span class="n">PUBLISH_READ_VAR</span><span class="p">(</span><span class="n">ai</span><span class="p">,</span> <span class="s">&quot;V2&quot;</span><span class="p">,</span> <span class="n">v2</span><span class="p">);</span>
-    <span class="n">PUBLISH_READ_VAR</span><span class="p">(</span><span class="n">ai</span><span class="p">,</span> <span class="s">&quot;V3&quot;</span><span class="p">,</span> <span class="n">v3</span><span class="p">);</span>
-    <span class="n">PUBLISH_WF_READ_VAR</span><span class="p">(</span><span class="kt">int</span><span class="p">,</span> <span class="s">&quot;WF&quot;</span><span class="p">,</span> <span class="mi">1000</span><span class="p">,</span> <span class="n">wf</span><span class="p">);</span>
+<span class="w">    </span><span class="n">update</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">create_interlock</span><span class="p">(</span><span class="s">&quot;UPDATE&quot;</span><span class="p">,</span><span class="w"> </span><span class="nb">false</span><span class="p">);</span>
+<span class="w">    </span><span class="n">PUBLISH_READ_VAR</span><span class="p">(</span><span class="n">ai</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;V1&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">v1</span><span class="p">);</span>
+<span class="w">    </span><span class="n">PUBLISH_READ_VAR</span><span class="p">(</span><span class="n">ai</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;V2&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">v2</span><span class="p">);</span>
+<span class="w">    </span><span class="n">PUBLISH_READ_VAR</span><span class="p">(</span><span class="n">ai</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;V3&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">v3</span><span class="p">);</span>
+<span class="w">    </span><span class="n">PUBLISH_WF_READ_VAR</span><span class="p">(</span><span class="kt">int</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;WF&quot;</span><span class="p">,</span><span class="w"> </span><span class="mi">1000</span><span class="p">,</span><span class="w"> </span><span class="n">wf</span><span class="p">);</span>
 <span class="p">}</span>
 </pre></div>
 </div>

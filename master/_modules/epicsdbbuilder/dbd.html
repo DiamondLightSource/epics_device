@@ -44,9 +44,9 @@
 <span class="kn">import</span> <span class="nn">ctypes</span>
 <span class="kn">import</span> <span class="nn">platform</span>
 
-<span class="kn">from</span> <span class="nn">.</span> <span class="k">import</span> <span class="n">mydbstatic</span>   <span class="c1"># Pick up interface to EPICS dbd files</span>
+<span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">mydbstatic</span>   <span class="c1"># Pick up interface to EPICS dbd files</span>
 
-<span class="kn">from</span> <span class="nn">.recordbase</span> <span class="k">import</span> <span class="n">Record</span>
+<span class="kn">from</span> <span class="nn">.recordbase</span> <span class="kn">import</span> <span class="n">Record</span>
 
 
 <span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;InitialiseDbd&#39;</span><span class="p">,</span> <span class="s1">&#39;LoadDbdFile&#39;</span><span class="p">,</span> <span class="s1">&#39;records&#39;</span><span class="p">]</span>
@@ -57,7 +57,7 @@
 <span class="c1"># (in response to calls to LoadDbdFile) they are automatically available to</span>
 <span class="c1"># all targets.</span>
 <span class="k">class</span> <span class="nc">RecordTypes</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">__RecordTypes</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
 
     <span class="k">def</span> <span class="nf">GetRecords</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -71,7 +71,7 @@
             <span class="n">Record</span><span class="o">.</span><span class="n">CreateSubclass</span><span class="p">(</span><span class="n">on_use</span><span class="p">,</span> <span class="n">recordType</span><span class="p">,</span> <span class="n">validate</span><span class="p">))</span>
 
     <span class="c1"># Checks whether the given recordType names a known valid record type.</span>
-    <span class="k">def</span> <span class="nf">__contains__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">recordType</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__contains__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">recordType</span><span class="p">):</span>
         <span class="k">return</span> <span class="n">recordType</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">__RecordTypes</span>
 
 
@@ -88,7 +88,7 @@
 <span class="c1"># This class uses a the static database to validate whether the associated</span>
 <span class="c1"># record type allows a given value to be written to a given field.</span>
 <span class="k">class</span> <span class="nc">ValidateDbField</span><span class="p">:</span>
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dbEntry</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dbEntry</span><span class="p">):</span>
         <span class="c1"># Copy the existing entry so it stays on the right record</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">dbEntry</span> <span class="o">=</span> <span class="n">DBEntry</span><span class="p">(</span><span class="n">dbEntry</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">__FieldInfo</span> <span class="o">=</span> <span class="kc">None</span>
@@ -138,7 +138,7 @@
 
 
 <span class="k">class</span> <span class="nc">DBEntry</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Create a dbEntry instance within the current DBD.</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Create a dbEntry instance within the current DBD.</span>
 
 <span class="sd">    This is a stateful pointer that can be moved to different</span>
 <span class="sd">    record types and fields within them with the iterate methods.</span>
@@ -146,7 +146,7 @@
 <span class="sd">    If entry is specified on init and is a DBEntry instance, it</span>
 <span class="sd">    will be copied so that its position is maintained.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">entry</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">entry</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="k">assert</span> <span class="n">_db</span><span class="p">,</span> <span class="s2">&quot;LoadDdbFile not called yet&quot;</span>
         <span class="k">if</span> <span class="n">entry</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="c1"># No entry, so alloc a new one</span>
@@ -156,20 +156,20 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">_as_parameter_</span> <span class="o">=</span> <span class="n">mydbstatic</span><span class="o">.</span><span class="n">dbCopyEntry</span><span class="p">(</span><span class="n">entry</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">iterate_records</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Iterate through the record types, yielding their names&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Iterate through the record types, yielding their names&quot;&quot;&quot;</span>
         <span class="n">status</span> <span class="o">=</span> <span class="n">mydbstatic</span><span class="o">.</span><span class="n">dbFirstRecordType</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
         <span class="k">while</span> <span class="n">status</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
             <span class="k">yield</span> <span class="n">mydbstatic</span><span class="o">.</span><span class="n">dbGetRecordTypeName</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
             <span class="n">status</span> <span class="o">=</span> <span class="n">mydbstatic</span><span class="o">.</span><span class="n">dbNextRecordType</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">iterate_fields</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dct_only</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Iterate through a record&#39;s fields, yielding their names&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Iterate through a record&#39;s fields, yielding their names&quot;&quot;&quot;</span>
         <span class="n">status</span> <span class="o">=</span> <span class="n">mydbstatic</span><span class="o">.</span><span class="n">dbFirstField</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dct_only</span><span class="p">)</span>
         <span class="k">while</span> <span class="n">status</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
             <span class="k">yield</span> <span class="n">mydbstatic</span><span class="o">.</span><span class="n">dbGetFieldName</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
             <span class="n">status</span> <span class="o">=</span> <span class="n">mydbstatic</span><span class="o">.</span><span class="n">dbNextField</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dct_only</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">__del__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__del__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="n">mydbstatic</span><span class="o">.</span><span class="n">dbFreeEntry</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_as_parameter_</span><span class="p">)</span>
 
 
@@ -211,7 +211,7 @@
         <span class="n">_epics_base</span> <span class="o">=</span> <span class="n">epics_base</span>
     <span class="k">else</span><span class="p">:</span>
         <span class="c1"># Import from epicscorelibs installed libs</span>
-        <span class="kn">from</span> <span class="nn">epicscorelibs</span> <span class="k">import</span> <span class="n">path</span>
+        <span class="kn">from</span> <span class="nn">epicscorelibs</span> <span class="kn">import</span> <span class="n">path</span>
         <span class="n">mydbstatic</span><span class="o">.</span><span class="n">ImportFunctionsFrom</span><span class="p">(</span><span class="n">path</span><span class="o">.</span><span class="n">get_lib</span><span class="p">(</span><span class="s1">&#39;dbCore&#39;</span><span class="p">))</span>
         <span class="n">_epics_base</span> <span class="o">=</span> <span class="n">path</span><span class="o">.</span><span class="n">base_path</span>
     <span class="n">LoadDbdFile</span><span class="p">(</span><span class="s1">&#39;base.dbd&#39;</span><span class="p">)</span>
