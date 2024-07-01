@@ -163,6 +163,7 @@ static enum PERSISTENCE_TYPES waveform_type_to_persistence(
         case waveform_TYPE_int:     return PERSISTENT_int;
         case waveform_TYPE_float:   return PERSISTENT_float;
         case waveform_TYPE_double:  return PERSISTENT_double;
+        case waveform_TYPE_EPICS_STRING: return PERSISTENT_string;
         default: ASSERT_FAIL();
     }
 }
@@ -538,6 +539,7 @@ static short waveform_type_dbr(enum waveform_type waveform_type)
         case waveform_TYPE_int:     return DBR_LONG;
         case waveform_TYPE_float:   return DBR_FLOAT;
         case waveform_TYPE_double:  return DBR_DOUBLE;
+        case waveform_TYPE_EPICS_STRING:  return DBR_STRING;
         default: ASSERT_FAIL();
     }
 }
@@ -1060,6 +1062,7 @@ static error__t check_waveform_type(
         case waveform_TYPE_int:     expected = DBF_LONG;    break;
         case waveform_TYPE_float:   expected = DBF_FLOAT;   break;
         case waveform_TYPE_double:  expected = DBF_DOUBLE;  break;
+        case waveform_TYPE_EPICS_STRING:  expected = DBF_STRING;  break;
     }
     return
         TEST_OK_(pr->ftvl == expected,

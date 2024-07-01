@@ -310,7 +310,8 @@ enum waveform_type {
     waveform_TYPE_short,
     waveform_TYPE_int,
     waveform_TYPE_float,
-    waveform_TYPE_double
+    waveform_TYPE_double,
+    waveform_TYPE_EPICS_STRING,
 };
 
 
@@ -570,6 +571,7 @@ _DECLARE_WAVEFORM_ARGS(short);
 _DECLARE_WAVEFORM_ARGS(int);
 _DECLARE_WAVEFORM_ARGS(float);
 _DECLARE_WAVEFORM_ARGS(double);
+_DECLARE_WAVEFORM_ARGS(EPICS_STRING);
 
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
