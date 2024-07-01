@@ -667,7 +667,7 @@ _DECLARE_WAVEFORM_ARGS(EPICS_STRING);
         .init    = (PROC_WAVEFORM_T(type)) _publish_waveform_read_var, \
         .context = _make_waveform_context( \
             sizeof(type), max_length, NULL, \
-            ENSURE_TYPE(type *, waveform), ##args)
+            ENSURE_TYPE(type *, waveform)), ##args)
 #define PUBLISH_WF_WRITE_VAR_P(type, name, max_length, waveform, args...) \
     PUBLISH_WF_WRITE_VAR( \
         type, name, max_length, waveform, .persist = true, ##args)
@@ -679,7 +679,7 @@ _DECLARE_WAVEFORM_ARGS(EPICS_STRING);
         .init    = (PROC_WAVEFORM_T(type)) _publish_waveform_read_var, \
         .context = _make_waveform_context( \
             sizeof(type), max_length, &(length), \
-            ENSURE_TYPE(type *, waveform), ##args)
+            ENSURE_TYPE(type *, waveform)), ##args)
 #define PUBLISH_WF_WRITE_VAR_LEN_P( \
         type, name, max_length, length, waveform, args...) \
     PUBLISH_WF_WRITE_VAR_LEN( \
