@@ -34,4 +34,6 @@ for prefix in ['A', 'B']:
 
 longOut('ADD_ONE', DESC = 'Adds one to the written value')
 
+WaveformOut('STRINGS', 4, 'STRING')
+
 WriteRecords(sys.argv[1])

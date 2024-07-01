@@ -30,6 +30,11 @@ static double scaling = 0.1;
 static int trigger_count = 0;
 static int trigger_waveform[WF_LENGTH];
 
+static EPICS_STRING strings[4] = {
+    { "1" }, { "2" }, { "3" }, { "4" }
+};
+static unsigned int strings_len = 4;
+
 
 static void update_waveform(void)
 {
@@ -148,6 +153,9 @@ error__t initialise_example_pvs(void)
     publish_group("B");
 
     PUBLISH(longout, "ADD_ONE", add_one);
+
+    PUBLISH_WF_WRITE_VAR_LEN_P(
+        EPICS_STRING, "STRINGS", 4, strings_len, strings);
 
     pthread_t thread_id;
     return TEST_PTHREAD(pthread_create(&thread_id, NULL, event_thread, NULL));
