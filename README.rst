@@ -8,8 +8,8 @@ standalone.
 
 
 ============== ==============================================================
-Source code    https://github.com/dls-controls/epics_device
-Documentation  https://dls-controls.github.io/epics_device
+Source code    https://github.com/DiamondLightSource/epics_device
+Documentation  https://DiamondLightSource.github.io/epics_device
 ============== ==============================================================
 
 
@@ -87,6 +87,6 @@ means that following two files in the ``configure`` directory must be edited:
         not necessary to install or setup ``epicsdbbuilder``, it can be used in
         place.
 
-See https://dls-controls.github.io/epics_device for more detailed documentation.
+See https://DiamondLightSource.github.io/epics_device for more detailed documentation.
 
 ..  _epicsdbbuilder: https://github.com/Araneidae/epicsdbbuilder
