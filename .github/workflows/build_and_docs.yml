@@ -13,13 +13,13 @@ on:
 # Global environment
 env:
   # EPICS Base version for system block IOC
-  EPCISDBBUILER_VERSION: 1.5
+  EPICSDBBUILDER_VERSION: 1.5
 
 jobs:
   build:
     name: "Build and Docs CI"
     runs-on: ubuntu-latest
-    container: ghcr.io/epics-containers/epics-base-linux-developer:7.0.7ec3
+    container: ghcr.io/epics-containers/epics-base-developer:7.0.8ec2
 
     steps:
       - name: Checkout Source
@@ -32,9 +32,11 @@ jobs:
       - name: Install Packages
         # Pin Sphinx version to one that supports Python3, but does not feature an API
         # change that would break our custom cdomain.py extension
-        # Pin Jinja2 and alabaster to fix dependency issue between them and sphinx
+        # Pin Jinja2, alabaster, and various sphinxcontrib-* packages to fix dependency issue between them and sphinx
         run: |
-          pip install epicsdbbuilder==${EPCISDBBUILER_VERSION} sphinx==2.3.1 Jinja2==3.0.3 alabaster==0.7.12
+          pip install epicsdbbuilder==${EPICSDBBUILDER_VERSION} sphinx==2.3.1 Jinja2==3.0.3 alabaster==0.7.12 \
+            sphinxcontrib-applehelp==1.0.4 sphinxcontrib-devhelp==1.0.2 sphinxcontrib-htmlhelp==2.0.1 \
+            sphinxcontrib-serializinghtml==1.1.5 sphinxcontrib-qthelp==1.0.3
 
       - name: Build (including docs)
         run: |
