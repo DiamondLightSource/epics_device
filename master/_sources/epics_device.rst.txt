@@ -493,15 +493,16 @@ PUBLISH_WAVEFORM API
         cryptic compiler error message will be generated, and the corresponding
         string must be written into the ``FTVL`` field:
 
-        =============== =====================
-        C type          ``FTVL`` setting
-        =============== =====================
-        ``char``        ``'CHAR'``
-        ``short``       ``'SHORT'``
-        ``int``         ``'LONG'``
-        ``float``       ``'FLOAT'``
-        ``double``      ``'DOUBLE'``
-        =============== =====================
+        ================ =====================
+        C type           ``FTVL`` setting
+        ================ =====================
+        ``char``         ``'CHAR'``
+        ``short``        ``'SHORT'``
+        ``int``          ``'LONG'``
+        ``float``        ``'FLOAT'``
+        ``double``       ``'DOUBLE'``
+        ``EPICS_STRING`` ``'STRING'``
+        ================ =====================
 
         Note that the ``int`` type is anomalous -- although EPICS uses the
         description ``'LONG'`` this must in fact be a 32-bit type.  The current

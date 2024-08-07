@@ -138,13 +138,17 @@ interval and description.</p>
 <span class="normal"> 7</span>
 <span class="normal"> 8</span>
 <span class="normal"> 9</span>
-<span class="normal">10</span></pre></div></td><td class="code"><div><pre><span></span><span class="kn">import</span> <span class="nn">sys</span><span class="o">,</span> <span class="nn">os</span>
+<span class="normal">10</span>
+<span class="normal">11</span>
+<span class="normal">12</span></pre></div></td><td class="code"><div><pre><span></span><span class="kn">import</span> <span class="nn">sys</span><span class="o">,</span> <span class="nn">os</span>
 <span class="n">sys</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">[</span><span class="s1">&#39;EPICS_DEVICE&#39;</span><span class="p">])</span>
 
 <span class="kn">from</span> <span class="nn">epics_device</span> <span class="kn">import</span> <span class="o">*</span>
 <span class="n">SetTemplateRecordNames</span><span class="p">()</span>
 
 <span class="n">longIn</span><span class="p">(</span><span class="s1">&#39;TSEC&#39;</span><span class="p">,</span> <span class="n">DESC</span> <span class="o">=</span> <span class="s1">&#39;Timestamp in seconds&#39;</span><span class="p">,</span> <span class="n">SCAN</span> <span class="o">=</span> <span class="s1">&#39;1 second&#39;</span><span class="p">)</span>
+
+<span class="n">Waveform</span><span class="p">(</span><span class="s1">&#39;STRINGS&#39;</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="s1">&#39;STRING&#39;</span><span class="p">,</span> <span class="n">PINI</span> <span class="o">=</span> <span class="s2">&quot;YES&quot;</span><span class="p">)</span>
 
 <span class="c1"># Write out the generated .db file</span>
 <span class="n">WriteRecords</span><span class="p">(</span><span class="n">sys</span><span class="o">.</span><span class="n">argv</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
@@ -244,7 +248,12 @@ script above.</p>
 <span class="normal">27</span>
 <span class="normal">28</span>
 <span class="normal">29</span>
-<span class="normal">30</span></pre></div></td><td class="code"><div><pre><span></span><span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;stdbool.h&gt;</span>
+<span class="normal">30</span>
+<span class="normal">31</span>
+<span class="normal">32</span>
+<span class="normal">33</span>
+<span class="normal">34</span>
+<span class="normal">35</span></pre></div></td><td class="code"><div><pre><span></span><span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;stdbool.h&gt;</span>
 <span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;unistd.h&gt;</span>
 <span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;time.h&gt;</span>
 <span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;pthread.h&gt;</span>
@@ -254,6 +263,10 @@ script above.</p>
 <span class="cp">#include</span><span class="w"> </span><span class="cpf">&quot;error.h&quot;</span>
 <span class="cp">#include</span><span class="w"> </span><span class="cpf">&quot;epics_device.h&quot;</span>
 
+<span class="k">static</span><span class="w"> </span><span class="n">EPICS_STRING</span><span class="w"> </span><span class="n">strings</span><span class="p">[</span><span class="mi">4</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="p">{</span><span class="w"> </span><span class="s">&quot;Hello&quot;</span><span class="w"> </span><span class="p">},</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="s">&quot;There&quot;</span><span class="w"> </span><span class="p">},</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="s">&quot;A longer string&quot;</span><span class="w"> </span><span class="p">},</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="s">&quot;THE END&quot;</span><span class="w"> </span><span class="p">}</span>
+<span class="p">};</span>
+
 <span class="k">static</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="nf">read_timestamp</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span>
 <span class="p">{</span>
 <span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="p">(</span><span class="kt">int</span><span class="p">)</span><span class="w"> </span><span class="n">time</span><span class="p">(</span><span class="nb">NULL</span><span class="p">);</span>
@@ -262,6 +275,7 @@ script above.</p>
 <span class="k">static</span><span class="w"> </span><span class="n">error__t</span><span class="w"> </span><span class="nf">publish_pvs</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span>
 <span class="p">{</span>
 <span class="w">    </span><span class="n">PUBLISH_READER</span><span class="p">(</span><span class="n">longin</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;TSEC&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">read_timestamp</span><span class="p">);</span>
+<span class="w">    </span><span class="n">PUBLISH_WF_READ_VAR</span><span class="p">(</span><span class="n">EPICS_STRING</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;STRINGS&quot;</span><span class="p">,</span><span class="w"> </span><span class="mi">4</span><span class="p">,</span><span class="w"> </span><span class="n">strings</span><span class="p">);</span>
 <span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="n">ERROR_OK</span><span class="p">;</span>
 <span class="p">}</span>
 
@@ -378,7 +392,9 @@ functioned IOC.</p>
 <span class="normal">34</span>
 <span class="normal">35</span>
 <span class="normal">36</span>
-<span class="normal">37</span></pre></div></td><td class="code"><div><pre><span></span><span class="kn">import</span> <span class="nn">sys</span><span class="o">,</span> <span class="nn">os</span>
+<span class="normal">37</span>
+<span class="normal">38</span>
+<span class="normal">39</span></pre></div></td><td class="code"><div><pre><span></span><span class="kn">import</span> <span class="nn">sys</span><span class="o">,</span> <span class="nn">os</span>
 
 <span class="n">sys</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">[</span><span class="s1">&#39;EPICS_DEVICE&#39;</span><span class="p">])</span>
 
@@ -413,6 +429,8 @@ functioned IOC.</p>
     <span class="n">pop_name_prefix</span><span class="p">()</span>
 
 <span class="n">longOut</span><span class="p">(</span><span class="s1">&#39;ADD_ONE&#39;</span><span class="p">,</span> <span class="n">DESC</span> <span class="o">=</span> <span class="s1">&#39;Adds one to the written value&#39;</span><span class="p">)</span>
+
+<span class="n">WaveformOut</span><span class="p">(</span><span class="s1">&#39;STRINGS&#39;</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="s1">&#39;STRING&#39;</span><span class="p">)</span>
 
 <span class="n">WriteRecords</span><span class="p">(</span><span class="n">sys</span><span class="o">.</span><span class="n">argv</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
 </pre></div></td></tr></table></div>
