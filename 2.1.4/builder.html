@@ -1,0 +1,561 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>4. Database Builder Support &#8212; EPICS Device  documentation</title>
+    <link rel="stylesheet" href="_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="_static/language_data.js"></script>
+    
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="5. Support for Persistent PV State" href="persistence.html" />
+    <link rel="prev" title="3. Extra EPICS Device Support" href="epics_extra.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="persistence.html" title="5. Support for Persistent PV State"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="epics_extra.html" title="3. Extra EPICS Device Support"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">EPICS Device  documentation</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <span class="target" id="module-epics_device"></span><section id="database-builder-support">
+<h1><span class="section-number">4. </span>Database Builder Support<a class="headerlink" href="#database-builder-support" title="Permalink to this headline">¶</a></h1>
+<p>The functionality documented here is designed to create EPICS databases
+alongside an IOC developed using the EPICS Device C API.  The database building
+process uses the EPICS database builder, which is a separate support module and
+documented elsewere.</p>
+<p>Importing <a class="reference internal" href="#module-epics_device" title="epics_device"><code class="xref py py-mod docutils literal notranslate"><span class="pre">epics_device</span></code></a> will automatically import and initialise
+<a class="reference internal" href="#module-epicsdbbuilder" title="epicsdbbuilder"><code class="xref py py-mod docutils literal notranslate"><span class="pre">epicsdbbuilder</span></code></a>.  By default the version configured in
+<code class="docutils literal notranslate"><span class="pre">configure/SITE_CONFIG</span></code> of <code class="docutils literal notranslate"><span class="pre">epics_device</span></code> will be used, but this can be
+overridden by setting the environment variable <code class="docutils literal notranslate"><span class="pre">EPICSDBBUILDER</span></code> before
+importing <a class="reference internal" href="#module-epics_device" title="epics_device"><code class="xref py py-mod docutils literal notranslate"><span class="pre">epics_device</span></code></a>.</p>
+<p>A database building script will normally be invoked from the EPICS build
+environment.  This will have already exported the environment variable
+<code class="docutils literal notranslate"><span class="pre">EPICS_BASE</span></code>, which must be set before importing <a class="reference internal" href="#module-epics_device" title="epics_device"><code class="xref py py-mod docutils literal notranslate"><span class="pre">epics_device</span></code></a>.  If
+<code class="docutils literal notranslate"><span class="pre">EPICS_DEVICE</span></code> has also been configured in <code class="docutils literal notranslate"><span class="pre">configure/RELEASE</span></code> then this can
+be exported from the make file and then the following example script will work:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># Configure path using environment</span>
+<span class="kn">import</span> <span class="nn">sys</span><span class="o">,</span> <span class="nn">os</span>
+<span class="n">sys</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">[</span><span class="s1">&#39;EPICS_DEVICE&#39;</span><span class="p">])</span>
+
+<span class="c1"># Import and initialise EPICS device</span>
+<span class="kn">from</span> <span class="nn">epics_device</span> <span class="kn">import</span> <span class="o">*</span>
+
+<span class="c1"># Configure an appropriate record naming convention</span>
+<span class="n">SetTemplateRecordNames</span><span class="p">()</span>
+
+<span class="c1"># Now create records, eg</span>
+<span class="n">aOut</span><span class="p">(</span><span class="s1">&#39;RECORD&#39;</span><span class="p">,</span> <span class="n">DESC</span> <span class="o">=</span> <span class="s1">&#39;This is a record&#39;</span><span class="p">)</span>
+
+<span class="c1"># Finally write the records, here the filename is sys.argv</span>
+<span class="n">WriteRecords</span><span class="p">(</span><span class="n">sys</span><span class="o">.</span><span class="n">argv</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+</pre></div>
+</div>
+<p>Invoking a Python script of this form will write a valid EPICS database file.
+With this script the following lines added to the <code class="docutils literal notranslate"><span class="pre">Db/Makefile</span></code> after
+<code class="docutils literal notranslate"><span class="pre">include</span> <span class="pre">$(TOP)/configure/RULES</span></code> will build the database as required:</p>
+<div class="highlight-make notranslate"><div class="highlight"><pre><span></span><span class="k">export</span><span class="w"> </span><span class="nv">EPICS_DEVICE</span>
+
+<span class="nf">$(COMMON_DIR)/%.db</span><span class="o">:</span><span class="w"> </span>../%.<span class="n">py</span>
+<span class="w">        </span><span class="k">$(</span>PYTHON<span class="k">)</span><span class="w"> </span>$&lt;<span class="w"> </span><span class="nv">$@</span>
+</pre></div>
+</div>
+<section id="creating-epics-records">
+<h2><span class="section-number">4.1. </span>Creating EPICS Records<a class="headerlink" href="#creating-epics-records" title="Permalink to this headline">¶</a></h2>
+<p>The methods exported by <a class="reference internal" href="#module-epics_device" title="epics_device"><code class="xref py py-mod docutils literal notranslate"><span class="pre">epics_device</span></code></a> provide helper functions for
+creating EPICS records of each of the eleven basic types.  A particular coding
+style is supported by these calls, if the default behaviour is not felt to be
+appropriate then records can be created directly by calling the appropriate
+methods of <a class="reference internal" href="#epics_device.EpicsDevice" title="epics_device.EpicsDevice"><code class="xref py py-class docutils literal notranslate"><span class="pre">EpicsDevice</span></code></a>.</p>
+<p>A number of defaults and naming conventions are applied by the functions below.</p>
+<section id="record-address">
+<h3><span class="section-number">4.1.1. </span>Record Address<a class="headerlink" href="#record-address" title="Permalink to this headline">¶</a></h3>
+<p>By default the name used to look up the record in IOC support, as published by
+<a class="reference internal" href="epics_device.html#c.PUBLISH" title="PUBLISH"><code class="xref c c-func docutils literal notranslate"><span class="pre">PUBLISH()</span></code></a> and allies, is the name argument as passed to the appropriate
+record construct documented below, before any name processing occurs.  This can
+be modified in two ways:</p>
+<ol class="arabic simple">
+<li><p>Firstly, every record creation function listed below takes an optional
+keyword argument <cite>address</cite>, which can be used to specify an address other
+than the record <cite>name</cite>.</p></li>
+<li><p>Secondly, a prefix can be prepended to every <cite>address</cite> and <cite>name</cite> by calling
+the functions <a class="reference internal" href="#epics_device.push_name_prefix" title="epics_device.push_name_prefix"><code class="xref py py-func docutils literal notranslate"><span class="pre">push_name_prefix()</span></code></a> and <a class="reference internal" href="#epics_device.pop_name_prefix" title="epics_device.pop_name_prefix"><code class="xref py py-func docutils literal notranslate"><span class="pre">pop_name_prefix()</span></code></a>.</p></li>
+</ol>
+<dl class="function">
+<dt id="epics_device.push_name_prefix">
+<code class="sig-prename descclassname">epics_device.</code><code class="sig-name descname">push_name_prefix</code><span class="sig-paren">(</span><em class="sig-param">prefix</em><span class="sig-paren">)</span><a class="headerlink" href="#epics_device.push_name_prefix" title="Permalink to this definition">¶</a></dt>
+<dt id="epics_device.pop_name_prefix">
+<code class="sig-prename descclassname">epics_device.</code><code class="sig-name descname">pop_name_prefix</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#epics_device.pop_name_prefix" title="Permalink to this definition">¶</a></dt>
+<dd><p>These two functions mirror the action of <a class="reference internal" href="epics_device.html#c.push_record_name_prefix" title="push_record_name_prefix"><code class="xref c c-func docutils literal notranslate"><span class="pre">push_record_name_prefix()</span></code></a>
+and <a class="reference internal" href="epics_device.html#c.pop_record_name_prefix" title="pop_record_name_prefix"><code class="xref c c-func docutils literal notranslate"><span class="pre">pop_record_name_prefix()</span></code></a>, and affect both the record name and
+the associated address.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="epics_device.set_name_separator">
+<code class="sig-prename descclassname">epics_device.</code><code class="sig-name descname">set_name_separator</code><span class="sig-paren">(</span><em class="sig-param">separator</em><span class="sig-paren">)</span><a class="headerlink" href="#epics_device.set_name_separator" title="Permalink to this definition">¶</a></dt>
+<dd><p>By default component of the prefix and the record name are separated by ‘:’,
+but this function can be used to change the separator.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="epics_device.name_prefix">
+<em class="property">class </em><code class="sig-prename descclassname">epics_device.</code><code class="sig-name descname">name_prefix</code><span class="sig-paren">(</span><em class="sig-param">prefix</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/epics_device/device.html#name_prefix"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#epics_device.name_prefix" title="Permalink to this definition">¶</a></dt>
+<dd><p>This is a context manager for a name prefix, wrapping
+<a class="reference internal" href="#epics_device.push_name_prefix" title="epics_device.push_name_prefix"><code class="xref py py-func docutils literal notranslate"><span class="pre">push_name_prefix()</span></code></a> and <a class="reference internal" href="#epics_device.pop_name_prefix" title="epics_device.pop_name_prefix"><code class="xref py py-func docutils literal notranslate"><span class="pre">pop_name_prefix()</span></code></a> into a single action.
+This can be used thus:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">with</span> <span class="n">name_prefix</span><span class="p">(</span><span class="s1">&#39;PREFIX&#39;</span><span class="p">):</span>
+    <span class="n">aIn</span><span class="p">(</span><span class="s1">&#39;AIN&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</section>
+<section id="in-records">
+<h3><span class="section-number">4.1.2. </span>In Records<a class="headerlink" href="#in-records" title="Permalink to this headline">¶</a></h3>
+<p>Input records are created by the following functions.  Processing must be
+arranged for each record.  The options are:</p>
+<ul class="simple">
+<li><p>Setting <code class="docutils literal notranslate"><span class="pre">SCAN</span></code> to a delay interval and allowing EPICS to trigger processing.</p></li>
+<li><p>Setting <code class="docutils literal notranslate"><span class="pre">SCAN</span> <span class="pre">=</span> <span class="pre">'I/O</span> <span class="pre">Intr'</span></code> and calling <a class="reference internal" href="epics_device.html#c.trigger_record" title="trigger_record"><code class="xref c c-func docutils literal notranslate"><span class="pre">trigger_record()</span></code></a> from within
+the driver.</p></li>
+<li><p>Leaving <code class="docutils literal notranslate"><span class="pre">SCAN</span></code> as <code class="docutils literal notranslate"><span class="pre">'Passive'</span></code> and ensuring that the record is processed in
+response to <code class="docutils literal notranslate"><span class="pre">FLNK</span></code> from some other record.  In particular see
+<a class="reference internal" href="#epics_device.Trigger" title="epics_device.Trigger"><code class="xref py py-func docutils literal notranslate"><span class="pre">Trigger()</span></code></a> for this.</p></li>
+</ul>
+<dl class="function">
+<dt id="epics_device.aIn">
+<code class="sig-prename descclassname">epics_device.</code><code class="sig-name descname">aIn</code><span class="sig-paren">(</span><em class="sig-param">name</em>, <em class="sig-param">LOPR=None</em>, <em class="sig-param">HOPR=None</em>, <em class="sig-param">EGU=None</em>, <em class="sig-param">PREC=None</em>, <em class="sig-param">**fields</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/epics_device/device.html#aIn"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#epics_device.aIn" title="Permalink to this definition">¶</a></dt>
+<dt id="epics_device.longIn">
+<code class="sig-prename descclassname">epics_device.</code><code class="sig-name descname">longIn</code><span class="sig-paren">(</span><em class="sig-param">name</em>, <em class="sig-param">LOPR=None</em>, <em class="sig-param">HOPR=None</em>, <em class="sig-param">EGU=None</em>, <em class="sig-param">**fields</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/epics_device/device.html#longIn"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#epics_device.longIn" title="Permalink to this definition">¶</a></dt>
+<dd><p>For <code class="docutils literal notranslate"><span class="pre">ai</span></code> and <code class="docutils literal notranslate"><span class="pre">longin</span></code> records the <code class="docutils literal notranslate"><span class="pre">MDEL</span></code> field is set by default to -1
+to ensure that all ticks are generated.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="epics_device.boolIn">
+<code class="sig-prename descclassname">epics_device.</code><code class="sig-name descname">boolIn</code><span class="sig-paren">(</span><em class="sig-param">name</em>, <em class="sig-param">ZNAM=None</em>, <em class="sig-param">ONAM=None</em>, <em class="sig-param">**fields</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/epics_device/device.html#boolIn"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#epics_device.boolIn" title="Permalink to this definition">¶</a></dt>
+<dd><p>For <a class="reference internal" href="#epics_device.boolIn" title="epics_device.boolIn"><code class="xref py py-func docutils literal notranslate"><span class="pre">boolIn()</span></code></a> the two optional arguments are the strings associated
+with boolean values <code class="docutils literal notranslate"><span class="pre">false</span></code> and <code class="docutils literal notranslate"><span class="pre">true</span></code> respectively.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="epics_device.mbbIn">
+<code class="sig-prename descclassname">epics_device.</code><code class="sig-name descname">mbbIn</code><span class="sig-paren">(</span><em class="sig-param">name</em>, <em class="sig-param">*options</em>, <em class="sig-param">**fields</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/epics_device/device.html#mbbIn"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#epics_device.mbbIn" title="Permalink to this definition">¶</a></dt>
+<dd><p>For <code class="docutils literal notranslate"><span class="pre">mbbIn</span></code> <cite>*options</cite> represents a sequence of up to 16 enumeration
+assignments.  Each assignment is either a string or else a tuple of two
+values, in which case the first value is the option name and the second is
+the severity option.</p>
+<p>In all cases the underlying values are assigned by default in ascending
+order from 0.</p>
+<p>For example:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">status</span> <span class="o">=</span> <span class="n">mbbIn</span><span class="p">(</span><span class="s1">&#39;STATUS&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;Ok&#39;</span><span class="p">,</span> <span class="p">(</span><span class="s1">&#39;Failing&#39;</span><span class="p">,</span> <span class="s1">&#39;MINOR&#39;</span><span class="p">),</span> <span class="p">(</span><span class="s1">&#39;Failed&#39;</span><span class="p">,</span> <span class="s1">&#39;MAJOR&#39;</span><span class="p">),</span>
+    <span class="n">DESC</span> <span class="o">=</span> <span class="s1">&#39;Status pv&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>This creates a PV with value 0, 1 or 2, and with increasing severity.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="epics_device.stringIn">
+<code class="sig-prename descclassname">epics_device.</code><code class="sig-name descname">stringIn</code><span class="sig-paren">(</span><em class="sig-param">name</em>, <em class="sig-param">**fields</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/epics_device/device.html#stringIn"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#epics_device.stringIn" title="Permalink to this definition">¶</a></dt>
+<dd><p>Creates a <code class="docutils literal notranslate"><span class="pre">stringin</span></code> record.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="epics_device.set_MDEL_default">
+<code class="sig-prename descclassname">epics_device.</code><code class="sig-name descname">set_MDEL_default</code><span class="sig-paren">(</span><em class="sig-param">default</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/epics_device/device.html#set_MDEL_default"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#epics_device.set_MDEL_default" title="Permalink to this definition">¶</a></dt>
+<dd><p>Normally the <code class="docutils literal notranslate"><span class="pre">MDEL</span></code> field for <code class="docutils literal notranslate"><span class="pre">ai</span></code> and <code class="docutils literal notranslate"><span class="pre">longin</span></code> records defaults to 0.
+This means that record updates which don’t change the published value aren’t
+transmitted over channel access.  In some applications this is inconvenient,
+in which case this function can be called with <cite>default</cite> set to -1 to ensure
+that all updates are transmitted.</p>
+</dd></dl>
+
+</section>
+<section id="out-records">
+<h3><span class="section-number">4.1.3. </span>Out Records<a class="headerlink" href="#out-records" title="Permalink to this headline">¶</a></h3>
+<p>For all “out” records <code class="docutils literal notranslate"><span class="pre">OMSL</span></code> is set to <code class="docutils literal notranslate"><span class="pre">supervisory</span></code> and <code class="docutils literal notranslate"><span class="pre">PINI</span></code> is set to
+<code class="docutils literal notranslate"><span class="pre">YES</span></code>.  As “out” records are normally used for device configuration they
+should be left with <code class="docutils literal notranslate"><span class="pre">SCAN</span></code> set to <code class="docutils literal notranslate"><span class="pre">'Passive'</span></code>, the default.</p>
+<p>The name passed to each of these functions is the internal address, but the
+record name can be modified by invoking <a class="reference internal" href="#epics_device.set_out_name" title="epics_device.set_out_name"><code class="xref py py-func docutils literal notranslate"><span class="pre">set_out_name()</span></code></a>.</p>
+<dl class="function">
+<dt id="epics_device.aOut">
+<code class="sig-prename descclassname">epics_device.</code><code class="sig-name descname">aOut</code><span class="sig-paren">(</span><em class="sig-param">name</em>, <em class="sig-param">DRVL=None</em>, <em class="sig-param">DRVH=None</em>, <em class="sig-param">EGU=None</em>, <em class="sig-param">PREC=None</em>, <em class="sig-param">**fields</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/epics_device/device.html#aOut"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#epics_device.aOut" title="Permalink to this definition">¶</a></dt>
+<dt id="epics_device.longOut">
+<code class="sig-prename descclassname">epics_device.</code><code class="sig-name descname">longOut</code><span class="sig-paren">(</span><em class="sig-param">name</em>, <em class="sig-param">DRVL=None</em>, <em class="sig-param">DRVH=None</em>, <em class="sig-param">EGU=None</em>, <em class="sig-param">**fields</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/epics_device/device.html#longOut"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#epics_device.longOut" title="Permalink to this definition">¶</a></dt>
+<dd><p>By default for <code class="docutils literal notranslate"><span class="pre">ao</span></code> and <code class="docutils literal notranslate"><span class="pre">longout</span></code> records the <code class="docutils literal notranslate"><span class="pre">LOPR</span></code> and <code class="docutils literal notranslate"><span class="pre">HOPR</span></code>
+fields are set equal to <code class="docutils literal notranslate"><span class="pre">DRVL</span></code> and <code class="docutils literal notranslate"><span class="pre">DRVH</span></code> respectively.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="epics_device.boolOut">
+<code class="sig-prename descclassname">epics_device.</code><code class="sig-name descname">boolOut</code><span class="sig-paren">(</span><em class="sig-param">name</em>, <em class="sig-param">ZNAM=None</em>, <em class="sig-param">ONAM=None</em>, <em class="sig-param">**fields</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/epics_device/device.html#boolOut"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#epics_device.boolOut" title="Permalink to this definition">¶</a></dt>
+<dd><p>See <a class="reference internal" href="#epics_device.boolIn" title="epics_device.boolIn"><code class="xref py py-func docutils literal notranslate"><span class="pre">boolIn()</span></code></a> for the optional arguments.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="epics_device.mbbOut">
+<code class="sig-prename descclassname">epics_device.</code><code class="sig-name descname">mbbOut</code><span class="sig-paren">(</span><em class="sig-param">name</em>, <em class="sig-param">*options</em>, <em class="sig-param">**fields</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/epics_device/device.html#mbbOut"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#epics_device.mbbOut" title="Permalink to this definition">¶</a></dt>
+<dd><p>See <a class="reference internal" href="#epics_device.mbbIn" title="epics_device.mbbIn"><code class="xref py py-func docutils literal notranslate"><span class="pre">mbbIn()</span></code></a> for <cite>options</cite>.  An example control PV might be:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">mbbOut</span><span class="p">(</span><span class="s1">&#39;SETUP&#39;</span><span class="p">,</span> <span class="s1">&#39;Normal&#39;</span><span class="p">,</span> <span class="s1">&#39;Unusual&#39;</span><span class="p">,</span> <span class="s1">&#39;Special&#39;</span><span class="p">,</span>
+    <span class="n">DESC</span> <span class="o">=</span> <span class="s1">&#39;Configure setup control&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="epics_device.stringOut">
+<code class="sig-prename descclassname">epics_device.</code><code class="sig-name descname">stringOut</code><span class="sig-paren">(</span><em class="sig-param">name</em>, <em class="sig-param">**fields</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/epics_device/device.html#stringOut"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#epics_device.stringOut" title="Permalink to this definition">¶</a></dt>
+<dd><p>Creates a <code class="docutils literal notranslate"><span class="pre">stringout</span></code> record.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="epics_device.set_out_name">
+<code class="sig-prename descclassname">epics_device.</code><code class="sig-name descname">set_out_name</code><span class="sig-paren">(</span><em class="sig-param">function</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/epics_device/device.html#set_out_name"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#epics_device.set_out_name" title="Permalink to this definition">¶</a></dt>
+<dd><p>This hook can be used to implement a special naming convention for out
+records: the record name for all out records is first processed by this
+function before being passed through to normal <a class="reference internal" href="#module-epicsdbbuilder" title="epicsdbbuilder"><code class="xref py py-mod docutils literal notranslate"><span class="pre">epicsdbbuilder</span></code></a>
+processing.</p>
+<p>For example, all output records can be named with a trailing <code class="docutils literal notranslate"><span class="pre">_S</span></code> suffix
+with the following call:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">set_out_name</span><span class="p">(</span><span class="k">lambda</span> <span class="n">name</span><span class="p">:</span> <span class="n">name</span> <span class="o">+</span> <span class="s1">&#39;_S&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</section>
+<section id="waveform-records">
+<h3><span class="section-number">4.1.4. </span>Waveform Records<a class="headerlink" href="#waveform-records" title="Permalink to this headline">¶</a></h3>
+<p>For waveform records the direction of data flow is determined by driver support
+rather than by EPICS or the device layer.</p>
+<dl class="function">
+<dt id="epics_device.Waveform">
+<code class="sig-prename descclassname">epics_device.</code><code class="sig-name descname">Waveform</code><span class="sig-paren">(</span><em class="sig-param">name</em>, <em class="sig-param">length</em>, <em class="sig-param">FTVL='LONG'</em>, <em class="sig-param">**fields</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/epics_device/device.html#Waveform"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#epics_device.Waveform" title="Permalink to this definition">¶</a></dt>
+<dd><p>Defines a waveform record with the given <cite>name</cite>.  The number of points in
+the waveform must be specified as <cite>length</cite>, and if a field type other than
+<code class="docutils literal notranslate"><span class="pre">'LONG'</span></code> (which really means 32-bit integer) is wanted this must be
+explicitly specified.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="epics_device.WaveformOut">
+<code class="sig-prename descclassname">epics_device.</code><code class="sig-name descname">WaveformOut</code><span class="sig-paren">(</span><em class="sig-param">name</em>, <em class="sig-param">length</em>, <em class="sig-param">FTVL='LONG'</em>, <em class="sig-param">**fields</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/epics_device/device.html#WaveformOut"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#epics_device.WaveformOut" title="Permalink to this definition">¶</a></dt>
+<dd><p>This is used for defining a waveform specialised for output.  Functionally
+this is identicial to <a class="reference internal" href="#epics_device.Waveform" title="epics_device.Waveform"><code class="xref py py-func docutils literal notranslate"><span class="pre">Waveform()</span></code></a> except for two differences:</p>
+<ul class="simple">
+<li><p>The associated record name is passed through the <a class="reference internal" href="#epics_device.set_out_name" title="epics_device.set_out_name"><code class="xref py py-func docutils literal notranslate"><span class="pre">set_out_name()</span></code></a>
+hook.</p></li>
+<li><p>The <code class="docutils literal notranslate"><span class="pre">'PINI'</span></code> field is set to <code class="docutils literal notranslate"><span class="pre">'YES'</span></code>.</p></li>
+</ul>
+</dd></dl>
+
+</section>
+<section id="raw-record-creation">
+<h3><span class="section-number">4.1.5. </span>Raw Record Creation<a class="headerlink" href="#raw-record-creation" title="Permalink to this headline">¶</a></h3>
+<p>The functions listed above are all helper functions with a number of hard-wired
+defaults and actions.  A more direct approach to record creation can be taken by
+invoking the record creation methods for <a class="reference internal" href="#epics_device.EpicsDevice" title="epics_device.EpicsDevice"><code class="xref py py-data docutils literal notranslate"><span class="pre">EpicsDevice</span></code></a> and
+<a class="reference internal" href="#epicsdbbuilder.records" title="epicsdbbuilder.records"><code class="xref py py-data docutils literal notranslate"><span class="pre">epicsdbbuilder.records</span></code></a> directly.</p>
+<dl class="data">
+<dt id="epics_device.EpicsDevice">
+<code class="sig-prename descclassname">epics_device.</code><code class="sig-name descname">EpicsDevice</code><a class="reference internal" href="_modules/epics_device/device.html#EpicsDevice"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#epics_device.EpicsDevice" title="Permalink to this definition">¶</a></dt>
+<dd><p>This Python object has a method for each record type supported by EPICS
+Device, namely <code class="docutils literal notranslate"><span class="pre">ai</span></code>, <code class="docutils literal notranslate"><span class="pre">bi</span></code>, <code class="docutils literal notranslate"><span class="pre">longin</span></code>, <code class="docutils literal notranslate"><span class="pre">mbbi</span></code>, <code class="docutils literal notranslate"><span class="pre">stringin</span></code>, <code class="docutils literal notranslate"><span class="pre">ao</span></code>,
+<code class="docutils literal notranslate"><span class="pre">bo</span></code>, <code class="docutils literal notranslate"><span class="pre">longout</span></code>, <code class="docutils literal notranslate"><span class="pre">mbbo</span></code>, <code class="docutils literal notranslate"><span class="pre">stringout</span></code>, <code class="docutils literal notranslate"><span class="pre">waveform</span></code>.  Each method has
+the following signature:</p>
+<dl class="function">
+<dt id="epics_device.EpicsDevice.record">
+<code class="sig-prename descclassname">EpicsDevice.</code><code class="sig-name descname">record</code><span class="sig-paren">(</span><em class="sig-param">name</em>, <em class="sig-param">address=None</em>, <em class="sig-param">**fields</em><span class="sig-paren">)</span><a class="headerlink" href="#epics_device.EpicsDevice.record" title="Permalink to this definition">¶</a></dt>
+<dd><p>Creates an EPICS record  of type <cite>record</cite> with the given <cite>name</cite>.  The
+record is configured with EPICS Device support, and by default the EPICS
+Device binding address is also <cite>name</cite>, but a different value can be
+specified by setting <cite>address</cite>.  Keyword arguments can be used to
+specify any EPICS field.</p>
+<p>This method automatically initialises the <code class="docutils literal notranslate"><span class="pre">DTYP</span></code> and <code class="docutils literal notranslate"><span class="pre">INP</span></code> or
+<code class="docutils literal notranslate"><span class="pre">OUT</span></code> fields as appropriate, and is otherwise just a wrapper around
+the corresponding method of <a class="reference internal" href="#epicsdbbuilder.records" title="epicsdbbuilder.records"><code class="xref py py-data docutils literal notranslate"><span class="pre">epicsdbbuilder.records</span></code></a>.</p>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+</section>
+<section id="helper-functions">
+<h2><span class="section-number">4.2. </span>Helper Functions<a class="headerlink" href="#helper-functions" title="Permalink to this headline">¶</a></h2>
+<p>These functions are designed to assist in the generation of databases.  The
+<a class="reference internal" href="#epics_device.Trigger" title="epics_device.Trigger"><code class="xref py py-func docutils literal notranslate"><span class="pre">Trigger()</span></code></a> function is the most complex one, designed for record sets which
+update on driver internal events.</p>
+<dl class="function">
+<dt id="epics_device.Trigger">
+<code class="sig-prename descclassname">epics_device.</code><code class="sig-name descname">Trigger</code><span class="sig-paren">(</span><em class="sig-param">prefix</em>, <em class="sig-param">*pvs</em>, <em class="sig-param">set_time = False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/epics_device/common.html#Trigger"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#epics_device.Trigger" title="Permalink to this definition">¶</a></dt>
+<dd><p>This function generates two records with names <cite>prefix</cite><code class="docutils literal notranslate"><span class="pre">:TRIG</span></code> and
+<cite>prefix</cite><code class="docutils literal notranslate"><span class="pre">:DONE</span></code> together with as many fanout records as necessary to
+ensure that all of the PVs in <cite>pvs</cite> are processed in turn when the <code class="docutils literal notranslate"><span class="pre">:TRIG</span></code>
+record is processed.  This function is designed to be used with the
+<a class="reference internal" href="epics_extra.html#c.epics_interlock" title="epics_interlock"><code class="xref c c-type docutils literal notranslate"><span class="pre">epics_interlock</span></code></a> API to implement coherent updating of all the
+linked PVs.</p>
+<p>If the <cite>set_time</cite> field is set then <a class="reference internal" href="epics_extra.html#c.create_interlock" title="create_interlock"><code class="xref c c-func docutils literal notranslate"><span class="pre">create_interlock()</span></code></a> should be
+called with its <cite>set_time</cite> field set to <code class="docutils literal notranslate"><span class="pre">true</span></code> and a valid timestamp
+should be passed to <a class="reference internal" href="epics_extra.html#c.interlock_signal" title="interlock_signal"><code class="xref c c-func docutils literal notranslate"><span class="pre">interlock_signal()</span></code></a>.  In this case the driver is
+responsible for timestamping the records.</p>
+<p>For example, the database definition:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">Trigger</span><span class="p">(</span><span class="s1">&#39;UPDATE&#39;</span><span class="p">,</span> <span class="n">aIn</span><span class="p">(</span><span class="s1">&#39;V1&#39;</span><span class="p">),</span> <span class="n">aIn</span><span class="p">(</span><span class="s1">&#39;V2&#39;</span><span class="p">),</span> <span class="n">aIn</span><span class="p">(</span><span class="s1">&#39;V3&#39;</span><span class="p">),</span> <span class="n">Waveform</span><span class="p">(</span><span class="s1">&#39;WF&#39;</span><span class="p">,</span> <span class="mi">1000</span><span class="p">))</span>
+</pre></div>
+</div>
+<p>can be combined with the following C code to trigger simultaneous and
+coherent updates of the three named PVs:</p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="k">static</span><span class="w"> </span><span class="k">struct</span><span class="w"> </span><span class="nc">epics_interlock</span><span class="w"> </span><span class="o">*</span><span class="n">update</span><span class="p">;</span>
+<span class="k">static</span><span class="w"> </span><span class="kt">double</span><span class="w"> </span><span class="n">v1</span><span class="p">,</span><span class="w"> </span><span class="n">v2</span><span class="p">,</span><span class="w"> </span><span class="n">v3</span><span class="p">;</span>
+<span class="k">static</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">wf</span><span class="p">[</span><span class="mi">1000</span><span class="p">];</span>
+<span class="k">static</span><span class="w"> </span><span class="kt">void</span><span class="w"> </span><span class="nf">compute_update</span><span class="p">(</span>
+<span class="w">    </span><span class="kt">double</span><span class="w"> </span><span class="o">*</span><span class="n">v1</span><span class="p">,</span><span class="w"> </span><span class="kt">double</span><span class="w"> </span><span class="o">*</span><span class="n">v2</span><span class="p">,</span><span class="w"> </span><span class="kt">double</span><span class="w"> </span><span class="o">*</span><span class="n">v3</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">wf</span><span class="p">[])</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="p">...</span><span class="w"> </span><span class="p">}</span>
+
+<span class="c1">// Called in response to some internal or external action</span>
+<span class="kt">void</span><span class="w"> </span><span class="nf">trigger_update</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span>
+<span class="p">{</span>
+<span class="w">    </span><span class="n">interlock_wait</span><span class="p">(</span><span class="n">update</span><span class="p">);</span>
+<span class="w">    </span><span class="n">compute_update</span><span class="p">(</span><span class="o">&amp;</span><span class="n">v1</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="n">v2</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="n">v3</span><span class="p">,</span><span class="w"> </span><span class="n">wf</span><span class="p">);</span>
+<span class="w">    </span><span class="n">interlock_signal</span><span class="p">(</span><span class="n">update</span><span class="p">,</span><span class="w"> </span><span class="nb">NULL</span><span class="p">);</span>
+<span class="p">}</span>
+
+<span class="c1">// Publish the PVs</span>
+<span class="kt">void</span><span class="w"> </span><span class="nf">publish_pvs</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span>
+<span class="p">{</span>
+<span class="w">    </span><span class="n">update</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">create_interlock</span><span class="p">(</span><span class="s">&quot;UPDATE&quot;</span><span class="p">,</span><span class="w"> </span><span class="nb">false</span><span class="p">);</span>
+<span class="w">    </span><span class="n">PUBLISH_READ_VAR</span><span class="p">(</span><span class="n">ai</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;V1&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">v1</span><span class="p">);</span>
+<span class="w">    </span><span class="n">PUBLISH_READ_VAR</span><span class="p">(</span><span class="n">ai</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;V2&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">v2</span><span class="p">);</span>
+<span class="w">    </span><span class="n">PUBLISH_READ_VAR</span><span class="p">(</span><span class="n">ai</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;V3&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">v3</span><span class="p">);</span>
+<span class="w">    </span><span class="n">PUBLISH_WF_READ_VAR</span><span class="p">(</span><span class="kt">int</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;WF&quot;</span><span class="p">,</span><span class="w"> </span><span class="mi">1000</span><span class="p">,</span><span class="w"> </span><span class="n">wf</span><span class="p">);</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>The key principle here is that the variables containing the values of the
+PVs are only written while the interlock (<code class="docutils literal notranslate"><span class="pre">update</span></code>) is held, so that EPICS
+see a consistent update of all PVs.  This is of particular importance when
+waveforms are involved.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="epics_device.Action">
+<code class="sig-prename descclassname">epics_device.</code><code class="sig-name descname">Action</code><span class="sig-paren">(</span><em class="sig-param">name</em>, <em class="sig-param">**fields</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/epics_device/common.html#Action"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#epics_device.Action" title="Permalink to this definition">¶</a></dt>
+<dd><p>Creates an “action” PV.  This is a <code class="docutils literal notranslate"><span class="pre">bo</span></code> record configured not to start
+during IOC initialisation.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="epics_device.ForwardLink">
+<code class="sig-prename descclassname">epics_device.</code><code class="sig-name descname">ForwardLink</code><span class="sig-paren">(</span><em class="sig-param">name</em>, <em class="sig-param">desc</em>, <em class="sig-param">*pvs</em>, <em class="sig-param">**fields</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/epics_device/common.html#ForwardLink"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#epics_device.ForwardLink" title="Permalink to this definition">¶</a></dt>
+<dd><p>A helper function for triggering internal processing after any PV in the
+list <cite>pvs</cite> is processed.  Creates an action PV by calling <a class="reference internal" href="#epics_device.Action" title="epics_device.Action"><code class="xref py py-func docutils literal notranslate"><span class="pre">Action()</span></code></a> and
+forward links each passed PV to the new action PV.  The created PV is
+returned.</p>
+<p>This is designed to be used to trigger common processing after any of a set
+of “out” records have been updated.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="epics_device.AggregateSeverity">
+<code class="sig-prename descclassname">epics_device.</code><code class="sig-name descname">AggregateSeverity</code><span class="sig-paren">(</span><em class="sig-param">name</em>, <em class="sig-param">description</em>, <em class="sig-param">recs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/epics_device/common.html#AggregateSeverity"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#epics_device.AggregateSeverity" title="Permalink to this definition">¶</a></dt>
+<dd><p>For up to 12 records, passed as list <cite>recs</cite>, generates a <code class="docutils literal notranslate"><span class="pre">calc</span></code> record
+with the given name and description with severity set to the aggregated
+severity of the input records.  The value of the generated record is 1.</p>
+<p>The returned record must be processed, typically after processing the given
+list of records.  For example:</p>
+<div class="highlight-py notranslate"><div class="highlight"><pre><span></span><span class="n">pvs</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="n">aIn</span><span class="p">(</span><span class="s1">&#39;PV1&#39;</span><span class="p">,</span> <span class="n">HIGH</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span> <span class="n">HSV</span> <span class="o">=</span> <span class="s1">&#39;MINOR&#39;</span><span class="p">),</span>
+    <span class="n">bIn</span><span class="p">(</span><span class="s1">&#39;PV2&#39;</span><span class="p">,</span> <span class="s1">&#39;Ok&#39;</span><span class="p">,</span> <span class="s1">&#39;Bad&#39;</span><span class="p">,</span> <span class="n">OSV</span> <span class="o">=</span> <span class="s1">&#39;MAJOR&#39;</span><span class="p">)]</span>
+<span class="n">pvs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">AggregateSeverity</span><span class="p">(</span><span class="s1">&#39;ALL&#39;</span><span class="p">,</span> <span class="s1">&#39;Health&#39;</span><span class="p">,</span> <span class="n">pvs</span><span class="p">))</span>
+<span class="n">Trigger</span><span class="p">(</span><span class="s1">&#39;UPDATE&#39;</span><span class="p">,</span> <span class="o">*</span><span class="n">pvs</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Note that in this example the aggregation PV must be processed after the PVs
+it aggregates.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="epics_device.concat">
+<code class="sig-prename descclassname">epics_device.</code><code class="sig-name descname">concat</code><span class="sig-paren">(</span><em class="sig-param">ll</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/epics_device/common.html#concat"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#epics_device.concat" title="Permalink to this definition">¶</a></dt>
+<dd><p>A simple helper function to concatenate a list of lists.</p>
+</dd></dl>
+
+</section>
+<section id="module-epicsdbbuilder">
+<span id="functions-from-epics-db-builder"></span><h2><span class="section-number">4.3. </span>Functions from EPICS Db Builder<a class="headerlink" href="#module-epicsdbbuilder" title="Permalink to this headline">¶</a></h2>
+<p>The following functions are reexported from <a class="reference internal" href="#module-epicsdbbuilder" title="epicsdbbuilder"><code class="xref py py-mod docutils literal notranslate"><span class="pre">epicsdbbuilder</span></code></a> and are
+useful for database building.  For fuller documentation see the documentation
+for that module, but a selection of useful functions is listed here for
+reference.</p>
+<dl class="data">
+<dt id="epicsdbbuilder.records">
+<code class="sig-prename descclassname">epicsdbbuilder.</code><code class="sig-name descname">records</code><a class="headerlink" href="#epicsdbbuilder.records" title="Permalink to this definition">¶</a></dt>
+<dd><p>This is part of the IOC builder framework, not documented here.  There is a
+method for each record type supported by EPICS, ie <code class="docutils literal notranslate"><span class="pre">ai</span></code>, <code class="docutils literal notranslate"><span class="pre">ao</span></code>, <code class="docutils literal notranslate"><span class="pre">calc</span></code>,
+etc, with the following signature:</p>
+<dl class="method">
+<dt id="epicsdbbuilder.records.record_type">
+<code class="sig-prename descclassname">records.</code><code class="sig-name descname">record_type</code><span class="sig-paren">(</span><em class="sig-param">name</em>, <em class="sig-param">**fields</em><span class="sig-paren">)</span><a class="headerlink" href="#epicsdbbuilder.records.record_type" title="Permalink to this definition">¶</a></dt>
+<dd><p>Creates an EPICS record of type <cite>record_type</cite> with the given <cite>name</cite> and
+with other <cite>fields</cite> as specified.  These records by default have no
+EPICS Device support configured.</p>
+</dd></dl>
+
+<p>For example:</p>
+<dl class="method">
+<dt id="epicsdbbuilder.records.calc">
+<code class="sig-prename descclassname">records.</code><code class="sig-name descname">calc</code><span class="sig-paren">(</span><em class="sig-param">name</em>, <em class="sig-param">**fields</em><span class="sig-paren">)</span><a class="headerlink" href="#epicsdbbuilder.records.calc" title="Permalink to this definition">¶</a></dt>
+<dd><p>This creates a <code class="docutils literal notranslate"><span class="pre">calc</span></code> record with the given <cite>name</cite> (as modified by the
+appropriate <a class="reference internal" href="#epicsdbbuilder.SetRecordNames" title="epicsdbbuilder.SetRecordNames"><code class="xref py py-func docutils literal notranslate"><span class="pre">SetRecordNames()</span></code></a> setup).</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="function">
+<dt id="epicsdbbuilder.PP">
+<code class="sig-prename descclassname">epicsdbbuilder.</code><code class="sig-name descname">PP</code><span class="sig-paren">(</span><em class="sig-param">record</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/epicsdbbuilder/recordbase.html#PP"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#epicsdbbuilder.PP" title="Permalink to this definition">¶</a></dt>
+<dt id="epicsdbbuilder.CP">
+<code class="sig-prename descclassname">epicsdbbuilder.</code><code class="sig-name descname">CP</code><span class="sig-paren">(</span><em class="sig-param">record</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/epicsdbbuilder/recordbase.html#CP"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#epicsdbbuilder.CP" title="Permalink to this definition">¶</a></dt>
+<dt id="epicsdbbuilder.MS">
+<code class="sig-prename descclassname">epicsdbbuilder.</code><code class="sig-name descname">MS</code><span class="sig-paren">(</span><em class="sig-param">record</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/epicsdbbuilder/recordbase.html#MS"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#epicsdbbuilder.MS" title="Permalink to this definition">¶</a></dt>
+<dt id="epicsdbbuilder.NP">
+<code class="sig-prename descclassname">epicsdbbuilder.</code><code class="sig-name descname">NP</code><span class="sig-paren">(</span><em class="sig-param">record</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/epicsdbbuilder/recordbase.html#NP"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#epicsdbbuilder.NP" title="Permalink to this definition">¶</a></dt>
+<dd><p>When generating internal record links these add the appropriate link
+annotation.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="epicsdbbuilder.create_fanout">
+<code class="sig-prename descclassname">epicsdbbuilder.</code><code class="sig-name descname">create_fanout</code><span class="sig-paren">(</span><em class="sig-param">name</em>, <em class="sig-param">*records</em>, <em class="sig-param">**kargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/epicsdbbuilder/fanout.html#create_fanout"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#epicsdbbuilder.create_fanout" title="Permalink to this definition">¶</a></dt>
+<dt id="epicsdbbuilder.create_dfanout">
+<code class="sig-prename descclassname">epicsdbbuilder.</code><code class="sig-name descname">create_dfanout</code><span class="sig-paren">(</span><em class="sig-param">name</em>, <em class="sig-param">*records</em>, <em class="sig-param">**kargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/epicsdbbuilder/fanout.html#create_dfanout"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#epicsdbbuilder.create_dfanout" title="Permalink to this definition">¶</a></dt>
+<dd><p>Creates processing and data fanouts to an arbitrary list of records.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="epicsdbbuilder.WriteRecords">
+<code class="sig-prename descclassname">epicsdbbuilder.</code><code class="sig-name descname">WriteRecords</code><span class="sig-paren">(</span><em class="sig-param">filename</em><span class="optional">[</span>, <em class="sig-param">header</em><span class="optional">]</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/epicsdbbuilder/recordset.html#WriteRecords"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#epicsdbbuilder.WriteRecords" title="Permalink to this definition">¶</a></dt>
+<dd><p>Writes generated database.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="epicsdbbuilder.SetRecordNames">
+<code class="sig-prename descclassname">epicsdbbuilder.</code><code class="sig-name descname">SetRecordNames</code><span class="sig-paren">(</span><em class="sig-param">names</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/epicsdbbuilder/recordnames.html#SetRecordNames"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#epicsdbbuilder.SetRecordNames" title="Permalink to this definition">¶</a></dt>
+<dt id="epicsdbbuilder.SetTemplateRecordNames">
+<code class="sig-prename descclassname">epicsdbbuilder.</code><code class="sig-name descname">SetTemplateRecordNames</code><span class="sig-paren">(</span><em class="sig-param">[prefix] [,separator]</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/epicsdbbuilder/recordnames.html#SetTemplateRecordNames"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#epicsdbbuilder.SetTemplateRecordNames" title="Permalink to this definition">¶</a></dt>
+<dd><p>These two functions are used to establish how the full record name written
+to the generated database is derived from the short form record name passed
+to the appropriate <a class="reference internal" href="#epicsdbbuilder.records" title="epicsdbbuilder.records"><code class="xref py py-data docutils literal notranslate"><span class="pre">records</span></code></a> method.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="epicsdbbuilder.Parameter">
+<code class="sig-prename descclassname">epicsdbbuilder.</code><code class="sig-name descname">Parameter</code><span class="sig-paren">(</span><em class="sig-param">name [,description] [,default]</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/epicsdbbuilder/parameter.html#Parameter"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#epicsdbbuilder.Parameter" title="Permalink to this definition">¶</a></dt>
+<dd><p>When generating a template database this can be used to declare template
+parameters.</p>
+</dd></dl>
+
+</section>
+</section>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">4. Database Builder Support</a><ul>
+<li><a class="reference internal" href="#creating-epics-records">4.1. Creating EPICS Records</a><ul>
+<li><a class="reference internal" href="#record-address">4.1.1. Record Address</a></li>
+<li><a class="reference internal" href="#in-records">4.1.2. In Records</a></li>
+<li><a class="reference internal" href="#out-records">4.1.3. Out Records</a></li>
+<li><a class="reference internal" href="#waveform-records">4.1.4. Waveform Records</a></li>
+<li><a class="reference internal" href="#raw-record-creation">4.1.5. Raw Record Creation</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#helper-functions">4.2. Helper Functions</a></li>
+<li><a class="reference internal" href="#module-epicsdbbuilder">4.3. Functions from EPICS Db Builder</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="epics_extra.html"
+                        title="previous chapter"><span class="section-number">3. </span>Extra EPICS Device Support</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="persistence.html"
+                        title="next chapter"><span class="section-number">5. </span>Support for Persistent PV State</a></p>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/builder.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="persistence.html" title="5. Support for Persistent PV State"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="epics_extra.html" title="3. Extra EPICS Device Support"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">EPICS Device  documentation</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2015, Michael Abbott.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 2.3.1.
+    </div>
+  </body>
+</html>

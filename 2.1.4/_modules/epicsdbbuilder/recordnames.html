@@ -1,0 +1,167 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>epicsdbbuilder.recordnames &#8212; EPICS Device  documentation</title>
+    <link rel="stylesheet" href="../../_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <script type="text/javascript" src="../../_static/language_data.js"></script>
+    
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">EPICS Device  documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../index.html" accesskey="U">Module code</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for epicsdbbuilder.recordnames</h1><div class="highlight"><pre>
+<span></span><span class="sd">&#39;&#39;&#39;Support for default record name configurations.&#39;&#39;&#39;</span>
+
+<span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">parameter</span>
+
+
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="s1">&#39;SimpleRecordNames&#39;</span><span class="p">,</span> <span class="s1">&#39;TemplateRecordNames&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;SetSimpleRecordNames&#39;</span><span class="p">,</span> <span class="s1">&#39;SetTemplateRecordNames&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;RecordName&#39;</span><span class="p">,</span> <span class="s1">&#39;SetRecordNames&#39;</span><span class="p">,</span> <span class="s1">&#39;GetRecordNames&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;PushPrefix&#39;</span><span class="p">,</span> <span class="s1">&#39;PopPrefix&#39;</span><span class="p">,</span> <span class="s1">&#39;SetPrefix&#39;</span><span class="p">,</span> <span class="s1">&#39;SetSeparator&#39;</span><span class="p">]</span>
+
+
+<span class="c1"># Default record name support: each record is created with precisely the name</span>
+<span class="c1"># it is given.</span>
+<span class="k">class</span> <span class="nc">SimpleRecordNames</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="c1"># Maximum record name length for EPICS 3.14</span>
+    <span class="n">maxLength</span> <span class="o">=</span> <span class="mi">61</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">prefix</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="n">separator</span> <span class="o">=</span> <span class="s1">&#39;:&#39;</span><span class="p">,</span> <span class="n">check</span> <span class="o">=</span> <span class="kc">True</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">prefix</span> <span class="o">=</span> <span class="p">[</span><span class="n">prefix</span><span class="p">]</span> <span class="k">if</span> <span class="n">prefix</span> <span class="k">else</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">separator</span> <span class="o">=</span> <span class="n">separator</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">check</span> <span class="o">=</span> <span class="n">check</span>
+
+    <span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>
+        <span class="n">name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">separator</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="nb">str</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">prefix</span> <span class="o">+</span> <span class="p">[</span><span class="n">name</span><span class="p">]))</span>
+        <span class="k">assert</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">check</span> <span class="ow">or</span> <span class="mi">0</span> <span class="o">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">name</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">maxLength</span><span class="p">,</span> \
+            <span class="s1">&#39;Record name &quot;</span><span class="si">%s</span><span class="s1">&quot; too long&#39;</span> <span class="o">%</span> <span class="n">name</span>
+        <span class="k">return</span> <span class="n">name</span>
+
+    <span class="k">def</span> <span class="nf">PushPrefix</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">prefix</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">prefix</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">prefix</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">PopPrefix</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">prefix</span><span class="o">.</span><span class="n">pop</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">SetPrefix</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">prefix</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">prefix</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">prefix</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">PopPrefix</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">PushPrefix</span><span class="p">(</span><span class="n">prefix</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">PopPrefix</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">SetSeparator</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">separator</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">separator</span> <span class="o">=</span> <span class="n">separator</span>
+
+
+<span class="k">class</span> <span class="nc">TemplateRecordNames</span><span class="p">(</span><span class="n">SimpleRecordNames</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">prefix</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">separator</span> <span class="o">=</span> <span class="s1">&#39;:&#39;</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">prefix</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">prefix</span> <span class="o">=</span> <span class="n">parameter</span><span class="o">.</span><span class="n">Parameter</span><span class="p">(</span><span class="s1">&#39;DEVICE&#39;</span><span class="p">,</span> <span class="s1">&#39;Device name&#39;</span><span class="p">)</span>
+        <span class="n">SimpleRecordNames</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">prefix</span><span class="p">,</span> <span class="n">separator</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">SetSimpleRecordNames</span><span class="p">(</span><span class="n">prefix</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="n">separator</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span><span class="p">):</span>
+    <span class="n">SetRecordNames</span><span class="p">(</span><span class="n">SimpleRecordNames</span><span class="p">(</span><span class="n">prefix</span><span class="p">,</span> <span class="n">separator</span><span class="p">))</span>
+
+<div class="viewcode-block" id="SetTemplateRecordNames"><a class="viewcode-back" href="../../builder.html#epicsdbbuilder.SetTemplateRecordNames">[docs]</a><span class="k">def</span> <span class="nf">SetTemplateRecordNames</span><span class="p">(</span><span class="n">prefix</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">separator</span> <span class="o">=</span> <span class="s1">&#39;:&#39;</span><span class="p">):</span>
+    <span class="n">SetRecordNames</span><span class="p">(</span><span class="n">TemplateRecordNames</span><span class="p">(</span><span class="n">prefix</span><span class="p">,</span> <span class="n">separator</span><span class="p">))</span></div>
+
+
+<span class="c1"># By default record names are unmodified.</span>
+<span class="k">def</span> <span class="nf">_RecordNames</span><span class="p">(</span><span class="n">name</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">name</span>
+
+<div class="viewcode-block" id="SetRecordNames"><a class="viewcode-back" href="../../builder.html#epicsdbbuilder.SetRecordNames">[docs]</a><span class="k">def</span> <span class="nf">SetRecordNames</span><span class="p">(</span><span class="n">names</span><span class="p">):</span>
+    <span class="k">global</span> <span class="n">_RecordNames</span>
+    <span class="n">current</span> <span class="o">=</span> <span class="n">_RecordNames</span>
+    <span class="n">_RecordNames</span> <span class="o">=</span> <span class="n">names</span>
+    <span class="k">return</span> <span class="n">current</span></div>
+
+<span class="k">def</span> <span class="nf">GetRecordNames</span><span class="p">():</span>
+    <span class="k">return</span> <span class="n">_RecordNames</span>
+
+<span class="k">def</span> <span class="nf">RecordName</span><span class="p">(</span><span class="n">name</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">_RecordNames</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
+
+<span class="k">def</span> <span class="nf">PushPrefix</span><span class="p">(</span><span class="n">prefix</span><span class="p">):</span>
+    <span class="n">_RecordNames</span><span class="o">.</span><span class="n">PushPrefix</span><span class="p">(</span><span class="n">prefix</span><span class="p">)</span>
+
+<span class="k">def</span> <span class="nf">PopPrefix</span><span class="p">():</span>
+    <span class="k">return</span> <span class="n">_RecordNames</span><span class="o">.</span><span class="n">PopPrefix</span><span class="p">()</span>
+
+<span class="k">def</span> <span class="nf">SetPrefix</span><span class="p">(</span><span class="n">prefix</span><span class="p">):</span>
+    <span class="n">_RecordNames</span><span class="o">.</span><span class="n">SetPrefix</span><span class="p">(</span><span class="n">prefix</span><span class="p">)</span>
+
+<span class="k">def</span> <span class="nf">SetSeparator</span><span class="p">(</span><span class="n">separator</span><span class="p">):</span>
+    <span class="n">_RecordNames</span><span class="o">.</span><span class="n">SetSeparator</span><span class="p">(</span><span class="n">separator</span><span class="p">)</span>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">EPICS Device  documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../index.html" >Module code</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2015, Michael Abbott.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 2.3.1.
+    </div>
+  </body>
+</html>

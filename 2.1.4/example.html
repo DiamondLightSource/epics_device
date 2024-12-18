@@ -1,0 +1,609 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>9. Code Examples &#8212; EPICS Device  documentation</title>
+    <link rel="stylesheet" href="_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="_static/language_data.js"></script>
+    
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="10. External References" href="external.html" />
+    <link rel="prev" title="8. Generic Hash Table" href="hashtable.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="external.html" title="10. External References"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="hashtable.html" title="8. Generic Hash Table"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">EPICS Device  documentation</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <section id="code-examples">
+<h1><span class="section-number">9. </span>Code Examples<a class="headerlink" href="#code-examples" title="Permalink to this headline">¶</a></h1>
+<p>This file contains a couple of examples of code to show many of the features
+documented here.</p>
+<section id="basic-ioc">
+<h2><span class="section-number">9.1. </span>Basic IOC<a class="headerlink" href="#basic-ioc" title="Permalink to this headline">¶</a></h2>
+<p>The IOC in <code class="docutils literal notranslate"><span class="pre">examples/basic_ioc</span></code> illustrates the minimum code required to build
+an IOC using this framework.  The source tree is:</p>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>File/Directory</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>Db/</p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p>Db/Makefile</p></td>
+<td><p>Needs rules for building <code class="docutils literal notranslate"><span class="pre">.db</span></code> from <code class="docutils literal notranslate"><span class="pre">.py</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p>Db/basic_ioc.py</p></td>
+<td><p>Minimal example building a simple database</p></td>
+</tr>
+<tr class="row-odd"><td><p>src/</p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p>src/Makefile</p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p>src/main.c</p></td>
+<td><p>Minimal IOC implementation</p></td>
+</tr>
+<tr class="row-even"><td><p>st.cmd</p></td>
+<td><p>Startup script for IOC initialisation</p></td>
+</tr>
+<tr class="row-odd"><td><p>Makefile</p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p>configure/</p></td>
+<td><p>Standard EPICS <code class="docutils literal notranslate"><span class="pre">configure</span></code> directory, as generated
+by <code class="docutils literal notranslate"><span class="pre">makeBaseApp.pl</span></code>.</p></td>
+</tr>
+<tr class="row-odd"><td><p>configure/CONFIG</p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p>configure/CONFIG_APP</p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p>configure/CONFIG_SITE</p></td>
+<td><p>Must specify <code class="docutils literal notranslate"><span class="pre">PYTHON</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p>configure/Makefile</p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p>configure/RELEASE</p></td>
+<td><p>Must specify <code class="docutils literal notranslate"><span class="pre">EPICS_DEVICE</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p>configure/RULES</p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p>configure/RULES.ioc</p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p>configure/RULES_DIRS</p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p>configure/RULES_TOP</p></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<p>The <code class="docutils literal notranslate"><span class="pre">EPICS_DEVICE</span></code> support module must be defined as usual, and the build also
+needs the symbol <code class="docutils literal notranslate"><span class="pre">PYTHON</span></code> to identify the Python interpreter to use.</p>
+<section id="defining-the-database">
+<h3><span class="section-number">9.1.1. </span>Defining the Database<a class="headerlink" href="#defining-the-database" title="Permalink to this headline">¶</a></h3>
+<p>The database defined here is utterly minimal, consisting of a single PV with a 1
+second scan which returns the current timestamp in seconds.  The EPICS Device
+definition to build the database record entry is the following Python line:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">longIn</span><span class="p">(</span><span class="s1">&#39;TSEC&#39;</span><span class="p">,</span> <span class="n">DESC</span> <span class="o">=</span> <span class="s1">&#39;Timestamp in seconds&#39;</span><span class="p">,</span> <span class="n">SCAN</span> <span class="o">=</span> <span class="s1">&#39;1 second&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>This line defines an <code class="docutils literal notranslate"><span class="pre">longin</span></code> record named <code class="docutils literal notranslate"><span class="pre">TEST</span></code> with the specified scan
+interval and description.</p>
+<p>A little bit of boilerplate is needed to set things up:</p>
+<div class="highlight-python notranslate"><div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span class="normal"> 1</span>
+<span class="normal"> 2</span>
+<span class="normal"> 3</span>
+<span class="normal"> 4</span>
+<span class="normal"> 5</span>
+<span class="normal"> 6</span>
+<span class="normal"> 7</span>
+<span class="normal"> 8</span>
+<span class="normal"> 9</span>
+<span class="normal">10</span>
+<span class="normal">11</span>
+<span class="normal">12</span></pre></div></td><td class="code"><div><pre><span></span><span class="kn">import</span> <span class="nn">sys</span><span class="o">,</span> <span class="nn">os</span>
+<span class="n">sys</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">[</span><span class="s1">&#39;EPICS_DEVICE&#39;</span><span class="p">])</span>
+
+<span class="kn">from</span> <span class="nn">epics_device</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="n">SetTemplateRecordNames</span><span class="p">()</span>
+
+<span class="n">longIn</span><span class="p">(</span><span class="s1">&#39;TSEC&#39;</span><span class="p">,</span> <span class="n">DESC</span> <span class="o">=</span> <span class="s1">&#39;Timestamp in seconds&#39;</span><span class="p">,</span> <span class="n">SCAN</span> <span class="o">=</span> <span class="s1">&#39;1 second&#39;</span><span class="p">)</span>
+
+<span class="n">Waveform</span><span class="p">(</span><span class="s1">&#39;STRINGS&#39;</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="s1">&#39;STRING&#39;</span><span class="p">,</span> <span class="n">PINI</span> <span class="o">=</span> <span class="s2">&quot;YES&quot;</span><span class="p">)</span>
+
+<span class="c1"># Write out the generated .db file</span>
+<span class="n">WriteRecords</span><span class="p">(</span><span class="n">sys</span><span class="o">.</span><span class="n">argv</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+</pre></div></td></tr></table></div>
+</div>
+<p>This code picks up the configured <code class="docutils literal notranslate"><span class="pre">EPICS_DEVICE</span></code> version (as configured in
+<code class="docutils literal notranslate"><span class="pre">configure/RELEASE</span></code>) and configures the database to be generated with a
+<code class="docutils literal notranslate"><span class="pre">$(DEVICE):</span></code> prefix on each record name.  The last line writes out the
+generated database.</p>
+<p>Some support is also needed from the make file:</p>
+<div class="highlight-make notranslate"><div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span class="normal"> 1</span>
+<span class="normal"> 2</span>
+<span class="normal"> 3</span>
+<span class="normal"> 4</span>
+<span class="normal"> 5</span>
+<span class="normal"> 6</span>
+<span class="normal"> 7</span>
+<span class="normal"> 8</span>
+<span class="normal"> 9</span>
+<span class="normal">10</span>
+<span class="normal">11</span>
+<span class="normal">12</span>
+<span class="normal">13</span>
+<span class="normal">14</span>
+<span class="normal">15</span>
+<span class="normal">16</span>
+<span class="normal">17</span>
+<span class="normal">18</span></pre></div></td><td class="code"><div><pre><span></span><span class="nv">TOP</span><span class="w"> </span><span class="o">=</span><span class="w"> </span>..
+<span class="cp">include $(TOP)/configure/CONFIG</span>
+
+<span class="nv">DB</span><span class="w"> </span><span class="o">+=</span><span class="w"> </span>basic_ioc.db
+
+<span class="cp">include $(TOP)/configure/RULES</span>
+
+<span class="k">export</span><span class="w"> </span><span class="nv">EPICS_DEVICE</span>
+
+<span class="c"># We use the python library to construct the .db file</span>
+<span class="nf">$(COMMON_DIR)/%.db</span><span class="o">:</span><span class="w"> </span>../%.<span class="n">py</span> <span class="k">$(</span><span class="nv">wildcard</span> <span class="nv">..</span>/*<span class="nv">.py</span><span class="k">)</span>
+<span class="w">	</span><span class="k">$(</span>PYTHON<span class="k">)</span><span class="w"> </span>$&lt;<span class="w"> </span><span class="nv">$@</span>
+
+<span class="c"># EPICS 3.15 and later has changed the build system.  The following rules are</span>
+<span class="c"># needed to make things work.</span>
+
+<span class="nf">%.db.d</span><span class="o">:</span>
+<span class="w">	</span>touch<span class="w"> </span><span class="nv">$@</span>
+</pre></div></td></tr></table></div>
+</div>
+<p>The important point here is that the <code class="docutils literal notranslate"><span class="pre">.db</span></code> file is generated from the
+corresponding <code class="docutils literal notranslate"><span class="pre">.py</span></code> file and the <code class="docutils literal notranslate"><span class="pre">EPICS_DEVICE</span></code> symbol is exported to the
+script above.</p>
+<p>The result of this is the following file in <code class="docutils literal notranslate"><span class="pre">db/basic_ioc.db</span></code>:</p>
+<div class="highlight-none notranslate"><div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span class="normal">1</span>
+<span class="normal">2</span>
+<span class="normal">3</span>
+<span class="normal">4</span>
+<span class="normal">5</span>
+<span class="normal">6</span>
+<span class="normal">7</span></pre></div></td><td class="code"><div><pre><span></span>record(longin, &quot;$(DEVICE):TSEC&quot;)
+{
+    field(DESC, &quot;Timestamp in seconds&quot;)
+    field(DTYP, &quot;epics_device&quot;)
+    field(INP,  &quot;@TSEC&quot;)
+    field(SCAN, &quot;1 second&quot;)
+}
+</pre></div></td></tr></table></div>
+</div>
+</section>
+<section id="implementing-the-ioc">
+<h3><span class="section-number">9.1.2. </span>Implementing the IOC<a class="headerlink" href="#implementing-the-ioc" title="Permalink to this headline">¶</a></h3>
+<p>As this IOC does almost nothing its C implementation is pretty small:</p>
+<div class="highlight-c notranslate"><div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span class="normal"> 1</span>
+<span class="normal"> 2</span>
+<span class="normal"> 3</span>
+<span class="normal"> 4</span>
+<span class="normal"> 5</span>
+<span class="normal"> 6</span>
+<span class="normal"> 7</span>
+<span class="normal"> 8</span>
+<span class="normal"> 9</span>
+<span class="normal">10</span>
+<span class="normal">11</span>
+<span class="normal">12</span>
+<span class="normal">13</span>
+<span class="normal">14</span>
+<span class="normal">15</span>
+<span class="normal">16</span>
+<span class="normal">17</span>
+<span class="normal">18</span>
+<span class="normal">19</span>
+<span class="normal">20</span>
+<span class="normal">21</span>
+<span class="normal">22</span>
+<span class="normal">23</span>
+<span class="normal">24</span>
+<span class="normal">25</span>
+<span class="normal">26</span>
+<span class="normal">27</span>
+<span class="normal">28</span>
+<span class="normal">29</span>
+<span class="normal">30</span>
+<span class="normal">31</span>
+<span class="normal">32</span>
+<span class="normal">33</span>
+<span class="normal">34</span>
+<span class="normal">35</span></pre></div></td><td class="code"><div><pre><span></span><span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;stdbool.h&gt;</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;unistd.h&gt;</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;time.h&gt;</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;pthread.h&gt;</span>
+
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;iocsh.h&gt;</span>
+
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&quot;error.h&quot;</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&quot;epics_device.h&quot;</span>
+
+<span class="k">static</span><span class="w"> </span><span class="n">EPICS_STRING</span><span class="w"> </span><span class="n">strings</span><span class="p">[</span><span class="mi">4</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="p">{</span><span class="w"> </span><span class="s">&quot;Hello&quot;</span><span class="w"> </span><span class="p">},</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="s">&quot;There&quot;</span><span class="w"> </span><span class="p">},</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="s">&quot;A longer string&quot;</span><span class="w"> </span><span class="p">},</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="s">&quot;THE END&quot;</span><span class="w"> </span><span class="p">}</span>
+<span class="p">};</span>
+
+<span class="k">static</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="nf">read_timestamp</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span>
+<span class="p">{</span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="p">(</span><span class="kt">int</span><span class="p">)</span><span class="w"> </span><span class="n">time</span><span class="p">(</span><span class="nb">NULL</span><span class="p">);</span>
+<span class="p">}</span>
+
+<span class="k">static</span><span class="w"> </span><span class="n">error__t</span><span class="w"> </span><span class="nf">publish_pvs</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span>
+<span class="p">{</span>
+<span class="w">    </span><span class="n">PUBLISH_READER</span><span class="p">(</span><span class="n">longin</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;TSEC&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">read_timestamp</span><span class="p">);</span>
+<span class="w">    </span><span class="n">PUBLISH_WF_READ_VAR</span><span class="p">(</span><span class="n">EPICS_STRING</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;STRINGS&quot;</span><span class="p">,</span><span class="w"> </span><span class="mi">4</span><span class="p">,</span><span class="w"> </span><span class="n">strings</span><span class="p">);</span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="n">ERROR_OK</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="kt">int</span><span class="w"> </span><span class="nf">main</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">argc</span><span class="p">,</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="kt">char</span><span class="w"> </span><span class="o">*</span><span class="n">argv</span><span class="p">[])</span>
+<span class="p">{</span>
+<span class="w">    </span><span class="kt">bool</span><span class="w"> </span><span class="n">ok</span><span class="w"> </span><span class="o">=</span>
+<span class="w">        </span><span class="n">initialise_epics_device</span><span class="p">()</span><span class="w">  </span><span class="o">?:</span>
+<span class="w">        </span><span class="n">publish_pvs</span><span class="p">()</span><span class="w">  </span><span class="o">?:</span>
+<span class="w">        </span><span class="n">TEST_IO</span><span class="p">(</span><span class="n">iocsh</span><span class="p">(</span><span class="s">&quot;st.cmd&quot;</span><span class="p">)</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span><span class="w">  </span><span class="o">?:</span>
+<span class="w">        </span><span class="n">TEST_IO</span><span class="p">(</span><span class="n">iocsh</span><span class="p">(</span><span class="nb">NULL</span><span class="p">));</span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="n">ok</span><span class="w"> </span><span class="o">?</span><span class="w"> </span><span class="mi">0</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div></td></tr></table></div>
+</div>
+<p>First comes a minimal set of headers.  Both <code class="docutils literal notranslate"><span class="pre">stdbool.h</span></code> and <code class="docutils literal notranslate"><span class="pre">unistd.h</span></code> are
+required as a consequence of using <code class="docutils literal notranslate"><span class="pre">error.h</span></code>, and our implementation will use
+<code class="docutils literal notranslate"><span class="pre">time.h</span></code>.  We need <code class="docutils literal notranslate"><span class="pre">iocsh.h</span></code> in order to call <a class="reference internal" href="external.html#c.iocsh" title="iocsh"><code class="xref c c-func docutils literal notranslate"><span class="pre">iocsh()</span></code></a>.</p>
+<p>Then the EPICS Device headers <code class="docutils literal notranslate"><span class="pre">error.h</span></code> and <code class="docutils literal notranslate"><span class="pre">epics_device.h</span></code> are needed for
+any use of EPICS Device.</p>
+<p>The function <code class="docutils literal notranslate"><span class="pre">read_timestamp</span></code> actually implements the IOC functionality.  In
+this case when the corresponding record is processed we compute a value which is
+used to update the PV.</p>
+<p>The <a class="reference internal" href="epics_device.html#c.PUBLISH_READER" title="PUBLISH_READER"><code class="xref c c-func docutils literal notranslate"><span class="pre">PUBLISH_READER()</span></code></a> call binds our PV implementation to its definition in
+the database, and we’ve chosen the appropriate implementation.</p>
+<p>Finally IOC initialisation consists of a stereotyped sequence.
+<a class="reference internal" href="epics_device.html#c.initialise_epics_device" title="initialise_epics_device"><code class="xref c c-func docutils literal notranslate"><span class="pre">initialise_epics_device()</span></code></a> must be called early, then records can be
+published, then the IOC is started.  In this particular example we’ve put the
+rest of the initialisation into an external startup script:</p>
+<div class="highlight-c notranslate"><div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span class="normal">1</span>
+<span class="normal">2</span>
+<span class="normal">3</span>
+<span class="normal">4</span></pre></div></td><td class="code"><div><pre><span></span><span class="n">dbLoadDatabase</span><span class="p">(</span><span class="s">&quot;dbd/basic_ioc.dbd&quot;</span><span class="p">,</span><span class="w"> </span><span class="nb">NULL</span><span class="p">,</span><span class="w"> </span><span class="nb">NULL</span><span class="p">)</span>
+<span class="n">basic_ioc_registerRecordDeviceDriver</span><span class="p">(</span><span class="n">pdbbase</span><span class="p">)</span>
+<span class="n">dbLoadRecords</span><span class="p">(</span><span class="s">&quot;db/basic_ioc.db&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;DEVICE=TS-TS-TEST-99&quot;</span><span class="p">)</span>
+<span class="n">iocInit</span><span class="p">()</span>
+</pre></div></td></tr></table></div>
+</div>
+<p>Note that it is possible perform complete IOC initialisation without a startup
+script, and with a more complete IOC it can be more convenient to do this.</p>
+</section>
+<section id="internalising-st-cmd">
+<h3><span class="section-number">9.1.3. </span>Internalising <code class="docutils literal notranslate"><span class="pre">st.cmd</span></code><a class="headerlink" href="#internalising-st-cmd" title="Permalink to this headline">¶</a></h3>
+<p>It can be more convenient to internalise the startup script to the IOC source
+code, particularly if a number of template parameters need to be generated.
+This can be done by replacing the line <code class="docutils literal notranslate"><span class="pre">TEST_IO(iocsh(&quot;st.cmd&quot;)</span> <span class="pre">==</span> <span class="pre">0)</span></code> in the
+definition of <code class="docutils literal notranslate"><span class="pre">main</span></code> above with a call to <code class="docutils literal notranslate"><span class="pre">init_ioc()</span></code> as defined here:</p>
+<div class="highlight-c notranslate"><div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span class="normal"> 1</span>
+<span class="normal"> 2</span>
+<span class="normal"> 3</span>
+<span class="normal"> 4</span>
+<span class="normal"> 5</span>
+<span class="normal"> 6</span>
+<span class="normal"> 7</span>
+<span class="normal"> 8</span>
+<span class="normal"> 9</span>
+<span class="normal">10</span>
+<span class="normal">11</span></pre></div></td><td class="code"><div><pre><span></span><span class="k">extern</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="nf">basic_ioc_registerRecordDeviceDriver</span><span class="p">(</span><span class="k">struct</span><span class="w"> </span><span class="nc">dbBase</span><span class="w"> </span><span class="o">*</span><span class="n">pdb</span><span class="p">);</span>
+
+<span class="k">static</span><span class="w"> </span><span class="n">error__t</span><span class="w"> </span><span class="nf">init_ioc</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span>
+<span class="p">{</span>
+<span class="w">    </span><span class="k">return</span>
+<span class="w">        </span><span class="n">TEST_IO</span><span class="p">(</span><span class="n">dbLoadDatabase</span><span class="p">(</span><span class="s">&quot;dbd/basic_ioc.dbd&quot;</span><span class="p">,</span><span class="w"> </span><span class="nb">NULL</span><span class="p">,</span><span class="w"> </span><span class="nb">NULL</span><span class="p">))</span><span class="w">  </span><span class="o">?:</span>
+<span class="w">        </span><span class="n">TEST_IO</span><span class="p">(</span><span class="n">basic_ioc_registerRecordDeviceDriver</span><span class="p">(</span><span class="n">pdbbase</span><span class="p">))</span><span class="w">  </span><span class="o">?:</span>
+<span class="w">        </span><span class="n">DO</span><span class="p">(</span><span class="n">database_add_macro</span><span class="p">(</span><span class="s">&quot;DEVICE&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;TS-TS-TEST-99&quot;</span><span class="p">))</span><span class="w">  </span><span class="o">?:</span>
+<span class="w">        </span><span class="n">database_load_file</span><span class="p">(</span><span class="s">&quot;db/basic_ioc.db&quot;</span><span class="p">)</span><span class="w">  </span><span class="o">?:</span>
+<span class="w">        </span><span class="n">TEST_OK</span><span class="p">(</span><span class="n">iocInit</span><span class="p">()</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mi">0</span><span class="p">);</span>
+<span class="p">}</span>
+</pre></div></td></tr></table></div>
+</div>
+<p>This is a bit more code, but does have the advantage of rather more thorough
+error checking, and much more flexibility in macro generation.</p>
+</section>
+</section>
+<section id="a-more-complex-example">
+<h2><span class="section-number">9.2. </span>A More Complex Example<a class="headerlink" href="#a-more-complex-example" title="Permalink to this headline">¶</a></h2>
+<p>The source tree in <code class="docutils literal notranslate"><span class="pre">examples/example_ioc</span></code> illustrates a slightly fuller
+functioned IOC.</p>
+<section id="database-definition">
+<h3><span class="section-number">9.2.1. </span>Database Definition<a class="headerlink" href="#database-definition" title="Permalink to this headline">¶</a></h3>
+<p>The database code is as follows:</p>
+<div class="highlight-python notranslate"><div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span class="normal"> 1</span>
+<span class="normal"> 2</span>
+<span class="normal"> 3</span>
+<span class="normal"> 4</span>
+<span class="normal"> 5</span>
+<span class="normal"> 6</span>
+<span class="normal"> 7</span>
+<span class="normal"> 8</span>
+<span class="normal"> 9</span>
+<span class="normal">10</span>
+<span class="normal">11</span>
+<span class="normal">12</span>
+<span class="normal">13</span>
+<span class="normal">14</span>
+<span class="normal">15</span>
+<span class="normal">16</span>
+<span class="normal">17</span>
+<span class="normal">18</span>
+<span class="normal">19</span>
+<span class="normal">20</span>
+<span class="normal">21</span>
+<span class="normal">22</span>
+<span class="normal">23</span>
+<span class="normal">24</span>
+<span class="normal">25</span>
+<span class="normal">26</span>
+<span class="normal">27</span>
+<span class="normal">28</span>
+<span class="normal">29</span>
+<span class="normal">30</span>
+<span class="normal">31</span>
+<span class="normal">32</span>
+<span class="normal">33</span>
+<span class="normal">34</span>
+<span class="normal">35</span>
+<span class="normal">36</span>
+<span class="normal">37</span>
+<span class="normal">38</span>
+<span class="normal">39</span></pre></div></td><td class="code"><div><pre><span></span><span class="kn">import</span> <span class="nn">sys</span><span class="o">,</span> <span class="nn">os</span>
+
+<span class="n">sys</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">[</span><span class="s1">&#39;EPICS_DEVICE&#39;</span><span class="p">])</span>
+
+<span class="kn">from</span> <span class="nn">epics_device</span> <span class="kn">import</span> <span class="o">*</span>
+
+<span class="n">set_MDEL_default</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+<span class="n">set_out_name</span><span class="p">(</span><span class="k">lambda</span> <span class="n">name</span><span class="p">:</span> <span class="n">name</span> <span class="o">+</span> <span class="s1">&#39;_S&#39;</span><span class="p">)</span>
+<span class="n">SetTemplateRecordNames</span><span class="p">()</span>
+
+<span class="n">WF_LENGTH</span> <span class="o">=</span> <span class="mi">128</span>
+
+<span class="c1"># In this simple example setting FREQ_S causes WF and SUM to update.</span>
+<span class="n">aOut</span><span class="p">(</span><span class="s1">&#39;FREQ&#39;</span><span class="p">,</span> <span class="n">PREC</span> <span class="o">=</span> <span class="mi">4</span><span class="p">,</span>
+    <span class="n">FLNK</span> <span class="o">=</span> <span class="n">create_fanout</span><span class="p">(</span><span class="s1">&#39;WFFAN&#39;</span><span class="p">,</span>
+        <span class="n">Waveform</span><span class="p">(</span><span class="s1">&#39;WF&#39;</span><span class="p">,</span> <span class="n">WF_LENGTH</span><span class="p">,</span> <span class="s1">&#39;DOUBLE&#39;</span><span class="p">,</span> <span class="n">DESC</span> <span class="o">=</span> <span class="s1">&#39;Sine wave&#39;</span><span class="p">),</span>
+        <span class="n">aIn</span><span class="p">(</span><span class="s1">&#39;SUM&#39;</span><span class="p">,</span> <span class="n">PREC</span> <span class="o">=</span> <span class="mi">3</span><span class="p">,</span> <span class="n">DESC</span> <span class="o">=</span> <span class="s1">&#39;Sum of sine wave&#39;</span><span class="p">)),</span>
+    <span class="n">DESC</span> <span class="o">=</span> <span class="s1">&#39;Waveform frequency&#39;</span><span class="p">)</span>
+
+<span class="n">Trigger</span><span class="p">(</span><span class="s1">&#39;TRIG&#39;</span><span class="p">,</span>
+    <span class="n">Waveform</span><span class="p">(</span><span class="s1">&#39;TRIGWF&#39;</span><span class="p">,</span> <span class="n">WF_LENGTH</span><span class="p">,</span> <span class="n">DESC</span> <span class="o">=</span> <span class="s1">&#39;Triggered waveform&#39;</span><span class="p">),</span>
+    <span class="n">longIn</span><span class="p">(</span><span class="s1">&#39;COUNT&#39;</span><span class="p">,</span> <span class="n">DESC</span> <span class="o">=</span> <span class="s1">&#39;Trigger count&#39;</span><span class="p">))</span>
+<span class="n">Action</span><span class="p">(</span><span class="s1">&#39;RESET&#39;</span><span class="p">,</span> <span class="n">DESC</span> <span class="o">=</span> <span class="s1">&#39;Reset trigger count&#39;</span><span class="p">)</span>
+<span class="n">aOut</span><span class="p">(</span><span class="s1">&#39;INTERVAL&#39;</span><span class="p">,</span> <span class="mf">1e-2</span><span class="p">,</span> <span class="mi">100</span><span class="p">,</span> <span class="s1">&#39;s&#39;</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="n">DESC</span> <span class="o">=</span> <span class="s1">&#39;Trigger interval&#39;</span><span class="p">)</span>
+<span class="n">aOut</span><span class="p">(</span><span class="s1">&#39;SCALING&#39;</span><span class="p">,</span> <span class="n">PREC</span> <span class="o">=</span> <span class="mi">3</span><span class="p">,</span> <span class="n">DESC</span> <span class="o">=</span> <span class="s1">&#39;Frequency scaling&#39;</span><span class="p">)</span>
+
+<span class="n">Action</span><span class="p">(</span><span class="s1">&#39;WRITE&#39;</span><span class="p">,</span> <span class="n">DESC</span> <span class="o">=</span> <span class="s1">&#39;Force update to persistent state&#39;</span><span class="p">)</span>
+
+<span class="k">for</span> <span class="n">prefix</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;A&#39;</span><span class="p">,</span> <span class="s1">&#39;B&#39;</span><span class="p">]:</span>
+    <span class="n">push_name_prefix</span><span class="p">(</span><span class="n">prefix</span><span class="p">)</span>
+    <span class="n">read</span> <span class="o">=</span> <span class="n">longIn</span><span class="p">(</span><span class="s1">&#39;READ&#39;</span><span class="p">)</span>
+    <span class="n">write</span> <span class="o">=</span> <span class="n">longOut</span><span class="p">(</span><span class="s1">&#39;WRITE&#39;</span><span class="p">,</span> <span class="n">FLNK</span> <span class="o">=</span> <span class="n">read</span><span class="p">)</span>
+    <span class="n">pop_name_prefix</span><span class="p">()</span>
+
+<span class="n">longOut</span><span class="p">(</span><span class="s1">&#39;ADD_ONE&#39;</span><span class="p">,</span> <span class="n">DESC</span> <span class="o">=</span> <span class="s1">&#39;Adds one to the written value&#39;</span><span class="p">)</span>
+
+<span class="n">WaveformOut</span><span class="p">(</span><span class="s1">&#39;STRINGS&#39;</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="s1">&#39;STRING&#39;</span><span class="p">)</span>
+
+<span class="n">WriteRecords</span><span class="p">(</span><span class="n">sys</span><span class="o">.</span><span class="n">argv</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+</pre></div></td></tr></table></div>
+</div>
+<p>Here we have the following structures:</p>
+<ol class="arabic simple">
+<li><p>Record naming and defaults are set up so that all record names are prefixed
+with the macro <code class="docutils literal notranslate"><span class="pre">$(DEVICE):</span></code> (the default template behaviour) and all out
+records names are suffixed with <code class="docutils literal notranslate"><span class="pre">_S</span></code> (a very convenient naming
+convention).</p></li>
+<li><p>An <code class="docutils literal notranslate"><span class="pre">ao</span></code> record <code class="docutils literal notranslate"><span class="pre">FREQ_S</span></code> used to set the frequency for a waveform record
+<code class="docutils literal notranslate"><span class="pre">WF</span></code>; each time <code class="docutils literal notranslate"><span class="pre">FREQ_S</span></code> is written the waveform is updated and so is a
+<code class="docutils literal notranslate"><span class="pre">SUM</span></code> record.  In this case processing of <code class="docutils literal notranslate"><span class="pre">WF</span></code> and <code class="docutils literal notranslate"><span class="pre">SUM</span></code> is entirely
+driven by writes to <code class="docutils literal notranslate"><span class="pre">FREQ_S</span></code>.</p></li>
+<li><p>A pair of records <code class="docutils literal notranslate"><span class="pre">TRIFWF</span></code> and <code class="docutils literal notranslate"><span class="pre">COUNT</span></code> which update on an internally
+generated IOC event.  These are controlled by a couple of settings
+<code class="docutils literal notranslate"><span class="pre">INTERVAL_S</span></code> and <code class="docutils literal notranslate"><span class="pre">SCALING_S</span></code>, and <code class="docutils literal notranslate"><span class="pre">COUNT</span></code> can be reset by processing
+<code class="docutils literal notranslate"><span class="pre">RESET_S</span></code>.</p></li>
+<li><p>Another action <code class="docutils literal notranslate"><span class="pre">WRITE_S</span></code> which forces the persistent state to be saved.</p></li>
+</ol>
+<p>Of course here the database builder is more useful: 30 lines of source code
+generates 129 lines of database.</p>
+</section>
+<section id="publishing-records">
+<h3><span class="section-number">9.2.2. </span>Publishing Records<a class="headerlink" href="#publishing-records" title="Permalink to this headline">¶</a></h3>
+<p>For each of the records defined above an implementation needs to be defined and
+published.  The following C code publishes the variables above:</p>
+<div class="highlight-c notranslate"><div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span class="normal"> 1</span>
+<span class="normal"> 2</span>
+<span class="normal"> 3</span>
+<span class="normal"> 4</span>
+<span class="normal"> 5</span>
+<span class="normal"> 6</span>
+<span class="normal"> 7</span>
+<span class="normal"> 8</span>
+<span class="normal"> 9</span>
+<span class="normal">10</span>
+<span class="normal">11</span>
+<span class="normal">12</span>
+<span class="normal">13</span>
+<span class="normal">14</span>
+<span class="normal">15</span>
+<span class="normal">16</span>
+<span class="normal">17</span>
+<span class="normal">18</span></pre></div></td><td class="code"><div><pre><span></span><span class="n">error__t</span><span class="w"> </span><span class="nf">initialise_example_pvs</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span>
+<span class="p">{</span>
+<span class="w">    </span><span class="n">PUBLISH_WRITER_P</span><span class="p">(</span><span class="n">ao</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;FREQ&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">set_frequency</span><span class="p">);</span>
+<span class="w">    </span><span class="n">PUBLISH_WF_READ_VAR</span><span class="p">(</span><span class="kt">double</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;WF&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">WF_LENGTH</span><span class="p">,</span><span class="w"> </span><span class="n">waveform</span><span class="p">);</span>
+<span class="w">    </span><span class="n">PUBLISH_READ_VAR</span><span class="p">(</span><span class="n">ai</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;SUM&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">sum</span><span class="p">);</span>
+
+<span class="w">    </span><span class="n">PUBLISH_ACTION</span><span class="p">(</span><span class="s">&quot;WRITE&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">write_persistent_state</span><span class="p">);</span>
+
+<span class="w">    </span><span class="n">PUBLISH_WRITE_VAR_P</span><span class="p">(</span><span class="n">ao</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;INTERVAL&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">event_interval</span><span class="p">);</span>
+<span class="w">    </span><span class="n">PUBLISH_WRITE_VAR_P</span><span class="p">(</span><span class="n">ao</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;SCALING&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">scaling</span><span class="p">);</span>
+
+<span class="w">    </span><span class="n">interlock</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">create_interlock</span><span class="p">(</span><span class="s">&quot;TRIG&quot;</span><span class="p">,</span><span class="w"> </span><span class="nb">false</span><span class="p">);</span>
+<span class="w">    </span><span class="n">PUBLISH_READ_VAR</span><span class="p">(</span><span class="n">longin</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;COUNT&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">trigger_count</span><span class="p">);</span>
+<span class="w">    </span><span class="n">PUBLISH_WF_READ_VAR</span><span class="p">(</span><span class="kt">int</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;TRIGWF&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">WF_LENGTH</span><span class="p">,</span><span class="w"> </span><span class="n">trigger_waveform</span><span class="p">);</span>
+<span class="w">    </span><span class="n">PUBLISH_ACTION</span><span class="p">(</span><span class="s">&quot;RESET&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">reset_trigger_count</span><span class="p">);</span>
+
+<span class="w">    </span><span class="p">...</span>
+<span class="p">}</span>
+</pre></div></td></tr></table></div>
+</div>
+<p>Note that all of the out variables are published with a <code class="docutils literal notranslate"><span class="pre">_P</span></code> suffix,
+indicating that persitence support is enabled.  Here we see a variety of
+different implementations being used: calling a function, reading and writing a
+variable, and finally using an interlock.</p>
+</section>
+<section id="notes-on-trigger-and-interlock">
+<h3><span class="section-number">9.2.3. </span>Notes on Trigger and Interlock<a class="headerlink" href="#notes-on-trigger-and-interlock" title="Permalink to this headline">¶</a></h3>
+<p>The most complex structure involves <a class="reference internal" href="epics_extra.html#c.create_interlock" title="create_interlock"><code class="xref c c-func docutils literal notranslate"><span class="pre">create_interlock()</span></code></a>.  Before updating
+the variables <code class="docutils literal notranslate"><span class="pre">trigger_count</span></code> and <code class="docutils literal notranslate"><span class="pre">trigger_waveform</span></code> associated with the PVs
+which will be updated when the record <code class="docutils literal notranslate"><span class="pre">TRIG</span></code> is processed,
+<a class="reference internal" href="epics_extra.html#c.interlock_wait" title="interlock_wait"><code class="xref c c-func docutils literal notranslate"><span class="pre">interlock_wait()</span></code></a> must first be called – this blocks processing until
+the library knows that the IOC is no longer reading the variables.  Once the new
+state has been written then <a class="reference internal" href="epics_extra.html#c.interlock_signal" title="interlock_signal"><code class="xref c c-func docutils literal notranslate"><span class="pre">interlock_signal()</span></code></a> can be called to signal
+the update to EPICS and trigger processing of the associated records.</p>
+<div class="highlight-c notranslate"><div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span class="normal">1</span>
+<span class="normal">2</span>
+<span class="normal">3</span>
+<span class="normal">4</span>
+<span class="normal">5</span>
+<span class="normal">6</span>
+<span class="normal">7</span></pre></div></td><td class="code"><div><pre><span></span><span class="k">static</span><span class="w"> </span><span class="kt">void</span><span class="w"> </span><span class="nf">process_event</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span>
+<span class="p">{</span>
+<span class="w">    </span><span class="n">interlock_wait</span><span class="p">(</span><span class="n">interlock</span><span class="p">);</span>
+<span class="w">    </span><span class="n">trigger_count</span><span class="w"> </span><span class="o">+=</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span>
+<span class="w">    </span><span class="n">update_waveform</span><span class="p">();</span>
+<span class="w">    </span><span class="n">interlock_signal</span><span class="p">(</span><span class="n">interlock</span><span class="p">,</span><span class="w"> </span><span class="nb">NULL</span><span class="p">);</span>
+<span class="p">}</span>
+</pre></div></td></tr></table></div>
+</div>
+<p>Finally, in this example the function <code class="docutils literal notranslate"><span class="pre">process_event</span></code> is called internally by
+the driver implementation; in this example a thread is used to call it at an
+interval governed by the variable <code class="docutils literal notranslate"><span class="pre">event_interval</span></code>.</p>
+</section>
+</section>
+</section>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">9. Code Examples</a><ul>
+<li><a class="reference internal" href="#basic-ioc">9.1. Basic IOC</a><ul>
+<li><a class="reference internal" href="#defining-the-database">9.1.1. Defining the Database</a></li>
+<li><a class="reference internal" href="#implementing-the-ioc">9.1.2. Implementing the IOC</a></li>
+<li><a class="reference internal" href="#internalising-st-cmd">9.1.3. Internalising <code class="docutils literal notranslate"><span class="pre">st.cmd</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#a-more-complex-example">9.2. A More Complex Example</a><ul>
+<li><a class="reference internal" href="#database-definition">9.2.1. Database Definition</a></li>
+<li><a class="reference internal" href="#publishing-records">9.2.2. Publishing Records</a></li>
+<li><a class="reference internal" href="#notes-on-trigger-and-interlock">9.2.3. Notes on Trigger and Interlock</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="hashtable.html"
+                        title="previous chapter"><span class="section-number">8. </span>Generic Hash Table</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="external.html"
+                        title="next chapter"><span class="section-number">10. </span>External References</a></p>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/example.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="external.html" title="10. External References"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="hashtable.html" title="8. Generic Hash Table"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">EPICS Device  documentation</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2015, Michael Abbott.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 2.3.1.
+    </div>
+  </body>
+</html>
