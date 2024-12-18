@@ -16,10 +16,10 @@ CROSS_COMPILER_TARGET_ARCHS += linux-arm_elhf
 
 # This can either be an explicit path to the directory containing the
 # epicsdbbuilder module or a version number understood by pkg_resources.require
-EPICSDBBUILDER ?= /dls_sw/prod/python3/RHEL7-x86_64/epicsdbbuilder/1.5
+EPICSDBBUILDER = /dls_sw/prod/python3/RHEL7-x86_64/epicsdbbuilder/1.5
 
-SPHINXBUILD ?= /dls_sw/prod/python3/RHEL7-x86_64/sphinx/2.3.1/prefix/bin/sphinx-build
+SPHINXBUILD = /dls_sw/prod/python3/RHEL7-x86_64/sphinx/2.3.1/prefix/bin/sphinx-build
 
-PYTHON ?= python
+PYTHON = python
 
 # vim: set filetype=make:
